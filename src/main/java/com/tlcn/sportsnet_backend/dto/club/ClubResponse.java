@@ -1,9 +1,11 @@
 package com.tlcn.sportsnet_backend.dto.club;
 
+import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
+import java.util.Set;
 
 @Builder
 @Data
@@ -15,7 +17,11 @@ public class ClubResponse {
     String name;
     String description;
     String logoUrl;
+    String location;
+    Integer maxMembers;
+    ClubVisibilityEnum visibility;
+    Set<String> tags;
     boolean active;
-    String ownerId;
+    String ownerName;
     Instant createdAt;
 }

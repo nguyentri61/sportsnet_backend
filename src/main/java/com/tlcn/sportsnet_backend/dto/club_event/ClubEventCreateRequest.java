@@ -24,7 +24,13 @@ public class ClubEventCreateRequest {
     LocalDateTime startTime;
     LocalDateTime endTime;
     int totalMember;
-    ClubVisibilityEnum clubVisibility;
     List<BadmintonCategoryEnum> type;
+
+    BigDecimal fee;
+    LocalDateTime deadline;
+    boolean openForOutside;
+    int maxClubMembers;
+    int maxOutsideMembers;
+
     String clubId;
 }

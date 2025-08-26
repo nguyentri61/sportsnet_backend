@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,8 +27,16 @@ public class ClubEventResponse {
     LocalDateTime startTime;
     LocalDateTime endTime;
     int totalMember;
-    ClubVisibilityEnum clubVisibility;
     List<BadmintonCategoryEnum> categories;
     EventStatusEnum status;
     String clubId;
+
+    BigDecimal fee;
+    LocalDateTime deadline;
+    boolean openForOutside;
+    int maxClubMembers;
+    int maxOutsideMembers;
+
+    Instant createdAt;
+    String createdBy;
 }

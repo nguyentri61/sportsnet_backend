@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
+import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,6 +22,11 @@ public class ClubMember {
 
     @Enumerated(EnumType.STRING)
     ClubMemberRoleEnum role; // MEMBER, ADMIN
+
+    @Enumerated(EnumType.STRING)
+    ClubMemberStatusEnum status; // ACTIVE, BANNED, PENDING_APPROVAL
+
+    String note;
 
     LocalDateTime joinedAt;
 

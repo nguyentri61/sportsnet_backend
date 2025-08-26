@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.config;
 
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Role;
+import com.tlcn.sportsnet_backend.entity.UserInfo;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,11 +36,22 @@ public class ApplicationInitConfig implements ApplicationRunner {
             Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseThrow(
                     () -> new RuntimeException("ADMIN không tồn tại"));
 
+
+
             Account admin = Account.builder()
                     .email("admin@gmail.com")
                     .password(passwordEncoder.encode("123456"))
                     .roles(Set.of(adminRole))
                     .build();
+
+            admin = accountRepository.save(admin);
+
+            UserInfo userInfo = UserInfo.builder()
+                    .fullName("ADMIN")
+                    .account(admin)
+                    .build();
+
+            admin.setUserInfo(userInfo);
 
             accountRepository.save(admin);
         }

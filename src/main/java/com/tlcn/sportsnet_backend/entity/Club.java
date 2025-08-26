@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
@@ -28,10 +29,25 @@ public class Club {
     @Column(columnDefinition = "MEDIUMTEXT")
     String description;
 
+    String location;
+
     String logoUrl;
+
+    @Enumerated(EnumType.STRING)
+    ClubVisibilityEnum visibility;
 
     @Builder.Default
     boolean active = false;
+
+    int maxMembers;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "club_tags",
+            joinColumns = @JoinColumn(name = "club_id")
+    )
+    @Column(name = "tag")
+    Set<String> tags = new HashSet<>(); //mô tả nhanh về CLB, ví dụ: “cầu lông nghiệp dư”, “thi đấu giải”.
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)

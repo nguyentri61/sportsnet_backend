@@ -19,6 +19,11 @@ public class ClubEventController {
     private final ClubEventService clubEventService;
     private final FileStorageService fileStorageService;
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getEventClubInfo(@PathVariable String id) {
+        return ResponseEntity.ok(clubEventService.getEventClubInfo(id));
+    }
+
     @PostMapping
     public ResponseEntity<?> createClubEvent(@RequestBody ClubEventCreateRequest request) {
         return ResponseEntity.ok(clubEventService.createClubEvent(request));
