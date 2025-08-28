@@ -5,16 +5,25 @@ import com.tlcn.sportsnet_backend.dto.club.ClubResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.Role;
+import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
+import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.ClubRepository;
 import com.tlcn.sportsnet_backend.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Pageable;
+
 import java.util.HashSet;
+
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -35,7 +44,9 @@ public class ClubService {
         Role ownerRole = roleRepository.findByName("ROLE_CLUB_OWNER")
                 .orElseThrow(() -> new InvalidDataException("Role OWNER_CLUB not found"));
 
-        owner.setRoles(Set.of(ownerRole));
+        Set<Role> roles = owner.getRoles();
+        roles.add(ownerRole);
+        owner.setRoles(roles);
         roleRepository.save(ownerRole);
 
         Club club = Club.builder()
@@ -52,6 +63,23 @@ public class ClubService {
         club = clubRepository.save(club);
 
         return toClubResponse(club);
+    }
+    public PagedResponse<ClubResponse> getAllClubPublic(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Club> clubs = clubRepository.findAllByVisibility(ClubVisibilityEnum.PUBLIC, pageable);
+
+        List<ClubResponse> content = clubs.stream()
+                .map(this::toClubResponse)
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                clubs.getNumber(),
+                clubs.getSize(),
+                clubs.getTotalElements(),
+                clubs.getTotalPages(),
+                clubs.isLast()
+        );
     }
 
     public void activateClub(String id) {
@@ -88,4 +116,6 @@ public class ClubService {
                 .createdAt(club.getCreatedAt())
                 .build();
     }
+
+
 }

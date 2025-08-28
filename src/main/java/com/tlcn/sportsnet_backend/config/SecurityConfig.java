@@ -40,7 +40,7 @@ public class SecurityConfig {
 
     private final String[] API_ALLOWED = {
             "/", "/api/auth/login", "/api/auth/refresh", "/api/auth/register" ,"/uploads/**",
-            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
+            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html","/api/clubs/**"
     };
 
     @Bean
