@@ -65,9 +65,18 @@ public class ClubService {
         return toClubResponse(club);
     }
     public PagedResponse<ClubResponse> getAllClubPublic(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Club> clubs = clubRepository.findAllByVisibility(ClubVisibilityEnum.PUBLIC, pageable);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElse(null);
 
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Club> clubs;
+
+        if (account != null) {
+            clubs = clubRepository.findAvailableClubsForUser(ClubVisibilityEnum.PUBLIC, account, pageable);
+        } else {
+            clubs = clubRepository.findAllByVisibility(ClubVisibilityEnum.PUBLIC, pageable);
+        }
         List<ClubResponse> content = clubs.stream()
                 .map(this::toClubResponse)
                 .toList();
