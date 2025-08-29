@@ -3,6 +3,8 @@ package com.tlcn.sportsnet_backend.controller;
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
 import com.tlcn.sportsnet_backend.payload.exception.CustomUnauthorizedException;
+import com.tlcn.sportsnet_backend.entity.ClubMember;
+import com.tlcn.sportsnet_backend.service.ClubMemberService;
 import com.tlcn.sportsnet_backend.service.ClubService;
 import com.tlcn.sportsnet_backend.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.Map;
 public class ClubController {
     private final ClubService clubService;
     private final FileStorageService fileStorageService;
+    private final ClubMemberService clubMemberService;
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getClubInformation(@PathVariable String id) {
@@ -65,5 +68,30 @@ public class ClubController {
 
         return ResponseEntity.ok()
                 .body(ApiResponse.success(Map.of("fileName", uploadedFile)));
+    }
+
+    @PostMapping("/{clubId}/join")
+    public ResponseEntity<?> joinClub(@PathVariable String clubId) {
+        return ResponseEntity.ok(clubMemberService.joinClub(clubId));
+    }
+
+    @PostMapping("/{clubId}/members/{memberId}/approve")
+    public ResponseEntity<?> approveMember(
+            @PathVariable String clubId,
+            @PathVariable String memberId,
+            @RequestParam boolean approve) {
+
+        clubMemberService.approveMember(clubId, memberId, approve);
+        if (approve) {
+            return ResponseEntity.ok("Member approved successfully");
+        } else {
+            return ResponseEntity.ok("Member rejected successfully");
+        }
+    }
+
+    @PostMapping("/{clubId}/members/{memberId}/ban")
+    public ResponseEntity<?> banMember(@PathVariable String clubId, @PathVariable String memberId) {
+        clubMemberService.banMember(clubId, memberId);
+        return ResponseEntity.ok().body("Ban success");
     }
 }
