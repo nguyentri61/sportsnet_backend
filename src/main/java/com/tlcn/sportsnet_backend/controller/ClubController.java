@@ -2,10 +2,14 @@ package com.tlcn.sportsnet_backend.controller;
 
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
+import com.tlcn.sportsnet_backend.payload.exception.CustomUnauthorizedException;
 import com.tlcn.sportsnet_backend.service.ClubService;
 import com.tlcn.sportsnet_backend.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +34,14 @@ public class ClubController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(clubService.getAllClubPublic(page, size));
     }
+
+    @GetMapping("/my_clubs/all")
+    public ResponseEntity<?> getAllMyClubs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(clubService.getAllMyClub(page, size));
+    }
+
     @PostMapping
     public ResponseEntity<?> createClub(@RequestBody ClubCreateRequest request) {
         return ResponseEntity.ok(clubService.createClub(request));
@@ -43,6 +55,8 @@ public class ClubController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body("File is empty");
         }

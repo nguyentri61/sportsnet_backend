@@ -15,11 +15,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Pageable;
+
 
 import java.util.HashSet;
 
@@ -91,6 +94,28 @@ public class ClubService {
         );
     }
 
+    public PagedResponse<ClubResponse> getAllMyClub(int page, int size) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Club> clubs = clubRepository.findAvailableClubsBelongUser(ClubVisibilityEnum.PUBLIC, account, pageable);
+
+        List<ClubResponse> content = clubs.stream()
+                .map(this::toClubResponse)
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                clubs.getNumber(),
+                clubs.getSize(),
+                clubs.getTotalElements(),
+                clubs.getTotalPages(),
+                clubs.isLast()
+        );
+    }
+
     public void activateClub(String id) {
         Club club = clubRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
         club.setActive(true);
@@ -125,6 +150,7 @@ public class ClubService {
                 .createdAt(club.getCreatedAt())
                 .build();
     }
+
 
 
 }

@@ -40,14 +40,20 @@ public class SecurityConfig {
 
     private final String[] API_ALLOWED = {
             "/", "/api/auth/login", "/api/auth/refresh", "/api/auth/register" ,"/uploads/**",
-            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html","/api/clubs/**"
+            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html","/api/clubs/*",
+            "/api/clubs/all_public"
+    };
+    private final String[] API_DENIED = {
+            "/api/*/upload"
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(API_DENIED).authenticated()
                         .requestMatchers(API_ALLOWED).permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

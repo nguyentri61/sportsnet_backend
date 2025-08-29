@@ -31,4 +31,20 @@ public interface ClubRepository extends JpaRepository<Club, String> {
             @Param("account") Account account,
             Pageable pageable
     );
+
+    @Query("""
+    SELECT c FROM Club c
+    WHERE c.visibility = :visibility
+      AND (
+          c.owner = :account
+          OR c.id IN (
+              SELECT cm.club.id FROM ClubMember cm WHERE cm.account = :account
+          )
+      )
+""")
+    Page<Club> findAvailableClubsBelongUser(
+            @Param("visibility") ClubVisibilityEnum visibility,
+            @Param("account") Account account,
+            Pageable pageable
+    );
 }
