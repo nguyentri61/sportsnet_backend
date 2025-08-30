@@ -2,13 +2,18 @@ package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
 import com.tlcn.sportsnet_backend.dto.club.ClubResponse;
+import com.tlcn.sportsnet_backend.dto.club.MyClubResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
+import com.tlcn.sportsnet_backend.entity.ClubMember;
 import com.tlcn.sportsnet_backend.entity.Role;
+import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
+import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
+import com.tlcn.sportsnet_backend.repository.ClubMemberRepository;
 import com.tlcn.sportsnet_backend.repository.ClubRepository;
 import com.tlcn.sportsnet_backend.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
 
+import java.security.Permission;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import java.util.List;
@@ -33,6 +41,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ClubService {
     private final ClubRepository clubRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
     private final FileStorageService fileStorageService;
@@ -64,7 +73,15 @@ public class ClubService {
                 .build();
 
         club = clubRepository.save(club);
+        ClubMember clubMember = ClubMember.builder()
+                .club(club)
+                .account(owner)
+                .role(ClubMemberRoleEnum.OWNER)
+                .status(ClubMemberStatusEnum.APPROVED)
+                .joinedAt(Instant.now())
+                .build();
 
+        clubMemberRepository.save(clubMember);
         return toClubResponse(club);
     }
     public PagedResponse<ClubResponse> getAllClubPublic(int page, int size) {
@@ -94,18 +111,20 @@ public class ClubService {
         );
     }
 
-    public PagedResponse<ClubResponse> getAllMyClub(int page, int size) {
+    public PagedResponse<MyClubResponse> getAllMyClub(int page, int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new InvalidDataException("Account not found"));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Club> clubs = clubRepository.findAvailableClubsBelongUser(ClubVisibilityEnum.PUBLIC, account, pageable);
+        Page<Club> clubs = clubRepository.findAvailableClubsBelongUser( account, pageable);
 
-        List<ClubResponse> content = clubs.stream()
-                .map(this::toClubResponse)
-                .toList();
-
+        List<MyClubResponse> content = new ArrayList<>();
+        for (Club club : clubs) {
+            content.add(toMyClubResponse(club, account));
+        }
+// Sắp xếp: owner lên đầu
+        content.sort((c1, c2) -> Boolean.compare(!c1.isOwner(), !c2.isOwner()));
         return new PagedResponse<>(
                 content,
                 clubs.getNumber(),
@@ -115,7 +134,20 @@ public class ClubService {
                 clubs.isLast()
         );
     }
-
+    public MyClubResponse getMyClubInformation(String id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+        System.out.println(account.getEmail());
+        Club club = clubRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
+        System.out.println(club.getName());
+        ClubMember clubMember = clubMemberRepository.findClubMemberByAccountAndClub(account, club);
+//        System.out.println(clubMember.toString());
+        if(clubMember.getStatus() != ClubMemberStatusEnum.APPROVED) {
+            throw new InvalidDataException("ClubMember is not approved");
+        }
+        return toMyClubResponse(club, account);
+    }
     public void activateClub(String id) {
         Club club = clubRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
         club.setActive(true);
@@ -148,6 +180,36 @@ public class ClubService {
                 .active(club.isActive())
                 .ownerName(club.getOwner().getUserInfo().getFullName())
                 .createdAt(club.getCreatedAt())
+                .build();
+    }
+
+    private MyClubResponse toMyClubResponse(Club club, Account account) {
+
+        ClubMember clubMember = clubMemberRepository.findByClubAndAccount(club, account);
+        Instant joinAt = club.getCreatedAt();
+        if(clubMember != null) {
+            joinAt =clubMember.getJoinedAt();
+        }
+        List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
+
+        ClubMember member = clubMemberRepository.findClubMemberByAccountAndClub(account, club);
+        assert member != null;
+        return MyClubResponse.builder()
+                .id(club.getId())
+                .name(club.getName())
+                .description(club.getDescription())
+                .logoUrl(fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo"))
+                .location(club.getLocation())
+                .maxMembers(club.getMaxMembers())
+                .visibility(club.getVisibility())
+                .tags(club.getTags())
+                .active(club.isActive())
+                .memberStatus(member.getStatus())
+                .ownerName(club.getOwner().getUserInfo().getFullName())
+                .createdAt(club.getCreatedAt())
+                .dateJoined(joinAt)
+                .memberCount(members.size())
+                .isOwner(club.getOwner()==account)
                 .build();
     }
 

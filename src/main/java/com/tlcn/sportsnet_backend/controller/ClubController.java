@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.controller;
 
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
+import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.payload.exception.CustomUnauthorizedException;
 import com.tlcn.sportsnet_backend.entity.ClubMember;
 import com.tlcn.sportsnet_backend.service.ClubMemberService;
@@ -45,6 +46,20 @@ public class ClubController {
         return ResponseEntity.ok(clubService.getAllMyClub(page, size));
     }
 
+    @GetMapping("/my_clubs/{id}")
+    public ResponseEntity<?> getMyClubInformation(
+                                                   @PathVariable String id) {
+        return ResponseEntity.ok(clubService.getMyClubInformation(id));
+    }
+
+    @GetMapping("/my_clubs/{id}/member")
+    public ResponseEntity<?> getMyClubMember(@RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "10") int size,
+                                             @RequestParam(defaultValue = "APPROVED") ClubMemberStatusEnum status,
+                                             @PathVariable String id) {
+        return ResponseEntity.ok(clubMemberService.getMembers(page,size, status, id));
+    }
+
     @PostMapping
     public ResponseEntity<?> createClub(@RequestBody ClubCreateRequest request) {
         return ResponseEntity.ok(clubService.createClub(request));
@@ -75,7 +90,7 @@ public class ClubController {
         return ResponseEntity.ok(clubMemberService.joinClub(clubId));
     }
 
-    @PostMapping("/{clubId}/members/{memberId}/approve")
+    @PostMapping("/my_clubs/{clubId}/member/{memberId}/approve")
     public ResponseEntity<?> approveMember(
             @PathVariable String clubId,
             @PathVariable String memberId,

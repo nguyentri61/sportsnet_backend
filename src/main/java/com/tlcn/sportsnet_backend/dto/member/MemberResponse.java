@@ -1,41 +1,27 @@
-package com.tlcn.sportsnet_backend.entity;
+package com.tlcn.sportsnet_backend.dto.member;
 
 import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
-import jakarta.persistence.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
-@Entity
-@Data
 @Builder
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "club_members")
-public class ClubMember {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+public class MemberResponse {
 
+    String id;
+    String name;
     @Enumerated(EnumType.STRING)
     ClubMemberRoleEnum role; // MEMBER, ADMIN
-
     @Enumerated(EnumType.STRING)
     ClubMemberStatusEnum status; // ACTIVE, BANNED, PENDING_APPROVAL
-
-    String note;
-
     Instant joinedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false)
-    Account account;
-
-    @ManyToOne
-    @JoinColumn(name = "club_id", nullable = false)
-    Club club;
 }
