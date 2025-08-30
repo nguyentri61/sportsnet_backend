@@ -1,18 +1,29 @@
 package com.tlcn.sportsnet_backend.service;
 
+import com.tlcn.sportsnet_backend.dto.club.MyClubResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
+import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
+import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.ClubEventRepository;
 import com.tlcn.sportsnet_backend.repository.ClubRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -78,5 +89,21 @@ public class ClubEventService {
                 .build();
     }
 
+    public PagedResponse<ClubEventResponse> getAllEventsByClubId(String clubId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<ClubEvent> events = clubEventRepository.findByClub_Id(clubId, pageable);
 
+        List<ClubEventResponse> content = events.getContent().stream()
+                .map(this::toClubEventResponse)
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
+        );
+    }
 }
