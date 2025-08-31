@@ -35,7 +35,8 @@ public class ClubEvent {
     String image;
 
     String location;
-    LocalDate date;
+    @Column(columnDefinition = "TEXT")
+    String requirements;
 
     @Column(name = "start_time")
     LocalDateTime startTime;

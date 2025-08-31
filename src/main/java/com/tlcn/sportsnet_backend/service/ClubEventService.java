@@ -1,9 +1,8 @@
 package com.tlcn.sportsnet_backend.service;
 
-import com.tlcn.sportsnet_backend.dto.club.MyClubResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
+import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
-import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
@@ -16,13 +15,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -32,7 +27,7 @@ public class ClubEventService {
     private final ClubEventRepository clubEventRepository;
     private final FileStorageService fileStorageService;
 
-    public ClubEventResponse createClubEvent(ClubEventCreateRequest request) {
+    public ClubEventCreateResponse createClubEvent(ClubEventCreateRequest request) {
         Club club = clubRepository.findById(request.getClubId())
                 .orElseThrow(() -> new InvalidDataException("Club not found"));
 
@@ -40,13 +35,13 @@ public class ClubEventService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .image(request.getImage())
-                .date(request.getDate())
+                .requirements(request.getRequirements())
                 .location(request.getLocation())
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
                 .totalMember(request.getTotalMember())
                 .categories(request.getType())
-                .status(EventStatusEnum.DRAFT) // mặc định
+                .status(EventStatusEnum.OPEN) // mặc định
                 .fee(request.getFee() != null ? request.getFee() : BigDecimal.ZERO)
                 .deadline(request.getDeadline() != null ? request.getDeadline() : request.getStartTime().minusDays(1))
                 .openForOutside(request.isOpenForOutside()) // mặc định không mở cho người ngoài
@@ -57,20 +52,20 @@ public class ClubEventService {
 
         clubEventRepository.save(event);
 
-        return toClubEventResponse(event);
+        return toClubEventCreateResponse(event);
     }
 
-    public ClubEventResponse getEventClubInfo(String id) {
+    public ClubEventCreateResponse getEventClubInfo(String id) {
         ClubEvent event = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
-        return toClubEventResponse(event);
+        return toClubEventCreateResponse(event);
     }
 
-    private ClubEventResponse toClubEventResponse(ClubEvent event) {
-        return ClubEventResponse.builder()
+    private ClubEventCreateResponse toClubEventCreateResponse(ClubEvent event) {
+        return ClubEventCreateResponse.builder()
                 .id(event.getId())
                 .title(event.getTitle())
                 .description(event.getDescription())
-                .date(event.getDate())
+                .requirements(event.getRequirements())
                 .image(fileStorageService.getFileUrl(event.getImage(), "/club/events"))
                 .location(event.getLocation())
                 .startTime(event.getStartTime())
@@ -89,6 +84,21 @@ public class ClubEventService {
                 .build();
     }
 
+    private ClubEventResponse toClubEventResponse(ClubEvent event) {
+        return ClubEventResponse.builder()
+                .id(event.getId())
+                .image(fileStorageService.getFileUrl(event.getImage(), "/club/events"))
+                .startTime(event.getStartTime())
+                .endTime(event.getEndTime())
+                .location(event.getLocation())
+                .title(event.getTitle())
+                .fee(event.getFee())
+                .joinedMember(event.getParticipants().size())
+                .totalMember(event.getTotalMember())
+                .categories(event.getCategories())
+                .status(event.getStatus())
+                .build();
+    }
     public PagedResponse<ClubEventResponse> getAllEventsByClubId(String clubId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<ClubEvent> events = clubEventRepository.findByClub_Id(clubId, pageable);
