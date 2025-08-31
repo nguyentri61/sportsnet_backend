@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.dto.club_event;
 
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
+import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -25,6 +26,7 @@ public class ClubEventDetailResponse {
     LocalDateTime startTime;
     LocalDateTime endTime;
     int totalMember;
+    int joinedMember;
     List<BadmintonCategoryEnum> categories;
     EventStatusEnum status;
     String clubId;
@@ -35,4 +37,5 @@ public class ClubEventDetailResponse {
     int maxOutsideMembers;
     Instant createdAt;
     String createdBy;
+    ParticipantRoleEnum participantRole;
 }

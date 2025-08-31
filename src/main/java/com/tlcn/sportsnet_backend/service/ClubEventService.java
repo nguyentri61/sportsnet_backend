@@ -2,19 +2,26 @@ package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateResponse;
+import com.tlcn.sportsnet_backend.dto.club_event.ClubEventDetailResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
+import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
+import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
+import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.ClubEventRepository;
+import com.tlcn.sportsnet_backend.repository.ClubMemberRepository;
 import com.tlcn.sportsnet_backend.repository.ClubRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,6 +32,8 @@ import java.util.List;
 public class ClubEventService {
     private final ClubRepository clubRepository;
     private final ClubEventRepository clubEventRepository;
+    private final AccountRepository accountRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final FileStorageService fileStorageService;
 
     public ClubEventCreateResponse createClubEvent(ClubEventCreateRequest request) {
@@ -55,9 +64,29 @@ public class ClubEventService {
         return toClubEventCreateResponse(event);
     }
 
-    public ClubEventCreateResponse getEventClubInfo(String id) {
+    public ClubEventDetailResponse getEventClubInfo(String id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
         ClubEvent event = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
-        return toClubEventCreateResponse(event);
+        return toClubEventDetailResponse(event, account);
+    }
+
+    public PagedResponse<ClubEventResponse> getAllEventsByClubId(String clubId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<ClubEvent> events = clubEventRepository.findByClub_Id(clubId, pageable);
+
+        List<ClubEventResponse> content = events.getContent().stream()
+                .map(this::toClubEventResponse)
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
+        );
     }
 
     private ClubEventCreateResponse toClubEventCreateResponse(ClubEvent event) {
@@ -99,21 +128,40 @@ public class ClubEventService {
                 .status(event.getStatus())
                 .build();
     }
-    public PagedResponse<ClubEventResponse> getAllEventsByClubId(String clubId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<ClubEvent> events = clubEventRepository.findByClub_Id(clubId, pageable);
 
-        List<ClubEventResponse> content = events.getContent().stream()
-                .map(this::toClubEventResponse)
-                .toList();
-
-        return new PagedResponse<>(
-                content,
-                events.getNumber(),
-                events.getSize(),
-                events.getTotalElements(),
-                events.getTotalPages(),
-                events.isLast()
-        );
+    private ClubEventDetailResponse toClubEventDetailResponse(ClubEvent event, Account account) {
+        Club club = event.getClub();
+        ParticipantRoleEnum roleEnum= ParticipantRoleEnum.GUEST;
+        if(account!=null) {
+            if (club.getOwner().equals(account)){
+                roleEnum = ParticipantRoleEnum.OWNER;
+            }
+            else if(clubMemberRepository.existsByClubAndAccount(club, account)){
+                roleEnum = ParticipantRoleEnum.MEMBER;
+            }
+        }
+        return ClubEventDetailResponse.builder()
+                .id(event.getId())
+                .title(event.getTitle())
+                .description(event.getDescription())
+                .requirements(event.getRequirements())
+                .image(fileStorageService.getFileUrl(event.getImage(), "/club/events"))
+                .location(event.getLocation())
+                .startTime(event.getStartTime())
+                .endTime(event.getEndTime())
+                .totalMember(event.getTotalMember())
+                .joinedMember(event.getParticipants().size())
+                .categories(event.getCategories())
+                .status(event.getStatus())
+                .fee(event.getFee())
+                .deadline(event.getDeadline())
+                .openForOutside(event.isOpenForOutside())
+                .maxClubMembers(event.getMaxClubMembers())
+                .maxOutsideMembers(event.getMaxOutsideMembers())
+                .clubId(event.getClub().getId())
+                .createdAt(event.getCreatedAt())
+                .createdBy(event.getCreatedBy())
+                .participantRole(roleEnum)
+                .build();
     }
 }
