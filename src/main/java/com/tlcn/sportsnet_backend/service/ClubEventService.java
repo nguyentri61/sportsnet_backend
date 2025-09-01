@@ -88,7 +88,22 @@ public class ClubEventService {
                 events.isLast()
         );
     }
+    public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutside( pageable, true);
+        List<ClubEventResponse> content = events.getContent().stream()
+                .map(this::toClubEventResponse)
+                .toList();
 
+        return new PagedResponse<>(
+                content,
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
+        );
+    }
     private ClubEventCreateResponse toClubEventCreateResponse(ClubEvent event) {
         return ClubEventCreateResponse.builder()
                 .id(event.getId())
@@ -164,4 +179,6 @@ public class ClubEventService {
                 .participantRole(roleEnum)
                 .build();
     }
+
+
 }

@@ -12,4 +12,5 @@ import java.util.List;
 @Repository
 public interface ClubEventRepository extends JpaRepository<ClubEvent, String> {
     Page<ClubEvent> findByClub_Id(String clubId, Pageable pageable);
+    Page<ClubEvent> findAllByOpenForOutside(Pageable pageable, Boolean openForOutside);
 }
