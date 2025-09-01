@@ -30,6 +30,7 @@ public class ClubEvent {
     String id;
 
     String title;
+    @Column(columnDefinition = "TEXT")
     String description;
 
     String image;
