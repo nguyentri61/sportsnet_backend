@@ -2,13 +2,17 @@ package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.account.AccountRegisterRequest;
 import com.tlcn.sportsnet_backend.dto.account.AccountResponse;
+import com.tlcn.sportsnet_backend.dto.account.UpdateProfileRequest;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Role;
 import com.tlcn.sportsnet_backend.entity.UserInfo;
+import com.tlcn.sportsnet_backend.error.UnauthorizedException;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.RoleRepository;
 import com.tlcn.sportsnet_backend.repository.UserInfoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +26,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserInfoRepository userInfoRepository;
+    private final FileStorageService fileStorageService;
 
     public Optional<Account> findByEmail(String email) {
         return accountRepository.findByEmail(email);
@@ -58,24 +62,42 @@ public class AccountService {
 
     }
 
-    public static AccountResponse toResponse(Account account) {
+    public AccountResponse updateProfile(UpdateProfileRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
+
+        UserInfo userInfo = account.getUserInfo();
+        userInfo.setFullName(request.getFullName());
+        userInfo.setGender(request.getGender());
+        userInfo.setAddress(request.getAddress());
+        userInfo.setPhone(request.getPhone());
+        userInfo.setBio(request.getBio());
+        userInfo.setAvatarUrl(request.getAvatarUrl());
+
+        account.setUserInfo(userInfo);
+
+        account = accountRepository.save(account);
+
+        return toResponse(account);
+    }
+
+    public AccountResponse toResponse(Account account) {
         return AccountResponse.builder()
                 .id(account.getId())
                 .email(account.getEmail())
+                .fullName(account.getUserInfo().getFullName())
+                .gender(account.getUserInfo().getGender())
+                .address(account.getUserInfo().getAddress())
+                .birthDate(account.getUserInfo().getBirthDate())
+                .phone(account.getUserInfo().getPhone())
+                .bio(account.getUserInfo().getBio())
+                .avatarUrl(fileStorageService.getFileUrl(account.getUserInfo().getAvatarUrl(), "/avatar"))
                 .enabled(account.isEnabled())
                 .createdAt(account.getCreatedAt())
                 .updatedAt(account.getUpdatedAt())
                 .createdBy(account.getCreatedBy())
                 .updatedBy(account.getUpdatedBy())
-                .userInfo(account.getUserInfo() != null
-                        ? AccountResponse.UserInfoRes.builder()
-                        .fullName(account.getUserInfo().getFullName())
-                        .birthDate(account.getUserInfo().getBirthDate())
-                        .gender(account.getUserInfo().getGender())
-                        .address(account.getUserInfo().getAddress())
-                        .build()
-                        : null
-                )
                 .build();
     }
 }

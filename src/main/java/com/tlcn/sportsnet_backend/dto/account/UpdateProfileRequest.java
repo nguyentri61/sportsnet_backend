@@ -3,7 +3,6 @@ package com.tlcn.sportsnet_backend.dto.account;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
@@ -11,9 +10,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AccountResponse {
-    String id;
-    String email;
+public class UpdateProfileRequest {
     String fullName;
     LocalDate birthDate;
     String gender;
@@ -21,11 +18,4 @@ public class AccountResponse {
     String bio;
     String avatarUrl;
     String phone;
-
-    boolean enabled;
-    Instant createdAt;
-    Instant updatedAt;
-    String createdBy;
-    String updatedBy;
-
 }
