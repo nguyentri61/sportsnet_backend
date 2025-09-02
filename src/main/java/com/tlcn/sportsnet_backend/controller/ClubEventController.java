@@ -2,7 +2,9 @@ package com.tlcn.sportsnet_backend.controller;
 
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
+import com.tlcn.sportsnet_backend.service.ClubEventParticipantService;
 import com.tlcn.sportsnet_backend.service.ClubEventService;
+import com.tlcn.sportsnet_backend.service.ClubService;
 import com.tlcn.sportsnet_backend.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.Map;
 public class ClubEventController {
     private final ClubEventService clubEventService;
     private final FileStorageService fileStorageService;
+    private final ClubEventParticipantService clubEventParticipantService;
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getEventClubInfo(@PathVariable String id) {
@@ -44,6 +47,7 @@ public class ClubEventController {
         return ResponseEntity.ok(clubEventService.createClubEvent(request));
     }
 
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFiles(@RequestParam("files") List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
@@ -65,5 +69,11 @@ public class ClubEventController {
                     .body(ApiResponse.success(Map.of("fileNames", uploadedFiles)));
         }
     }
+
+    @PostMapping("/join/{id}")
+    public ResponseEntity<?> joinClub(@PathVariable String id) {
+        return ResponseEntity.ok(clubEventParticipantService.joinClub(id));
+    }
+
 
 }

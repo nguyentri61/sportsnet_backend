@@ -1,0 +1,21 @@
+package com.tlcn.sportsnet_backend.dto.club_event_participant;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.time.Instant;
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ClubEventParticipantResponse {
+    String id;
+    boolean isClubMember;
+    Instant joinedAt;
+    String email;
+    String fullName;
+    String gender;
+    String avatarUrl;
+
+}

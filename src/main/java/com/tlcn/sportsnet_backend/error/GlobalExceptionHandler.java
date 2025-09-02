@@ -81,17 +81,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidDataException.class)
-    @ResponseStatus(CONFLICT)
-    public ErrorResponse handleDuplicateKeyException(InvalidDataException e, WebRequest request) {
+    @ResponseStatus(BAD_REQUEST)   // đổi từ CONFLICT -> BAD_REQUEST
+    public ErrorResponse handleInvalidDataException(InvalidDataException e, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setTimestamp(new Date());
         errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
-        errorResponse.setStatus(CONFLICT.value());
-        errorResponse.setError(CONFLICT.getReasonPhrase());
+        errorResponse.setStatus(BAD_REQUEST.value());
+        errorResponse.setError(BAD_REQUEST.getReasonPhrase());
         errorResponse.setMessage(e.getMessage());
 
         return errorResponse;
     }
+
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(NOT_FOUND)

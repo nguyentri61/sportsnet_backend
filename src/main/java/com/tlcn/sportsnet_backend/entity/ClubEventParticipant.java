@@ -1,6 +1,8 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.tlcn.sportsnet_backend.enums.ParticipantStatusEnum;
+import com.tlcn.sportsnet_backend.util.SecurityUtil;
+import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,9 +24,6 @@ public class ClubEventParticipant {
 
     boolean isClubMember;
 
-    @Enumerated(EnumType.STRING)
-    ParticipantStatusEnum status; // PENDING, CONFIRMED, REJECTED
-
     Instant joinedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,4 +33,9 @@ public class ClubEventParticipant {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     Account participant;
+
+    @PrePersist
+    public void handleBeforeCreate(){
+        joinedAt = Instant.now();
+    }
 }
