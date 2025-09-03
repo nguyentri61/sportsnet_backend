@@ -24,6 +24,11 @@ public class AccountController {
     private final AccountService accountService;
     private final FileStorageService fileStorageService;
 
+    @GetMapping
+    public ResponseEntity<?> getAccount() {
+        return ResponseEntity.ok(accountService.getAccount());
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(accountService.updateProfile(request));

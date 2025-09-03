@@ -32,6 +32,12 @@ public class AccountService {
         return accountRepository.findByEmail(email);
     }
 
+    public AccountResponse getAccount() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
+        return toResponse(account);
+    }
+
     public Account registerAccount(AccountRegisterRequest request) {
         if (accountRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email đã tồn tại, vui lòng chọn email khác.");
