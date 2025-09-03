@@ -11,10 +11,7 @@ import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.ClubEventRepository;
-import com.tlcn.sportsnet_backend.repository.ClubMemberRepository;
-import com.tlcn.sportsnet_backend.repository.ClubRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +29,7 @@ import java.util.List;
 public class ClubEventService {
     private final ClubRepository clubRepository;
     private final ClubEventRepository clubEventRepository;
+    private final ClubEventParticipantRepository clubEventParticipantRepository;
     private final AccountRepository accountRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final FileStorageService fileStorageService;
@@ -176,6 +174,7 @@ public class ClubEventService {
                 .clubId(event.getClub().getId())
                 .createdAt(event.getCreatedAt())
                 .createdBy(event.getCreatedBy())
+                .isJoined(clubEventParticipantRepository.existsByClubEventAndParticipant(event, account))
                 .participantRole(roleEnum)
                 .build();
     }

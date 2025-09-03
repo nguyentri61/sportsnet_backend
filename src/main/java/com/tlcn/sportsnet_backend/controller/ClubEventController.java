@@ -71,8 +71,15 @@ public class ClubEventController {
     }
 
     @PostMapping("/join/{id}")
-    public ResponseEntity<?> joinClub(@PathVariable String id) {
-        return ResponseEntity.ok(clubEventParticipantService.joinClub(id));
+    public ResponseEntity<?> joinClubEvent(@PathVariable String id) {
+        return ResponseEntity.ok(clubEventParticipantService.joinClubEvent(id));
+    }
+
+    @GetMapping("/all-participant/{id}")
+    public ResponseEntity<?> getAllParticipantClubEvent(@PathVariable String id,
+                                                        @RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(clubEventParticipantService.getAllParticipantClubEvent(id, page, size));
     }
 
 

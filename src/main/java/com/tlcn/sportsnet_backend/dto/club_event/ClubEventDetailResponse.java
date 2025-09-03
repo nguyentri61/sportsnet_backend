@@ -33,6 +33,7 @@ public class ClubEventDetailResponse {
     BigDecimal fee;
     LocalDateTime deadline;
     boolean openForOutside;
+    boolean isJoined;
     int maxClubMembers;
     int maxOutsideMembers;
     Instant createdAt;
