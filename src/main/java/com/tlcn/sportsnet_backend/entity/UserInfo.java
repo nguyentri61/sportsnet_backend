@@ -24,6 +24,7 @@ public class UserInfo {
     String address;
     String bio;
     String avatarUrl;
+    String phone;
 
     @OneToOne
     @MapsId

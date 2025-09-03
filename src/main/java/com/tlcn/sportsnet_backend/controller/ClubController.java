@@ -73,8 +73,6 @@ public class ClubController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body("File is empty");
         }
