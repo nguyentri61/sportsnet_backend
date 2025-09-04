@@ -31,6 +31,7 @@ public class ClubMemberService {
     private final ClubRepository clubRepository;
     private final AccountRepository accountRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final FileStorageService fileStorageService;
 
     public String joinClub(String clubId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -126,10 +127,13 @@ public class ClubMemberService {
         // Filter bỏ account hiện tại
         List<MemberResponse> memberResponses = clubMembersPage.getContent()
                 .stream()
-                .filter(member -> !member.getAccount().equals(account))
+//                .filter(member -> !member.getAccount().equals(account))
                 .map(clubMember -> MemberResponse.builder()
                         .id(clubMember.getId())
                         .name(clubMember.getAccount().getUserInfo().getFullName())
+                        .avatar(clubMember.getAccount().getUserInfo().getAvatarUrl() != null
+                                ? fileStorageService.getFileUrl(clubMember.getAccount().getUserInfo().getAvatarUrl(), "/avatar")
+                                : null)
                         .joinedAt(clubMember.getJoinedAt())
                         .status(clubMember.getStatus())
                         .role(clubMember.getRole())

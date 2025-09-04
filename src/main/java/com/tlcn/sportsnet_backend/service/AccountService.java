@@ -79,7 +79,10 @@ public class AccountService {
         userInfo.setAddress(request.getAddress());
         userInfo.setPhone(request.getPhone());
         userInfo.setBio(request.getBio());
-        userInfo.setAvatarUrl(request.getAvatarUrl());
+        userInfo.setBirthDate(request.getBirthDate());
+        if(request.getAvatarUrl() != null) {
+            userInfo.setAvatarUrl(request.getAvatarUrl());
+        }
 
         account.setUserInfo(userInfo);
 
