@@ -34,6 +34,7 @@ public class ClubEventDetailResponse {
     LocalDateTime deadline;
     boolean openForOutside;
     boolean isJoined;
+    String nameClub;
     int maxClubMembers;
     int maxOutsideMembers;
     Instant createdAt;

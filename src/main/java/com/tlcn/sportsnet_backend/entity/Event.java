@@ -99,7 +99,7 @@ public class Event {
         }
         createdAt = Instant.now();
         createdBy = SecurityUtil.getCurrentUserLogin().orElse("");
-        status = status == null ? EventStatusEnum.DRAFT : status;
+        status = status == null ? EventStatusEnum.OPEN : status;
     }
 
     @PreUpdate

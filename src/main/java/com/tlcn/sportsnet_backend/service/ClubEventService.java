@@ -7,6 +7,7 @@ import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
+import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
@@ -22,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -88,7 +90,26 @@ public class ClubEventService {
     }
     public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutside( pageable, true);
+
+        Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutsideAndStatusAndDeadlineAfter( pageable, true,  EventStatusEnum.OPEN, LocalDateTime.now());
+        List<ClubEventResponse> content = events.getContent().stream()
+                .map(this::toClubEventResponse)
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
+        );
+    }
+    public PagedResponse<ClubEventResponse>  getAllMyClubEventClub(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
+        Page<ClubEvent> events = clubEventRepository.findByClub_Members_Account_IdAndClub_Members_StatusAndStatusAndDeadlineAfter( account.getId(), ClubMemberStatusEnum.APPROVED,  EventStatusEnum.OPEN, LocalDateTime.now(), pageable);
         List<ClubEventResponse> content = events.getContent().stream()
                 .map(this::toClubEventResponse)
                 .toList();
@@ -127,6 +148,7 @@ public class ClubEventService {
     }
 
     private ClubEventResponse toClubEventResponse(ClubEvent event) {
+        event = calculateStatus(event);
         return ClubEventResponse.builder()
                 .id(event.getId())
                 .image(fileStorageService.getFileUrl(event.getImage(), "/club/events"))
@@ -137,13 +159,16 @@ public class ClubEventService {
                 .fee(event.getFee())
                 .joinedMember(event.getParticipants().size())
                 .totalMember(event.getTotalMember())
+                .nameClub(event.getClub().getName())
                 .categories(event.getCategories())
+                .openForOutside(event.isOpenForOutside())
                 .status(event.getStatus())
                 .build();
     }
 
     private ClubEventDetailResponse toClubEventDetailResponse(ClubEvent event, Account account) {
         Club club = event.getClub();
+        event = calculateStatus(event);
         ParticipantRoleEnum roleEnum= ParticipantRoleEnum.GUEST;
         if(account!=null) {
             if (club.getOwner().equals(account)){
@@ -174,9 +199,30 @@ public class ClubEventService {
                 .clubId(event.getClub().getId())
                 .createdAt(event.getCreatedAt())
                 .createdBy(event.getCreatedBy())
+                .nameClub(event.getClub().getName())
                 .isJoined(clubEventParticipantRepository.existsByClubEventAndParticipant(event, account))
                 .participantRole(roleEnum)
                 .build();
+    }
+    public ClubEvent calculateStatus(ClubEvent event) {
+        EventStatusEnum newStatus = event.getStatus();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (now.isAfter(event.getDeadline()) && now.isBefore(event.getStartTime())) {
+            newStatus = EventStatusEnum.CLOSED;
+        } else if (now.isAfter(event.getStartTime()) && now.isBefore(event.getEndTime())) {
+            newStatus = EventStatusEnum.ONGOING;
+        } else if (now.isAfter(event.getEndTime())) {
+            newStatus = EventStatusEnum.FINISHED;
+        }
+
+        // Nếu status thay đổi, lưu vào DB
+        if (!event.getStatus().equals(newStatus)) {
+            event.setStatus(newStatus);
+            event = clubEventRepository.save(event);
+        }
+        return event;
     }
 
 
