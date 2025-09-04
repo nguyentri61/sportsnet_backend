@@ -7,10 +7,7 @@ import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.ClubEventParticipantRepository;
-import com.tlcn.sportsnet_backend.repository.ClubEventRepository;
-import com.tlcn.sportsnet_backend.repository.ClubMemberRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +27,7 @@ public class ClubEventParticipantService {
     private final ClubEventRepository clubEventRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final AccountRepository accountRepository;
+    private final FileStorageService fileStorageService;
     public ClubEventParticipantResponse joinClubEvent(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
@@ -86,7 +84,7 @@ public class ClubEventParticipantService {
                 .email(clubEventParticipant.getParticipant().getEmail())
                 .fullName(clubEventParticipant.getParticipant().getUserInfo().getFullName())
                 .gender(clubEventParticipant.getParticipant().getUserInfo().getGender())
-                .avatarUrl(clubEventParticipant.getParticipant().getUserInfo().getAvatarUrl())
+                .avatarUrl(fileStorageService.getFileUrl(clubEventParticipant.getParticipant().getUserInfo().getAvatarUrl(), "/avatar") )
                 .joinedAt(clubEventParticipant.getJoinedAt())
                 .build();
 
