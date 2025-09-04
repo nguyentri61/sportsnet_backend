@@ -23,6 +23,8 @@ public class ClubEventResponse {
     LocalDateTime endTime;
     int totalMember;
     int joinedMember;
+    String nameClub;
+    boolean openForOutside;
     BigDecimal fee;
     List<BadmintonCategoryEnum> categories;
     EventStatusEnum status;
