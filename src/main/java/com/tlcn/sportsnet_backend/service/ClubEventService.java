@@ -76,7 +76,7 @@ public class ClubEventService {
         Page<ClubEvent> events = clubEventRepository.findByClub_Id(clubId, pageable);
 
         List<ClubEventResponse> content = events.getContent().stream()
-                .map(this::toClubEventResponse)
+                .map(event -> toClubEventResponse(event, null))
                 .toList();
 
         return new PagedResponse<>(
@@ -90,10 +90,11 @@ public class ClubEventService {
     }
     public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null); 
         Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutsideAndStatusAndDeadlineAfter( pageable, true,  EventStatusEnum.OPEN, LocalDateTime.now());
         List<ClubEventResponse> content = events.getContent().stream()
-                .map(this::toClubEventResponse)
+                .map(event -> toClubEventResponse(event, account))
                 .toList();
 
         return new PagedResponse<>(
@@ -111,7 +112,7 @@ public class ClubEventService {
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
         Page<ClubEvent> events = clubEventRepository.findByClub_Members_Account_IdAndClub_Members_StatusAndStatusAndDeadlineAfter( account.getId(), ClubMemberStatusEnum.APPROVED,  EventStatusEnum.OPEN, LocalDateTime.now(), pageable);
         List<ClubEventResponse> content = events.getContent().stream()
-                .map(this::toClubEventResponse)
+                .map(event -> toClubEventResponse(event, account))
                 .toList();
 
         return new PagedResponse<>(
@@ -147,8 +148,18 @@ public class ClubEventService {
                 .build();
     }
 
-    private ClubEventResponse toClubEventResponse(ClubEvent event) {
+    private ClubEventResponse toClubEventResponse(ClubEvent event, Account account) {
         event = calculateStatus(event);
+        Club club = event.getClub();
+        ParticipantRoleEnum roleEnum= ParticipantRoleEnum.GUEST;
+        if(account!=null) {
+            if (club.getOwner().equals(account)){
+                roleEnum = ParticipantRoleEnum.OWNER;
+            }
+            else if(clubMemberRepository.existsByClubAndAccountAndStatus(club, account, ClubMemberStatusEnum.APPROVED)){
+                roleEnum = ParticipantRoleEnum.MEMBER;
+            }
+        }
         return ClubEventResponse.builder()
                 .id(event.getId())
                 .image(fileStorageService.getFileUrl(event.getImage(), "/club/events"))
@@ -159,10 +170,15 @@ public class ClubEventService {
                 .fee(event.getFee())
                 .joinedMember(event.getParticipants().size())
                 .totalMember(event.getTotalMember())
+                .joinedOpenMembers((int) event.getParticipants().stream()
+                        .filter(p -> !p.isClubMember() )
+                        .count())
+                .maxOutsideMembers(event.getMaxOutsideMembers())
                 .nameClub(event.getClub().getName())
                 .categories(event.getCategories())
                 .openForOutside(event.isOpenForOutside())
                 .status(event.getStatus())
+                .participantRole(roleEnum)
                 .build();
     }
 
@@ -174,7 +190,7 @@ public class ClubEventService {
             if (club.getOwner().equals(account)){
                 roleEnum = ParticipantRoleEnum.OWNER;
             }
-            else if(clubMemberRepository.existsByClubAndAccount(club, account)){
+            else if(clubMemberRepository.existsByClubAndAccountAndStatus(club, account, ClubMemberStatusEnum.APPROVED)){
                 roleEnum = ParticipantRoleEnum.MEMBER;
             }
         }
@@ -196,6 +212,9 @@ public class ClubEventService {
                 .openForOutside(event.isOpenForOutside())
                 .maxClubMembers(event.getMaxClubMembers())
                 .maxOutsideMembers(event.getMaxOutsideMembers())
+                .joinedOpenMembers((int) event.getParticipants().stream()
+                        .filter(p -> !p.isClubMember() )
+                        .count())
                 .clubId(event.getClub().getId())
                 .createdAt(event.getCreatedAt())
                 .createdBy(event.getCreatedBy())
