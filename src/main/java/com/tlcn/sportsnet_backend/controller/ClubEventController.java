@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.controller;
 
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
+import com.tlcn.sportsnet_backend.dto.club_event.ClubEventUpdateRequest;
 import com.tlcn.sportsnet_backend.service.ClubEventParticipantService;
 import com.tlcn.sportsnet_backend.service.ClubEventService;
 import com.tlcn.sportsnet_backend.service.ClubService;
@@ -51,6 +52,11 @@ public class ClubEventController {
     @PostMapping
     public ResponseEntity<?> createClubEvent(@RequestBody ClubEventCreateRequest request) {
         return ResponseEntity.ok(clubEventService.createClubEvent(request));
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateClubEvent(@PathVariable String id, @RequestBody ClubEventUpdateRequest request) {
+        return ResponseEntity.ok(clubEventService.updateClubEvent(id, request));
     }
 
 

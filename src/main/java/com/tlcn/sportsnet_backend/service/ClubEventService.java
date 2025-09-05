@@ -1,9 +1,6 @@
 package com.tlcn.sportsnet_backend.service;
 
-import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
-import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateResponse;
-import com.tlcn.sportsnet_backend.dto.club_event.ClubEventDetailResponse;
-import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
+import com.tlcn.sportsnet_backend.dto.club_event.*;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
@@ -25,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -226,5 +224,29 @@ public class ClubEventService {
     }
 
 
+    public ClubEventDetailResponse updateClubEvent(String id, ClubEventUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
+
+        ClubEvent clubEvent = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
+
+        clubEvent.setTitle(request.getTitle());
+        clubEvent.setDescription(request.getDescription());
+        clubEvent.setRequirements(request.getRequirements());
+        clubEvent.setImage(request.getImage() != null ? request.getImage() : "");
+        clubEvent.setLocation(request.getLocation());
+        clubEvent.setStartTime(request.getStartTime());
+        clubEvent.setEndTime(request.getEndTime());
+        clubEvent.setDeadline(request.getDeadline());
+        clubEvent.setOpenForOutside(request.isOpenForOutside());
+        clubEvent.setStatus(request.getStatus());
+        clubEvent.setFee(request.getFee());
+        clubEvent.setDeadline(request.getDeadline());
+        clubEvent.setCategories(request.getCategories());
+
+        clubEvent = clubEventRepository.save(clubEvent);
+
+        return toClubEventDetailResponse(clubEvent, account);
+    }
 }
