@@ -30,18 +30,25 @@ public class ClubEventParticipantService {
     private final FileStorageService fileStorageService;
     public ClubEventParticipantResponse joinClubEvent(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
-        ClubEvent clubEvent = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Event not found"));
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
+        ClubEvent clubEvent = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Không tìm thấy hoạt động"));
         Club club = clubEvent.getClub();
+        int totalOpenJoinedMembers = (int) clubEvent.getParticipants().stream()
+                .filter(p -> !p.isClubMember() )
+                .count();
+
         if(clubEventParticipantRepository.existsByClubEventAndParticipant(clubEvent, account)){
-            throw new InvalidDataException("You already join this event");
+            throw new InvalidDataException("Bạn đã tham gia hoạt động rồi.");
         }
-        boolean isMember = clubMemberRepository.existsByClubAndAccount(club, account);
+        boolean isMember = clubMemberRepository.existsByClubAndAccountAndStatus(club, account, ClubMemberStatusEnum.APPROVED);
         if (!isMember && !clubEvent.isOpenForOutside() ) {
-            throw new InvalidDataException("You are not allowed to join this event");
+            throw new InvalidDataException("Hoạt động chỉ dành cho người trong CLB");
+        }
+        if (!isMember && totalOpenJoinedMembers >= clubEvent.getMaxOutsideMembers() ) {
+            throw new InvalidDataException("Đã đủ số lượng vãng lai");
         }
         if(LocalDateTime.now().isAfter(clubEvent.getDeadline()) || clubEvent.getStatus() != EventStatusEnum.OPEN){
-            throw new InvalidDataException("You are not allowed to join this event");
+            throw new InvalidDataException("Hoạt động đã hết hạn");
         }
         ClubEventParticipant clubEventParticipant = ClubEventParticipant.builder()
                 .clubEvent(clubEvent)

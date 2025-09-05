@@ -16,6 +16,7 @@ import java.util.List;
 @Repository
 public interface ClubMemberRepository extends JpaRepository<ClubMember, String> {
     boolean existsByClubAndAccount(Club club, Account account);
+    boolean existsByClubAndAccountAndStatus(Club club, Account account, ClubMemberStatusEnum status);
     ClubMember findByClubAndAccount(Club club, Account account);
     @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId")
     Page<ClubMember> findPagedByClubId(String clubId, Pageable pageable);

@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.dto.club_event;
 
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
+import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -25,6 +26,9 @@ public class ClubEventResponse {
     int joinedMember;
     String nameClub;
     boolean openForOutside;
+    ParticipantRoleEnum participantRole;
+    int maxOutsideMembers;
+    int joinedOpenMembers;
     BigDecimal fee;
     List<BadmintonCategoryEnum> categories;
     EventStatusEnum status;

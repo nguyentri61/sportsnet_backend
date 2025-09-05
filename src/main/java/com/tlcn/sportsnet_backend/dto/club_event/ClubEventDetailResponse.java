@@ -37,6 +37,7 @@ public class ClubEventDetailResponse {
     String nameClub;
     int maxClubMembers;
     int maxOutsideMembers;
+    int joinedOpenMembers;
     Instant createdAt;
     String createdBy;
     ParticipantRoleEnum participantRole;
