@@ -243,17 +243,19 @@ public class ClubEventService {
     }
 
 
-    public ClubEventDetailResponse updateClubEvent(String id, ClubEventUpdateRequest request) {
+    public ClubEventDetailResponse updateClubEvent(ClubEventUpdateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
 
-        ClubEvent clubEvent = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
+        ClubEvent clubEvent = clubEventRepository.findById(request.getId()).orElseThrow(() -> new InvalidDataException("Club not found"));
 
         clubEvent.setTitle(request.getTitle());
         clubEvent.setDescription(request.getDescription());
         clubEvent.setRequirements(request.getRequirements());
-        clubEvent.setImage(request.getImage() != null ? request.getImage() : "");
+        if(request.getImage() != null) {
+            clubEvent.setImage(request.getImage());
+        }
         clubEvent.setLocation(request.getLocation());
         clubEvent.setStartTime(request.getStartTime());
         clubEvent.setEndTime(request.getEndTime());

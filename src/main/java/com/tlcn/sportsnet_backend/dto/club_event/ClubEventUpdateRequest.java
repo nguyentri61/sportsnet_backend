@@ -17,6 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ClubEventUpdateRequest {
+    String id;
     String title;
     String description;
     String image;

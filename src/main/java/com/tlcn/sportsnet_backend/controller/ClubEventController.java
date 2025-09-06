@@ -54,9 +54,9 @@ public class ClubEventController {
         return ResponseEntity.ok(clubEventService.createClubEvent(request));
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateClubEvent(@PathVariable String id, @RequestBody ClubEventUpdateRequest request) {
-        return ResponseEntity.ok(clubEventService.updateClubEvent(id, request));
+    @PutMapping("/update")
+    public ResponseEntity<?> updateClubEvent(@RequestBody ClubEventUpdateRequest request) {
+        return ResponseEntity.ok(clubEventService.updateClubEvent(request));
     }
 
 
