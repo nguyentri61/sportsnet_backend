@@ -228,7 +228,9 @@ public class ClubEventService {
         EventStatusEnum newStatus = event.getStatus();
 
         LocalDateTime now = LocalDateTime.now();
-
+        if(event.getTotalMember() == event.getParticipants().size()){
+            newStatus = EventStatusEnum.CLOSED;
+        }
         if (now.isAfter(event.getDeadline()) && now.isBefore(event.getStartTime())) {
             newStatus = EventStatusEnum.CLOSED;
         } else if (now.isAfter(event.getStartTime()) && now.isBefore(event.getEndTime())) {
