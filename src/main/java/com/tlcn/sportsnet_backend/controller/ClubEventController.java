@@ -23,17 +23,17 @@ public class ClubEventController {
     private final FileStorageService fileStorageService;
     private final ClubEventParticipantService clubEventParticipantService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getEventClubInfo(@PathVariable String id) {
-        return ResponseEntity.ok(clubEventService.getEventClubInfo(id));
+    @GetMapping("/{slug}")
+    public ResponseEntity<?> getEventClubInfo(@PathVariable String slug) {
+        return ResponseEntity.ok(clubEventService.getEventClubInfo(slug));
     }
 
-    @GetMapping("/all/{clubId}")
+    @GetMapping("/all/{clubSlug}")
     public ResponseEntity<?> getAllEventClub(
-            @PathVariable String clubId,
+            @PathVariable String clubSlug,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(clubEventService.getAllEventsByClubId(clubId, page, size));
+        return ResponseEntity.ok(clubEventService.getAllEventsByClubId(clubSlug, page, size));
     }
 
     @GetMapping("/all/my_clubs")

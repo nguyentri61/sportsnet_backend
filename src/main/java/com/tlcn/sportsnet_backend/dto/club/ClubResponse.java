@@ -14,6 +14,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ClubResponse {
     String id;
+    String slug;
     String name;
     String description;
     String logoUrl;

@@ -32,5 +32,5 @@ public class ClubEventCreateRequest {
     int maxClubMembers;
     int maxOutsideMembers;
 
-    String clubId;
+    String clubSlug;
 }

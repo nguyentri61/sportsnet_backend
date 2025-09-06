@@ -18,6 +18,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ClubEventDetailResponse {
     String id;
+    String slug;
     String title;
     String description;
     String image;

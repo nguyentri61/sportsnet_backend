@@ -12,10 +12,12 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClubEventRepository extends JpaRepository<ClubEvent, String> {
-    Page<ClubEvent> findByClub_Id(String clubId, Pageable pageable);
+    Page<ClubEvent> findByClub_Slug(String slug, Pageable pageable);
+    Optional<ClubEvent> findBySlug(String slug);
     Page<ClubEvent> findAllByOpenForOutsideAndStatusAndDeadlineAfter(Pageable pageable, Boolean openForOutside, EventStatusEnum status, LocalDateTime deadline);
     Page<ClubEvent> findByClub_Members_Account_IdAndClub_Members_StatusAndStatusAndDeadlineAfter(
             String accountId,

@@ -22,8 +22,10 @@ import java.util.Set;
 @Table(name = "clubs")
 public class Club {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-
+    @Column(unique = true, nullable = false)
+    private String slug;
     String name;
 
     @Column(columnDefinition = "MEDIUMTEXT")
@@ -77,10 +79,10 @@ public class Club {
         createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
-        if (this.id == null || this.id.isBlank()) {
+        if (this.slug == null || this.slug.isBlank()) {
             String slug = SlugUtil.toSlug(this.name);
             String randomSuffix = SlugUtil.randomString(8);
-            this.id = slug + "-" + randomSuffix;
+            this.slug = slug + "-" + randomSuffix;
         }
     }
 
@@ -90,5 +92,10 @@ public class Club {
         updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
+        if (this.slug == null || this.slug.isBlank()) {
+            String slug = SlugUtil.toSlug(this.name);
+            String randomSuffix = SlugUtil.randomString(8);
+            this.slug = slug + "-" + randomSuffix;
+        }
     }
 }

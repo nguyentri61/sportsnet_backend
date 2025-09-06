@@ -10,8 +10,11 @@ public class SlugUtil {
     private static final Transliterator TO_ASCII = Transliterator.getInstance("NFD; [:Nonspacing Mark:] Remove; NFC");
 
     public static String toSlug(String input) {
+        if (input == null) return "";
+        input = input.replace("đ", "d").replace("Đ", "D");
         // Convert to ASCII (loại bỏ dấu tiếng Việt)
         String ascii = TO_ASCII.transliterate(input);
+
         // Chuyển thành lowercase, thay khoảng trắng bằng dấu gạch ngang, loại bỏ ký tự đặc biệt
         String slug = ascii.toLowerCase(Locale.ENGLISH)
                 .replaceAll("[^a-z0-9\\s-]", "")  // loại ký tự đặc biệt

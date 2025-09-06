@@ -13,11 +13,12 @@ import org.springframework.data.domain.Pageable;
 
 import java.beans.Visibility;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClubRepository extends JpaRepository<Club, String> {
     Page<Club> findAllByVisibility(ClubVisibilityEnum visibility, Pageable pageable);
-
+    Optional<Club> findBySlug(String slug);
     @Query("""
     SELECT c FROM Club c
     WHERE c.visibility = :visibility
