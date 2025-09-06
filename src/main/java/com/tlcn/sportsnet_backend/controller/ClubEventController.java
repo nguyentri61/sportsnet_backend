@@ -43,6 +43,13 @@ public class ClubEventController {
         return ResponseEntity.ok(clubEventService.getAllMyClubEventClub(page, size));
     }
 
+    @GetMapping("/all/joined")
+    public ResponseEntity<?> getAllMyJoinedClubEvent(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(clubEventService.getAllMyJoinedClubEvents(page, size));
+    }
+
     @GetMapping("/all/public")
     public ResponseEntity<?> getAllPublicEventClub(
             @RequestParam(defaultValue = "0") int page,
