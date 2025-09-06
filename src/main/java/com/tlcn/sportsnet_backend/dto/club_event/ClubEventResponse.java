@@ -18,6 +18,7 @@ import java.util.List;
 public class ClubEventResponse {
     String id;
     String title;
+    String slug;
     String image;
     String location;
     LocalDateTime startTime;

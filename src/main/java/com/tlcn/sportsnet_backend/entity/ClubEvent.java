@@ -27,7 +27,10 @@ import java.util.List;
 public class ClubEvent {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+    @Column(unique = true, nullable = false)
+    private String slug;
 
     String title;
     @Column(columnDefinition = "TEXT")
@@ -88,10 +91,10 @@ public class ClubEvent {
         createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
-        if (this.id == null || this.id.isBlank()) {
+        if (this.slug == null || this.slug.isBlank()) {
             String slug = SlugUtil.toSlug(this.title);
             String randomSuffix = SlugUtil.randomString(8);
-            this.id = slug + "-" + randomSuffix;
+            this.slug = slug + "-" + randomSuffix;
         }
     }
 
@@ -101,5 +104,10 @@ public class ClubEvent {
         updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
+        if (this.slug == null || this.slug.isBlank()) {
+            String slug = SlugUtil.toSlug(this.title);
+            String randomSuffix = SlugUtil.randomString(8);
+            this.slug = slug + "-" + randomSuffix;
+        }
     }
 }

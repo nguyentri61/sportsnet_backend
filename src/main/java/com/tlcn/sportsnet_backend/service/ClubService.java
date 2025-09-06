@@ -134,12 +134,12 @@ public class ClubService {
                 clubs.isLast()
         );
     }
-    public MyClubResponse getMyClubInformation(String id) {
+    public MyClubResponse getMyClubInformation(String slug) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new InvalidDataException("Account not found"));
         System.out.println(account.getEmail());
-        Club club = clubRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
+        Club club = clubRepository.findBySlug(slug).orElseThrow(() -> new InvalidDataException("Club not found"));
         System.out.println(club.getName());
         ClubMember clubMember = clubMemberRepository.findClubMemberByAccountAndClub(account, club);
 //        System.out.println(clubMember.toString());
@@ -149,7 +149,7 @@ public class ClubService {
         return toMyClubResponse(club, account);
     }
     public void activateClub(String id) {
-        Club club = clubRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
+        Club club = clubRepository.findBySlug(id).orElseThrow(() -> new InvalidDataException("Club not found"));
         club.setActive(true);
 
         Account account = club.getOwner();
@@ -162,14 +162,15 @@ public class ClubService {
         accountRepository.save(account);
     }
 
-    public ClubResponse getClubInformation(String id) {
-        Club club = clubRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
+    public ClubResponse getClubInformation(String slug) {
+        Club club = clubRepository.findBySlug(slug).orElseThrow(() -> new InvalidDataException("Club not found"));
         return toClubResponse(club);
     }
 
     private ClubResponse toClubResponse(Club club) {
         return ClubResponse.builder()
                 .id(club.getId())
+                .slug(club.getSlug())
                 .name(club.getName())
                 .description(club.getDescription())
                 .logoUrl(fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo"))
@@ -196,6 +197,7 @@ public class ClubService {
         assert member != null;
         return MyClubResponse.builder()
                 .id(club.getId())
+                .slug(club.getSlug())
                 .name(club.getName())
                 .description(club.getDescription())
                 .logoUrl(fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo"))

@@ -35,7 +35,7 @@ public class ClubEventService {
     private final FileStorageService fileStorageService;
 
     public ClubEventCreateResponse createClubEvent(ClubEventCreateRequest request) {
-        Club club = clubRepository.findById(request.getClubId())
+        Club club = clubRepository.findBySlug(request.getClubSlug())
                 .orElseThrow(() -> new InvalidDataException("Club not found"));
 
         ClubEvent event = ClubEvent.builder()
@@ -65,13 +65,13 @@ public class ClubEventService {
     public ClubEventDetailResponse getEventClubInfo(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
-        ClubEvent event = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
+        ClubEvent event = clubEventRepository.findBySlug(id).orElseThrow(() -> new InvalidDataException("Club not found"));
         return toClubEventDetailResponse(event, account);
     }
 
-    public PagedResponse<ClubEventResponse> getAllEventsByClubId(String clubId, int page, int size) {
+    public PagedResponse<ClubEventResponse> getAllEventsByClubId(String clubSlug, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<ClubEvent> events = clubEventRepository.findByClub_Id(clubId, pageable);
+        Page<ClubEvent> events = clubEventRepository.findByClub_Slug(clubSlug, pageable);
 
         List<ClubEventResponse> content = events.getContent().stream()
                 .map(event -> toClubEventResponse(event, null))
@@ -125,6 +125,7 @@ public class ClubEventService {
     private ClubEventCreateResponse toClubEventCreateResponse(ClubEvent event) {
         return ClubEventCreateResponse.builder()
                 .id(event.getId())
+                .slug(event.getSlug())
                 .title(event.getTitle())
                 .description(event.getDescription())
                 .requirements(event.getRequirements())
@@ -160,6 +161,7 @@ public class ClubEventService {
         }
         return ClubEventResponse.builder()
                 .id(event.getId())
+                .slug(event.getSlug())
                 .image(fileStorageService.getFileUrl(event.getImage(), "/club/events"))
                 .startTime(event.getStartTime())
                 .endTime(event.getEndTime())
@@ -194,6 +196,7 @@ public class ClubEventService {
         }
         return ClubEventDetailResponse.builder()
                 .id(event.getId())
+                .slug(event.getSlug())
                 .title(event.getTitle())
                 .description(event.getDescription())
                 .requirements(event.getRequirements())
@@ -225,7 +228,9 @@ public class ClubEventService {
         EventStatusEnum newStatus = event.getStatus();
 
         LocalDateTime now = LocalDateTime.now();
-
+        if(event.getTotalMember() == event.getParticipants().size()){
+            newStatus = EventStatusEnum.CLOSED;
+        }
         if (now.isAfter(event.getDeadline()) && now.isBefore(event.getStartTime())) {
             newStatus = EventStatusEnum.CLOSED;
         } else if (now.isAfter(event.getStartTime()) && now.isBefore(event.getEndTime())) {

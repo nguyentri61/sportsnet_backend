@@ -27,9 +27,9 @@ public class ClubController {
     private final FileStorageService fileStorageService;
     private final ClubMemberService clubMemberService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getClubInformation(@PathVariable String id) {
-        return ResponseEntity.ok(clubService.getClubInformation(id));
+    @GetMapping("/{slug}")
+    public ResponseEntity<?> getClubInformation(@PathVariable String slug) {
+        return ResponseEntity.ok(clubService.getClubInformation(slug));
     }
 
     @GetMapping("/all_public")
@@ -46,10 +46,10 @@ public class ClubController {
         return ResponseEntity.ok(clubService.getAllMyClub(page, size));
     }
 
-    @GetMapping("/my_clubs/{id}")
+    @GetMapping("/my_clubs/{slug}")
     public ResponseEntity<?> getMyClubInformation(
-                                                   @PathVariable String id) {
-        return ResponseEntity.ok(clubService.getMyClubInformation(id));
+                                                   @PathVariable String slug) {
+        return ResponseEntity.ok(clubService.getMyClubInformation(slug));
     }
 
     @GetMapping("/my_clubs/{id}/member")
