@@ -4,6 +4,7 @@ import com.tlcn.sportsnet_backend.dto.club_event.*;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
+import com.tlcn.sportsnet_backend.entity.ClubEventParticipant;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
@@ -122,6 +123,30 @@ public class ClubEventService {
                 events.isLast()
         );
     }
+
+    public PagedResponse<ClubEventResponse> getAllMyJoinedClubEvents(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("joinedAt").descending());
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+
+        Page<ClubEventParticipant> participants = clubEventParticipantRepository.findByParticipant_Id(account.getId(), pageable);
+
+        List<ClubEventResponse> content = participants.getContent().stream()
+                .map(participant -> toClubEventResponse(participant.getClubEvent(), account))
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                participants.getNumber(),
+                participants.getSize(),
+                participants.getTotalElements(),
+                participants.getTotalPages(),
+                participants.isLast()
+        );
+    }
+
     private ClubEventCreateResponse toClubEventCreateResponse(ClubEvent event) {
         return ClubEventCreateResponse.builder()
                 .id(event.getId())
@@ -248,17 +273,19 @@ public class ClubEventService {
     }
 
 
-    public ClubEventDetailResponse updateClubEvent(String id, ClubEventUpdateRequest request) {
+    public ClubEventDetailResponse updateClubEvent(ClubEventUpdateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
 
-        ClubEvent clubEvent = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Club not found"));
+        ClubEvent clubEvent = clubEventRepository.findById(request.getId()).orElseThrow(() -> new InvalidDataException("Club not found"));
 
         clubEvent.setTitle(request.getTitle());
         clubEvent.setDescription(request.getDescription());
         clubEvent.setRequirements(request.getRequirements());
-        clubEvent.setImage(request.getImage() != null ? request.getImage() : "");
+        if(request.getImage() != null) {
+            clubEvent.setImage(request.getImage());
+        }
         clubEvent.setLocation(request.getLocation());
         clubEvent.setStartTime(request.getStartTime());
         clubEvent.setEndTime(request.getEndTime());

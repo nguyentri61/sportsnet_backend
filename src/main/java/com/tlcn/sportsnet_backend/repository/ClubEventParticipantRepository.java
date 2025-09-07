@@ -13,4 +13,6 @@ public interface ClubEventParticipantRepository extends JpaRepository<ClubEventP
     boolean existsByClubEventAndParticipant(ClubEvent clubEvent, Account account);
 
     Page<ClubEventParticipant> findAllByClubEvent(ClubEvent clubEvent, Pageable pageable);
+
+    Page<ClubEventParticipant> findByParticipant_Id(String accountId, Pageable pageable);
 }
