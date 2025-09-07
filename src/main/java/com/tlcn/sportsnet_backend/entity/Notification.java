@@ -23,12 +23,12 @@ public class Notification {
     private String content;
     private String link;
 
-    private boolean read = false;
+    private boolean isRead = false;
     private Instant createdAt ;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private Account user; // null nếu broadcast hoặc nhóm
+    private Account account; // null nếu broadcast hoặc nhóm
 
     private String clubId;  // null nếu không thuộc CLB
     private String eventId; // null nếu không liên quan event

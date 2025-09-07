@@ -15,7 +15,9 @@ import org.hibernate.annotations.Type;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -81,15 +83,12 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Payment> payments = new HashSet<>();
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<Notification> notifications = new HashSet<>();
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     Instant createdAt;
     Instant updatedAt;
     String createdBy;
     String updatedBy;
-
     @PrePersist
     public void onCreate() {
         if (this.id == null || this.id.isBlank()) {

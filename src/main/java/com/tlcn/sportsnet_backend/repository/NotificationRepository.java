@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, String> {
-    List<Notification> findByUserOrderByCreatedAtDesc(Account user);
+    List<Notification> findByAccountOrderByCreatedAtDesc(Account account);
 }

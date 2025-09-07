@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -92,6 +93,7 @@ public class Account {
     @OneToMany(mappedBy = "organizer")
     Set<Event> organizedEvents = new HashSet<>();
 
-    @OneToMany(mappedBy = "account")
-    Set<Notification> notifications = new HashSet<>();
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
 }

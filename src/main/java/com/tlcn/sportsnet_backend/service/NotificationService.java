@@ -45,7 +45,7 @@ public class NotificationService {
     public List<Notification> getByAccount() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
-        return notificationRepository.findByUserOrderByCreatedAtDesc(account);
+        return notificationRepository.findByAccountOrderByCreatedAtDesc(account);
     }
 
     public NotificationMessage toNotificationMessage(Notification notification) {
