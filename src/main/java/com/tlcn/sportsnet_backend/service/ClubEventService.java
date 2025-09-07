@@ -33,7 +33,7 @@ public class ClubEventService {
     private final AccountRepository accountRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final FileStorageService fileStorageService;
-
+    private final NotificationService notificationService;
     public ClubEventCreateResponse createClubEvent(ClubEventCreateRequest request) {
         Club club = clubRepository.findBySlug(request.getClubSlug())
                 .orElseThrow(() -> new InvalidDataException("Club not found"));
@@ -57,8 +57,8 @@ public class ClubEventService {
                 .club(club)
                 .build();
 
-        clubEventRepository.save(event);
-
+        event = clubEventRepository.save(event);
+        notificationService.sendToClub(club.getId(),"Hoạt động mới","Câu lạc bộ: "+club.getName()+ " đã tạo hoạt động mới","/events/"+event.getSlug());
         return toClubEventCreateResponse(event);
     }
 

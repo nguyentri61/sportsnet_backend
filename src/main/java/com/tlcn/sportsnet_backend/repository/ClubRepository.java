@@ -2,6 +2,8 @@ package com.tlcn.sportsnet_backend.repository;
 
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
+import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
+import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -42,9 +44,21 @@ public interface ClubRepository extends JpaRepository<Club, String> {
       )
 """)
     Page<Club> findAvailableClubsBelongUser(
-
             @Param("account") Account account,
             Pageable pageable
+    );
+
+    @Query("""
+    SELECT cm.club.id
+    FROM ClubMember cm
+    WHERE cm.account = :account
+      AND cm.role = :role
+      AND cm.status = :status
+""")
+    List<String> findActiveMemberClubIds(
+            @Param("account") Account account,
+            @Param("role") ClubMemberRoleEnum role,
+            @Param("status") ClubMemberStatusEnum status
     );
 
 

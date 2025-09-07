@@ -19,22 +19,19 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    String title;
+    private String title;
+    private String content;
+    private String link;
 
-    @Column(columnDefinition = "MEDIUMTEXT")
-    String content;
+    private boolean read = false;
+    private Instant createdAt ;
 
-    @Enumerated(EnumType.STRING)
-    NotificationTypeEnum type; // ANNOUNCEMENT, REMINDER, RESULT, CHANGE_SCHEDULE
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private Account user; // null nếu broadcast hoặc nhóm
 
-    Instant createdAt;
+    private String clubId;  // null nếu không thuộc CLB
+    private String eventId; // null nếu không liên quan event
 
-    @ManyToOne @JoinColumn(name = "account_id", nullable = false)
-    Account account;
-
-    @ManyToOne @JoinColumn(name = "event_id")
-    Event event;
-
-    @PrePersist
-    protected void onCreate() { createdAt = Instant.now(); }
+    private NotificationTypeEnum type; // optional: BROADCAST, CLUB, EVENT, SYSTEM
 }

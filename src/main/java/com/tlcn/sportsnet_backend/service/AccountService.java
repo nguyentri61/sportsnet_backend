@@ -6,8 +6,11 @@ import com.tlcn.sportsnet_backend.dto.account.UpdateProfileRequest;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Role;
 import com.tlcn.sportsnet_backend.entity.UserInfo;
+import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
+import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.error.UnauthorizedException;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
+import com.tlcn.sportsnet_backend.repository.ClubRepository;
 import com.tlcn.sportsnet_backend.repository.RoleRepository;
 import com.tlcn.sportsnet_backend.repository.UserInfoRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,6 +28,7 @@ import java.util.Set;
 public class AccountService {
 
     private final AccountRepository accountRepository;
+    private final ClubRepository clubRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
@@ -108,5 +113,11 @@ public class AccountService {
                 .createdBy(account.getCreatedBy())
                 .updatedBy(account.getUpdatedBy())
                 .build();
+    }
+
+    public List<String> getAllClubID() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
+        return clubRepository.findActiveMemberClubIds(account, ClubMemberRoleEnum.MEMBER, ClubMemberStatusEnum.APPROVED);
     }
 }

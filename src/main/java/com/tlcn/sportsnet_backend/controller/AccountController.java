@@ -45,5 +45,9 @@ public class AccountController {
         return ResponseEntity.ok()
                 .body(ApiResponse.success(Map.of("fileName", uploadedFile)));
     }
+    @GetMapping("/get-all-club-id")
+    public ResponseEntity<?> getAllClubID() {
+        return ResponseEntity.ok(accountService.getAllClubID());
+    }
 
 }
