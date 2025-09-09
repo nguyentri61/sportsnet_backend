@@ -93,7 +93,4 @@ public class Account {
     @OneToMany(mappedBy = "organizer")
     Set<Event> organizedEvents = new HashSet<>();
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
-
 }

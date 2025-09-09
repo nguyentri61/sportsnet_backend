@@ -11,8 +11,10 @@ import java.time.Instant;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationMessage {
+    private String id;
     private String title;
     private String content;
     private String link;      // URL hoặc route FE
     private Instant timestamp;
+    private boolean isRead;
 }
