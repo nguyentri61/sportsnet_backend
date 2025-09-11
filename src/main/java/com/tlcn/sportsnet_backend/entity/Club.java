@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
@@ -39,7 +40,8 @@ public class Club {
     ClubVisibilityEnum visibility;
 
     @Builder.Default
-    boolean active = false;
+    @Enumerated(EnumType.STRING)
+    ClubStatusEnum status = ClubStatusEnum.PENDING;
 
     int maxMembers;
 

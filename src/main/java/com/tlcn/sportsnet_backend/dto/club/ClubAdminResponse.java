@@ -13,17 +13,14 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ClubResponse {
+public class ClubAdminResponse {
     String id;
     String slug;
     String name;
-    String description;
-    String logoUrl;
-    String location;
-    Integer maxMembers;
-    ClubVisibilityEnum visibility;
-    Set<String> tags;
-    ClubStatusEnum status;
     String ownerName;
+    String email;
+    Integer memberCount;
+    Integer maxMembers;
+    ClubStatusEnum status;
     Instant createdAt;
 }
