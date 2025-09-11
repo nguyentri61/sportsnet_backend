@@ -43,6 +43,9 @@ public class Account {
 
     String updatedBy;
 
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ClubEventRating> clubEventRatings = new ArrayList<>();
+
     @PrePersist
     public void handleBeforeCreate(){
         createdAt = Instant.now();
