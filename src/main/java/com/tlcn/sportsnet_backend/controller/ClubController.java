@@ -3,6 +3,7 @@ package com.tlcn.sportsnet_backend.controller;
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
+import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.payload.exception.CustomUnauthorizedException;
 import com.tlcn.sportsnet_backend.entity.ClubMember;
 import com.tlcn.sportsnet_backend.service.ClubMemberService;
@@ -63,12 +64,6 @@ public class ClubController {
     @PostMapping
     public ResponseEntity<?> createClub(@RequestBody ClubCreateRequest request) {
         return ResponseEntity.ok(clubService.createClub(request));
-    }
-
-    @PutMapping("/active/{id}")
-    public ResponseEntity<?> activateClub(@PathVariable String id) {
-        clubService.activateClub(id);
-        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/upload")

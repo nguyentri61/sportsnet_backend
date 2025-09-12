@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.dto.club;
 
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
+import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -25,7 +26,7 @@ public class MyClubResponse {
     ClubVisibilityEnum visibility;
     Set<String> tags;
     ClubMemberStatusEnum memberStatus;
-    boolean active;
+    ClubStatusEnum status;
     boolean isOwner;
     Instant dateJoined;
     String ownerName;
