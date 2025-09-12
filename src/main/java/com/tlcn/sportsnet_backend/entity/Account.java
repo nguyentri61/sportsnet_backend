@@ -43,6 +43,9 @@ public class Account {
 
     String updatedBy;
 
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ClubEventRating> clubEventRatings = new ArrayList<>();
+
     @PrePersist
     public void handleBeforeCreate(){
         createdAt = Instant.now();
@@ -92,8 +95,5 @@ public class Account {
     // Event organizing
     @OneToMany(mappedBy = "organizer")
     Set<Event> organizedEvents = new HashSet<>();
-
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
 
 }

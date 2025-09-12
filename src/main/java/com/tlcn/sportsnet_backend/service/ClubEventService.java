@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,6 +36,8 @@ public class ClubEventService {
     private final ClubMemberRepository clubMemberRepository;
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
+
+    @Transactional
     public ClubEventCreateResponse createClubEvent(ClubEventCreateRequest request) {
         Club club = clubRepository.findBySlug(request.getClubSlug())
                 .orElseThrow(() -> new InvalidDataException("Club not found"));

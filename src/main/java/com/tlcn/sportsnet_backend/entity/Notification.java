@@ -1,12 +1,17 @@
 package com.tlcn.sportsnet_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.tlcn.sportsnet_backend.enums.NotificationTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
+// Notification.java
 @Entity
 @Data
 @Builder
@@ -23,15 +28,19 @@ public class Notification {
     private String content;
     private String link;
 
-    private boolean isRead = false;
-    private Instant createdAt ;
+    private Instant createdAt;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private Account account; // null nếu broadcast hoặc nhóm
+    private String clubId;
+    private String eventId;
 
-    private String clubId;  // null nếu không thuộc CLB
-    private String eventId; // null nếu không liên quan event
+    @Enumerated(EnumType.STRING)
+    private NotificationTypeEnum type;
 
-    private NotificationTypeEnum type; // optional: BROADCAST, CLUB, EVENT, SYSTEM
+    @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NotificationRecipient> recipients = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = Instant.now();
+    }
 }

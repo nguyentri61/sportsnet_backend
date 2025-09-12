@@ -76,6 +76,9 @@ public class ClubEvent {
     @OneToMany(mappedBy = "clubEvent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClubEventParticipant> participants = new ArrayList<>();
 
+    @OneToMany(mappedBy = "clubEvent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ClubEventRating> clubEventRatings = new ArrayList<>();
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     Instant createdAt;
 
