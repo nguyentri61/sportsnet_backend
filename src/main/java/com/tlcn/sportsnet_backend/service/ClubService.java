@@ -95,9 +95,9 @@ public class ClubService {
         Page<Club> clubs;
 
         if (account != null) {
-            clubs = clubRepository.findAvailableClubsForUser(ClubVisibilityEnum.PUBLIC, account, pageable);
+            clubs = clubRepository.findAvailableClubsForUserAndStatus(ClubVisibilityEnum.PUBLIC, ClubStatusEnum.ACTIVE, account, pageable);
         } else {
-            clubs = clubRepository.findAllByVisibility(ClubVisibilityEnum.PUBLIC, pageable);
+            clubs = clubRepository.findAllByVisibilityAndStatus(ClubVisibilityEnum.PUBLIC, ClubStatusEnum.ACTIVE, pageable);
         }
         List<ClubResponse> content = clubs.stream()
                 .map(this::toClubResponse)
@@ -119,7 +119,7 @@ public class ClubService {
                 .orElseThrow(() -> new InvalidDataException("Account not found"));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Club> clubs = clubRepository.findAvailableClubsBelongUser( account, pageable);
+        Page<Club> clubs = clubRepository.findAvailableClubsBelongUserAndStatus( account, ClubStatusEnum.ACTIVE, pageable);
 
         List<MyClubResponse> content = new ArrayList<>();
         for (Club club : clubs) {

@@ -4,6 +4,7 @@ import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
+import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,34 +20,26 @@ import java.util.Optional;
 
 @Repository
 public interface ClubRepository extends JpaRepository<Club, String> {
-    Page<Club> findAllByVisibility(ClubVisibilityEnum visibility, Pageable pageable);
+    Page<Club> findAllByVisibilityAndStatus(ClubVisibilityEnum visibility, ClubStatusEnum status, Pageable pageable);
     Optional<Club> findBySlug(String slug);
-    @Query("""
-    SELECT c FROM Club c
-    WHERE c.visibility = :visibility
-      AND c.owner <> :account
-      AND c.id NOT IN (
-          SELECT cm.club.id FROM ClubMember cm WHERE cm.account = :account
-      )
-""")
-    Page<Club> findAvailableClubsForUser(
-            @Param("visibility") ClubVisibilityEnum visibility,
-            @Param("account") Account account,
-            Pageable pageable
-    );
 
-    @Query("""
-    SELECT c FROM Club c
-    WHERE  (
-          c.id IN (
-              SELECT cm.club.id FROM ClubMember cm WHERE cm.account = :account
-          )
-      )
-""")
-    Page<Club> findAvailableClubsBelongUser(
+    @Query("SELECT c FROM Club c " +
+            "WHERE c.visibility = :visibility " +
+            "AND c.status = :status " +
+            "AND c.id NOT IN (SELECT cm.club.id FROM ClubMember cm WHERE cm.account = :account)")
+    Page<Club> findAvailableClubsForUserAndStatus(
+            @Param("visibility") ClubVisibilityEnum visibility,
+            @Param("status") ClubStatusEnum status,
             @Param("account") Account account,
-            Pageable pageable
-    );
+            Pageable pageable);
+
+    @Query("SELECT c FROM Club c " +
+            "WHERE (c.owner = :account OR EXISTS (SELECT cm FROM ClubMember cm WHERE cm.club = c AND cm.account = :account)) " +
+            "AND c.status = :status")
+    Page<Club> findAvailableClubsBelongUserAndStatus(
+            @Param("account") Account account,
+            @Param("status") ClubStatusEnum status,
+            Pageable pageable);
 
     @Query("""
     SELECT cm.club.id
