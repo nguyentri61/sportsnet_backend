@@ -14,7 +14,7 @@ import java.time.Instant;
 public class ClubEventRatingResponse {
     private String id;
     private String nameSender;
-    private String eventClubId;
+    private String eventName;
     private Integer rating;
     private String comment;
     private String avatarUrl;

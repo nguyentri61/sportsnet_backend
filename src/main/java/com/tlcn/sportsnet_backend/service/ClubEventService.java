@@ -256,14 +256,14 @@ public class ClubEventService {
         EventStatusEnum newStatus = event.getStatus();
 
         LocalDateTime now = LocalDateTime.now();
-        if(event.getTotalMember() == event.getParticipants().size()){
+        if(event.getTotalMember() == event.getParticipants().size() && newStatus == EventStatusEnum.OPEN ){
             newStatus = EventStatusEnum.CLOSED;
         }
-        if (now.isAfter(event.getDeadline()) && now.isBefore(event.getStartTime())) {
+        if (now.isAfter(event.getDeadline()) && now.isBefore(event.getStartTime()) && newStatus == EventStatusEnum.OPEN ) {
             newStatus = EventStatusEnum.CLOSED;
-        } else if (now.isAfter(event.getStartTime()) && now.isBefore(event.getEndTime())) {
+        } else if (now.isAfter(event.getStartTime()) && now.isBefore(event.getEndTime()) && newStatus != EventStatusEnum.FINISHED) {
             newStatus = EventStatusEnum.ONGOING;
-        } else if (now.isAfter(event.getEndTime())) {
+        } else if (now.isAfter(event.getEndTime()) ) {
             newStatus = EventStatusEnum.FINISHED;
         }
 
