@@ -4,6 +4,7 @@ import com.tlcn.sportsnet_backend.dto.NotificationMessage;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.NotificationTypeEnum;
+import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.error.UnauthorizedException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.*;
@@ -24,7 +25,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
-
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationRepository notificationRepository;
     private final NotificationRecipientRepository notificationRecipientRepository;
@@ -65,7 +65,32 @@ public class NotificationService {
         }
     }
 
+    public void sendToAccount(Account account, String title, String content, String link) {
+        Instant now = Instant.now();
+        Notification notification = Notification.builder()
+                .title(title)
+                .content(content)
+                .link(link)
+                .createdAt(now)
+                .type(NotificationTypeEnum.CLUB)
+                .recipients(new ArrayList<>())
+                .build();
 
+        NotificationRecipient recipient = NotificationRecipient.builder()
+                            .notification(notification)
+                            .account(account)
+                            .isRead(false)
+                            .build();
+        notification.getRecipients().add(recipient);
+
+        notificationRepository.save(notification);
+
+        // Gửi WS cho từng người
+        NotificationMessage msg = new NotificationMessage(notification.getId(),title, content, link, now, false);
+        for (NotificationRecipient r : notification.getRecipients()) {
+            messagingTemplate.convertAndSend("/topic/account/" + r.getAccount().getId(), msg);
+        }
+    }
 //    public void sendBroadcast(String title, String content, String link) {
 //        NotificationMessage msg = new NotificationMessage(title, content, link, Instant.now());
 //        messagingTemplate.convertAndSend("/topic/notifications", msg);

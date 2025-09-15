@@ -1,4 +1,4 @@
-package com.tlcn.sportsnet_backend.dto.account;
+package com.tlcn.sportsnet_backend.dto.member;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -6,12 +6,12 @@ import lombok.experimental.FieldDefaults;
 import java.time.Instant;
 import java.time.LocalDate;
 
-@Data
 @Builder
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AccountResponse {
+public class DetailMemberResponse {
     String id;
     String email;
     String fullName;
@@ -21,10 +21,6 @@ public class AccountResponse {
     String bio;
     String avatarUrl;
     String phone;
-    boolean enabled;
     Instant createdAt;
-    Instant updatedAt;
-    String createdBy;
-    String updatedBy;
-
+    String note;
 }

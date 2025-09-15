@@ -19,7 +19,6 @@ public class MemberResponse {
     String id;
     String name;
     String avatar;
-
     @Enumerated(EnumType.STRING)
     ClubMemberRoleEnum role; // MEMBER, ADMIN
     @Enumerated(EnumType.STRING)
