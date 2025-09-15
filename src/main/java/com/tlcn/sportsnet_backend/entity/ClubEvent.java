@@ -33,7 +33,8 @@ public class ClubEvent {
     private String slug;
 
     String title;
-    @Column(columnDefinition = "TEXT")
+
+    @Lob
     String description;
 
     String image;

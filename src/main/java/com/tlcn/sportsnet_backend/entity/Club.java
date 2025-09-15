@@ -29,7 +29,8 @@ public class Club {
     private String slug;
     String name;
 
-    @Column(columnDefinition = "MEDIUMTEXT")
+
+    @Lob
     String description;
 
     String location;
