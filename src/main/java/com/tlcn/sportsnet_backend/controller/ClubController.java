@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.controller;
 
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
+import com.tlcn.sportsnet_backend.dto.club.JoinClubRequest;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.payload.exception.CustomUnauthorizedException;
@@ -55,7 +56,7 @@ public class ClubController {
 
     @GetMapping("/my_clubs/{id}/member")
     public ResponseEntity<?> getMyClubMember(@RequestParam(defaultValue = "0") int page,
-                                             @RequestParam(defaultValue = "10") int size,
+                                             @RequestParam(defaultValue = "100") int size,
                                              @RequestParam(defaultValue = "APPROVED") ClubMemberStatusEnum status,
                                              @PathVariable String id) {
         return ResponseEntity.ok(clubMemberService.getMembers(page,size, status, id));
@@ -79,8 +80,8 @@ public class ClubController {
     }
 
     @PostMapping("/{clubId}/join")
-    public ResponseEntity<?> joinClub(@PathVariable String clubId) {
-        return ResponseEntity.ok(clubMemberService.joinClub(clubId));
+    public ResponseEntity<?> joinClub(@PathVariable String clubId,  @RequestBody JoinClubRequest request) {
+        return ResponseEntity.ok(clubMemberService.joinClub(clubId, request.getNotification()));
     }
 
     @PostMapping("/my_clubs/{clubId}/member/{memberId}/approve")
@@ -101,5 +102,10 @@ public class ClubController {
     public ResponseEntity<?> banMember(@PathVariable String clubId, @PathVariable String memberId) {
         clubMemberService.banMember(clubId, memberId);
         return ResponseEntity.ok().body("Ban success");
+    }
+
+    @GetMapping("/my_clubs/detail_member/{id}")
+    public ResponseEntity<?> getMyClubMember(@PathVariable String id) {
+        return ResponseEntity.ok(clubMemberService.getDetailMember(id));
     }
 }

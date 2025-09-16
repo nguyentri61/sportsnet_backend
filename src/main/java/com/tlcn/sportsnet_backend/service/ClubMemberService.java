@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.service;
 
+import com.tlcn.sportsnet_backend.dto.member.DetailMemberResponse;
 import com.tlcn.sportsnet_backend.dto.member.MemberResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
@@ -32,8 +33,9 @@ public class ClubMemberService {
     private final AccountRepository accountRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
-    public String joinClub(String clubId) {
+    public String joinClub(String clubId, String notification) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         Account account = accountRepository.findByEmail(authentication.getName())
@@ -49,12 +51,14 @@ public class ClubMemberService {
         ClubMember clubMember = ClubMember.builder()
                 .club(club)
                 .account(account)
+                .note(notification)
                 .role(ClubMemberRoleEnum.MEMBER)
                 .status(ClubMemberStatusEnum.PENDING)
                 .joinedAt(Instant.now())
                 .build();
 
          clubMemberRepository.save(clubMember);
+        notificationService.sendToAccount(club.getOwner(), "Yêu cầu gia nhập CLB","Câu lạc bộ: "+club.getName()+ " có yêu cầu gia nhập","/my-clubs/"+club.getSlug()+"?tab=members");
          return "Tham gia thành công";
     }
 
@@ -151,4 +155,22 @@ public class ClubMemberService {
         );
     }
 
+    public DetailMemberResponse getDetailMember(String id) {
+        ClubMember clubMember = clubMemberRepository.findById(id).orElseThrow(() -> new InvalidDataException("ClubMember not found"));
+        return DetailMemberResponse.builder()
+                .id(clubMember.getId())
+                .email(clubMember.getAccount().getEmail())
+                .phone(clubMember.getAccount().getUserInfo().getPhone())
+                .fullName(clubMember.getAccount().getUserInfo().getFullName())
+                .gender(clubMember.getAccount().getUserInfo().getGender())
+                .bio(clubMember.getAccount().getUserInfo().getBio())
+                .createdAt(clubMember.getAccount().getCreatedAt())
+                .birthDate(clubMember.getAccount().getUserInfo().getBirthDate())
+                .address(clubMember.getAccount().getUserInfo().getAddress())
+                .note(clubMember.getNote())
+                .avatarUrl(clubMember.getAccount().getUserInfo().getAvatarUrl() != null
+                        ? fileStorageService.getFileUrl(clubMember.getAccount().getUserInfo().getAvatarUrl(), "/avatar")
+                        : null)
+                .build();
+    }
 }
