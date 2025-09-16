@@ -82,7 +82,7 @@ public class Account {
     @OneToMany(mappedBy = "receiver")
     Set<Friendship> receivedFriendships = new HashSet<>();
 
-    @OneToMany(mappedBy = "createdBy")
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Post> posts = new HashSet<>();
 
     // Messaging

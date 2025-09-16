@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.service;
 
 
+import com.tlcn.sportsnet_backend.enums.MediaTypeEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -11,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -60,6 +62,13 @@ public class FileStorageService {
         } catch (IOException ex) {
             throw new RuntimeException("Could not delete file: " + ex.getMessage(), ex);
         }
+    }
+
+    public MediaTypeEnum detectMediaType(String filename) {
+        String ext = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+        return List.of("mp4", "mov", "avi", "mkv").contains(ext)
+                ? MediaTypeEnum.VIDEO
+                : MediaTypeEnum.IMAGE;
     }
 }
 
