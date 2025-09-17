@@ -96,4 +96,6 @@ public class Account {
     @OneToMany(mappedBy = "organizer")
     Set<Event> organizedEvents = new HashSet<>();
 
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private PlayerRating playerRating;
 }
