@@ -11,8 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PostCreateRequest {
-    String content;
-    String clubId;
     String eventId;
+    String content;
     List<String> fileNames;
 }

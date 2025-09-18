@@ -20,4 +20,6 @@ public class PostResponse {
     List<MediaResponse> mediaList;
     int likeCount;
     int commentCount;
+    String userId;
+    String currentUserId;
 }

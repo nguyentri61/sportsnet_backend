@@ -43,11 +43,6 @@ public class PostService {
                 .author(account)
                 .build();
 
-        // Gắn club
-        if (request.getClubId() != null) {
-            clubRepository.findBySlug(request.getClubId()).ifPresent(post::setClub);
-        }
-
         // Gắn event
         if (request.getEventId() != null) {
             clubEventRepository.findBySlug(request.getEventId()).ifPresent(post::setEvent);
@@ -72,6 +67,9 @@ public class PostService {
 
     private PostResponse toResponse(Post post, Account account) {
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account currentAccount = accountRepository.findByEmail(authentication.getName()).orElse(null);
+
         List<PostMedia> mediaList = postMediaRepository.findByPostId(post.getId());
 
         List<MediaResponse> mediaResponses = mediaList.stream()
@@ -90,11 +88,13 @@ public class PostService {
                 .likeCount(0)
                 .commentCount(0)
                 .mediaList(mediaResponses)
+                .userId(account.getId())
+                .currentUserId(currentAccount != null ? currentAccount.getId() : null)
                 .build();
     }
 
     public List<PostResponse> getAllPostsByEvent(String eventId) {
-        List<Post> postList = postRepository.findByEventId(eventId);
+        List<Post> postList = postRepository.findByEventIdOrderByCreatedAtDesc(eventId);
 
         return postList.stream()
                 .map(post -> toResponse(post, post.getAuthor()))
