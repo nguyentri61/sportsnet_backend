@@ -4,9 +4,11 @@ import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.account.AccountRegisterRequest;
 import com.tlcn.sportsnet_backend.dto.account.AccountResponse;
 import com.tlcn.sportsnet_backend.dto.account.UpdateProfileRequest;
+import com.tlcn.sportsnet_backend.dto.player_rating.PlayerRatingCreateRequest;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.service.AccountService;
 import com.tlcn.sportsnet_backend.service.FileStorageService;
+import com.tlcn.sportsnet_backend.service.PlayerRatingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,6 +24,7 @@ import java.util.Map;
 public class AccountController {
 
     private final AccountService accountService;
+    private final PlayerRatingService playerRatingService;
     private final FileStorageService fileStorageService;
 
     @GetMapping
@@ -50,4 +53,13 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getAllClubID());
     }
 
+    @PostMapping("/player-rating")
+    public ResponseEntity<?> createPlayerRating(@RequestBody PlayerRatingCreateRequest request) {
+        return ResponseEntity.ok(playerRatingService.createPlayerRating(request));
+    }
+
+    @GetMapping("/player-rating")
+    public ResponseEntity<?> getPlayerRating() {
+        return ResponseEntity.ok(playerRatingService.getPlayerRating());
+    }
 }
