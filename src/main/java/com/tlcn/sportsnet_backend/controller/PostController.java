@@ -20,6 +20,12 @@ public class PostController {
     private final PostService postService;
     private final FileStorageService fileStorageService;
 
+    @GetMapping("/{eventId}")
+    public ResponseEntity<?> getAllPostsByEvent(@PathVariable String eventId) {
+        return ResponseEntity.ok(postService.getAllPostsByEvent(eventId));
+    }
+
+
     @PostMapping
     public ResponseEntity<PostResponse> createPost(@RequestBody PostCreateRequest request) {
         PostResponse postResponse = postService.createPost(request);
