@@ -5,6 +5,7 @@ import com.tlcn.sportsnet_backend.dto.member.MemberResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubMember;
+import com.tlcn.sportsnet_backend.entity.PlayerRating;
 import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
@@ -12,6 +13,7 @@ import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.ClubMemberRepository;
 import com.tlcn.sportsnet_backend.repository.ClubRepository;
+import com.tlcn.sportsnet_backend.repository.PlayerRatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -32,9 +35,10 @@ public class ClubMemberService {
     private final ClubRepository clubRepository;
     private final AccountRepository accountRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final PlayerRatingRepository playerRatingRepository;
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
-
+    
     public String joinClub(String clubId, String notification) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -157,6 +161,7 @@ public class ClubMemberService {
 
     public DetailMemberResponse getDetailMember(String id) {
         ClubMember clubMember = clubMemberRepository.findById(id).orElseThrow(() -> new InvalidDataException("ClubMember not found"));
+        PlayerRating playerRating = playerRatingRepository.findByAccount(clubMember.getAccount()).orElse(null);    
         return DetailMemberResponse.builder()
                 .id(clubMember.getId())
                 .email(clubMember.getAccount().getEmail())
@@ -171,6 +176,12 @@ public class ClubMemberService {
                 .avatarUrl(clubMember.getAccount().getUserInfo().getAvatarUrl() != null
                         ? fileStorageService.getFileUrl(clubMember.getAccount().getUserInfo().getAvatarUrl(), "/avatar")
                         : null)
+                .experience(playerRating != null ? playerRating.getExperience() : null)
+                .averageTechnicalScore(playerRating != null ? playerRating.getAverageTechnicalScore() : null)
+                .tactics(playerRating != null ? playerRating.getTactics() : null)
+                .stamina(playerRating != null ? playerRating.getStamina() : null)
+                .overallScore(playerRating != null ? playerRating.getOverallScore() : null)
+                .skillLevel(playerRating != null ? playerRating.getSkillLevel() : "")
                 .build();
     }
 }

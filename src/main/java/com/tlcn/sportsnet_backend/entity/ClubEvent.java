@@ -7,6 +7,8 @@ import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -61,6 +63,13 @@ public class ClubEvent {
     int maxClubMembers;   // số lượng thành viên CLB được tham gia
     int maxOutsideMembers;
 
+    @Min(0)
+    @Max(5)
+    double minLevel;
+
+    @Min(0)
+    @Max(5)
+    double maxLevel;
     // Các hạng mục (Đơn nam, Đơn nữ, Đôi nam, ...)
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)

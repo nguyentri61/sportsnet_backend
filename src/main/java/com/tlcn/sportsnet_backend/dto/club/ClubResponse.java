@@ -20,7 +20,10 @@ public class ClubResponse {
     String description;
     String logoUrl;
     String location;
+    Integer memberCount;
     Integer maxMembers;
+    Double minLevel;
+    Double maxLevel;
     ClubVisibilityEnum visibility;
     Set<String> tags;
     ClubStatusEnum status;

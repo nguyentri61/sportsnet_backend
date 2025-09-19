@@ -1,5 +1,7 @@
 package com.tlcn.sportsnet_backend.entity;
 
+import com.tlcn.sportsnet_backend.enums.ClubEventParticipantStatusEnum;
+import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ParticipantStatusEnum;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
@@ -35,6 +37,9 @@ public class ClubEventParticipant {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     Account participant;
+
+    @Enumerated(EnumType.STRING)
+    ClubEventParticipantStatusEnum status;
 
     @PrePersist
     public void handleBeforeCreate(){

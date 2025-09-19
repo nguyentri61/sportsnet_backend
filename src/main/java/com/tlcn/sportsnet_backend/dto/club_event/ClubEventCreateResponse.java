@@ -25,6 +25,8 @@ public class ClubEventCreateResponse {
     String requirements;
     LocalDateTime startTime;
     LocalDateTime endTime;
+    double minLevel;
+    double maxLevel;
     int totalMember;
     List<BadmintonCategoryEnum> categories;
     EventStatusEnum status;

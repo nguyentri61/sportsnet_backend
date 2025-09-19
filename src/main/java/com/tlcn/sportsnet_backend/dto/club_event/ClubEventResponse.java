@@ -27,6 +27,8 @@ public class ClubEventResponse {
     int joinedMember;
     String nameClub;
     boolean openForOutside;
+    double minLevel;
+    double maxLevel;
     ParticipantRoleEnum participantRole;
     int maxOutsideMembers;
     int joinedOpenMembers;

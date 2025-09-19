@@ -13,6 +13,12 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DetailMemberResponse {
     String id;
+    Integer  experience;
+    Integer  stamina;
+    Integer  tactics;
+    Double  averageTechnicalScore;
+    Double  overallScore;
+    String skillLevel;
     String email;
     String fullName;
     LocalDate birthDate;

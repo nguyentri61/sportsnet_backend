@@ -95,11 +95,17 @@ public class ClubEventController {
     }
 
     @GetMapping("/all-participant/{id}")
-    public ResponseEntity<?> getAllParticipantClubEvent(@PathVariable String id,
-                                                        @RequestParam(defaultValue = "0") int page,
-                                                        @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(clubEventParticipantService.getAllParticipantClubEvent(id, page, size));
+    public ResponseEntity<?> getAllParticipantClubEvent(@PathVariable String id) {
+        return ResponseEntity.ok(clubEventParticipantService.getAllParticipantClubEvent(id));
     }
 
+    @PutMapping("/{idEvent}/participant/{id}/approve")
+    public ResponseEntity<?> approveParticipant(@PathVariable String id,@PathVariable String idEvent) {
+        return ResponseEntity.ok(clubEventParticipantService.approveParticipant(id, idEvent));
+    }
 
+    @PutMapping("/{idEvent}/participant/{id}/reject")
+    public ResponseEntity<?> rejectParticipant(@PathVariable String id,@PathVariable String idEvent) {
+        return ResponseEntity.ok(clubEventParticipantService.rejectParticipant(id, idEvent));
+    }
 }
