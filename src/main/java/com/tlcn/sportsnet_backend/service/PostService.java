@@ -3,6 +3,7 @@ package com.tlcn.sportsnet_backend.service;
 import com.tlcn.sportsnet_backend.dto.post.MediaResponse;
 import com.tlcn.sportsnet_backend.dto.post.PostCreateRequest;
 import com.tlcn.sportsnet_backend.dto.post.PostResponse;
+import com.tlcn.sportsnet_backend.dto.post.PostUpdateRequest;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Post;
 import com.tlcn.sportsnet_backend.entity.PostMedia;
@@ -100,5 +101,39 @@ public class PostService {
                 .map(post -> toResponse(post, post.getAuthor()))
                 .toList();
 
+    }
+
+    public PostResponse updatePost(PostUpdateRequest request) {
+        Post post = postRepository.findById(request.getId()).orElseThrow(() -> new InvalidDataException("Post not found"));
+
+        post.setContent(request.getContent());
+
+        // Lấy danh sách media hiện có trong DB
+        List<PostMedia> currentMedia = postMediaRepository.findByPostId(post.getId());
+
+        // 1. Xóa media không còn trong keepFileNames
+        for (PostMedia media : currentMedia) {
+            if (request.getKeepFileNames() == null ||
+                    !request.getKeepFileNames().contains(media.getFilename())) {
+                // Xóa file vật lý
+                fileStorageService.deleteFile(media.getFilename(), "/posts");
+                // Xóa record trong DB
+                postMediaRepository.delete(media);
+            }
+        }
+
+        // 2. Thêm file mới (nếu có)
+        if (request.getNewFileNames() != null && !request.getNewFileNames().isEmpty()) {
+            for (String filename : request.getNewFileNames()) {
+                PostMedia media = PostMedia.builder()
+                        .filename(filename)
+                        .type(fileStorageService.detectMediaType(filename))
+                        .post(post)
+                        .build();
+                postMediaRepository.save(media);
+            }
+        }
+        post = postRepository.save(post);
+        return toResponse(post, post.getAuthor());
     }
 }

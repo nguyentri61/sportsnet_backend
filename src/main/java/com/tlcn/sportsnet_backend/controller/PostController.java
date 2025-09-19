@@ -3,6 +3,7 @@ package com.tlcn.sportsnet_backend.controller;
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.post.PostCreateRequest;
 import com.tlcn.sportsnet_backend.dto.post.PostResponse;
+import com.tlcn.sportsnet_backend.dto.post.PostUpdateRequest;
 import com.tlcn.sportsnet_backend.service.FileStorageService;
 import com.tlcn.sportsnet_backend.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,11 @@ public class PostController {
     public ResponseEntity<PostResponse> createPost(@RequestBody PostCreateRequest request) {
         PostResponse postResponse = postService.createPost(request);
         return ResponseEntity.ok(postResponse);
+    }
+
+    @PutMapping
+    public ResponseEntity<PostResponse> updatePost(@RequestBody PostUpdateRequest request) {
+        return ResponseEntity.ok(postService.updatePost(request));
     }
 
     @PostMapping("/upload")
