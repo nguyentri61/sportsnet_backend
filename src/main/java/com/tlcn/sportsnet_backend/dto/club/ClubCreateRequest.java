@@ -17,6 +17,8 @@ public class ClubCreateRequest {
     String logoUrl;
     String location;
     int maxMembers;
+    double minLevel;
+    double maxLevel;
     ClubVisibilityEnum visibility;
     Set<String> tags;
 }

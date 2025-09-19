@@ -30,4 +30,6 @@ public class ClubEventUpdateRequest {
     BigDecimal fee;
     LocalDateTime deadline;
     boolean openForOutside;
+    double minLevel;
+    double maxLevel;
 }

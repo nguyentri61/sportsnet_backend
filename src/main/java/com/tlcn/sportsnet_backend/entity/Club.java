@@ -6,6 +6,8 @@ import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -45,6 +47,14 @@ public class Club {
     ClubStatusEnum status = ClubStatusEnum.PENDING;
 
     int maxMembers;
+
+    @Min(0)
+    @Max(5)
+    double minLevel;
+
+    @Min(0)
+    @Max(5)
+    double maxLevel;
 
     @ElementCollection
     @CollectionTable(

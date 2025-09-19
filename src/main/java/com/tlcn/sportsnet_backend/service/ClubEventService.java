@@ -5,6 +5,7 @@ import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
 import com.tlcn.sportsnet_backend.entity.ClubEventParticipant;
+import com.tlcn.sportsnet_backend.enums.ClubEventParticipantStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
@@ -51,13 +52,15 @@ public class ClubEventService {
                 .endTime(request.getEndTime())
                 .totalMember(request.getTotalMember())
                 .categories(request.getType())
-                .status(EventStatusEnum.OPEN) // mặc định
+                .status(EventStatusEnum.DRAFT) // mặc định
                 .fee(request.getFee() != null ? request.getFee() : BigDecimal.ZERO)
                 .deadline(request.getDeadline() != null ? request.getDeadline() : request.getStartTime().minusDays(1))
                 .openForOutside(request.isOpenForOutside()) // mặc định không mở cho người ngoài
                 .maxClubMembers(request.getMaxClubMembers() > 0 ? request.getMaxClubMembers() : request.getTotalMember())
                 .maxOutsideMembers(request.getMaxOutsideMembers()) // có thể 0
                 .club(club)
+                .minLevel(request.getMinLevel())
+                .maxLevel(request.getMaxLevel())
                 .build();
 
         event = clubEventRepository.save(event);
@@ -171,6 +174,8 @@ public class ClubEventService {
                 .clubId(event.getClub().getId())
                 .createdAt(event.getCreatedAt())
                 .createdBy(event.getCreatedBy())
+                .minLevel(event.getMinLevel())
+                .maxLevel(event.getMaxLevel())
                 .build();
     }
 
@@ -195,10 +200,12 @@ public class ClubEventService {
                 .location(event.getLocation())
                 .title(event.getTitle())
                 .fee(event.getFee())
-                .joinedMember(event.getParticipants().size())
+                .joinedMember((int) event.getParticipants().stream()
+                        .filter(p -> !p.getStatus().equals(ClubEventParticipantStatusEnum.PENDING) )
+                        .count())
                 .totalMember(event.getTotalMember())
                 .joinedOpenMembers((int) event.getParticipants().stream()
-                        .filter(p -> !p.isClubMember() )
+                        .filter(p -> !p.isClubMember() && !p.getStatus().equals(ClubEventParticipantStatusEnum.PENDING) )
                         .count())
                 .maxOutsideMembers(event.getMaxOutsideMembers())
                 .nameClub(event.getClub().getName())
@@ -206,12 +213,15 @@ public class ClubEventService {
                 .openForOutside(event.isOpenForOutside())
                 .status(event.getStatus())
                 .participantRole(roleEnum)
+                .maxLevel(event.getMaxLevel())
+                .minLevel(event.getMinLevel())
                 .build();
     }
 
     private ClubEventDetailResponse toClubEventDetailResponse(ClubEvent event, Account account) {
         Club club = event.getClub();
         event = calculateStatus(event);
+        ClubEventParticipant clubEventParticipant = clubEventParticipantRepository.findByClubEventAndParticipant(event,account).orElse(null);
         ParticipantRoleEnum roleEnum= ParticipantRoleEnum.GUEST;
         if(account!=null) {
             if (club.getOwner().equals(account)){
@@ -232,7 +242,9 @@ public class ClubEventService {
                 .startTime(event.getStartTime())
                 .endTime(event.getEndTime())
                 .totalMember(event.getTotalMember())
-                .joinedMember(event.getParticipants().size())
+                .joinedMember((int) event.getParticipants().stream()
+                        .filter(p -> !p.getStatus().equals(ClubEventParticipantStatusEnum.PENDING) )
+                        .count())
                 .categories(event.getCategories())
                 .status(event.getStatus())
                 .fee(event.getFee())
@@ -241,7 +253,7 @@ public class ClubEventService {
                 .maxClubMembers(event.getMaxClubMembers())
                 .maxOutsideMembers(event.getMaxOutsideMembers())
                 .joinedOpenMembers((int) event.getParticipants().stream()
-                        .filter(p -> !p.isClubMember() )
+                        .filter(p -> !p.isClubMember() && !p.getStatus().equals(ClubEventParticipantStatusEnum.PENDING) )
                         .count())
                 .clubId(event.getClub().getId())
                 .createdAt(event.getCreatedAt())
@@ -249,6 +261,9 @@ public class ClubEventService {
                 .nameClub(event.getClub().getName())
                 .isJoined(clubEventParticipantRepository.existsByClubEventAndParticipant(event, account))
                 .participantRole(roleEnum)
+                .maxLevel(event.getMaxLevel())
+                .minLevel(event.getMinLevel())
+                .participantStatus(clubEventParticipant != null ? clubEventParticipant.getStatus() : null)
                 .build();
     }
     public ClubEvent calculateStatus(ClubEvent event) {
@@ -297,7 +312,8 @@ public class ClubEventService {
         clubEvent.setFee(request.getFee());
         clubEvent.setDeadline(request.getDeadline());
         clubEvent.setCategories(request.getCategories());
-
+        clubEvent.setMaxLevel(request.getMaxLevel());
+        clubEvent.setMinLevel(request.getMinLevel());
         clubEvent = clubEventRepository.save(clubEvent);
 
         return toClubEventDetailResponse(clubEvent, account);

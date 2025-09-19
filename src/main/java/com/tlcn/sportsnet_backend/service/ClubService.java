@@ -69,6 +69,8 @@ public class ClubService {
                 .logoUrl(request.getLogoUrl())
                 .location(request.getLocation())
                 .maxMembers(request.getMaxMembers())
+                .minLevel(request.getMinLevel())
+                .maxLevel(request.getMaxLevel())
                 .visibility(request.getVisibility())
                 .tags(request.getTags() != null ? request.getTags() : new HashSet<>())
                 .owner(owner)
@@ -174,6 +176,7 @@ public class ClubService {
     }
 
     private ClubResponse toClubResponse(Club club) {
+        List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
         return ClubResponse.builder()
                 .id(club.getId())
                 .slug(club.getSlug())
@@ -181,7 +184,10 @@ public class ClubService {
                 .description(club.getDescription())
                 .logoUrl(fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo"))
                 .location(club.getLocation())
+                .memberCount(members.size())
                 .maxMembers(club.getMaxMembers())
+                .minLevel(club.getMinLevel())
+                .maxLevel(club.getMaxLevel())
                 .visibility(club.getVisibility())
                 .tags(club.getTags())
                 .status(club.getStatus())
@@ -198,7 +204,6 @@ public class ClubService {
             joinAt =clubMember.getJoinedAt();
         }
         List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
-
         ClubMember member = clubMemberRepository.findClubMemberByAccountAndClub(account, club);
         assert member != null;
         return MyClubResponse.builder()
@@ -217,6 +222,8 @@ public class ClubService {
                 .createdAt(club.getCreatedAt())
                 .dateJoined(joinAt)
                 .memberCount(members.size())
+                .minLevel(club.getMinLevel())
+                .maxLevel(club.getMaxLevel())
                 .isOwner(club.getOwner()==account)
                 .build();
     }

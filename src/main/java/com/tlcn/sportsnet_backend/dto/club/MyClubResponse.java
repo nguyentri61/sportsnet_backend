@@ -23,6 +23,8 @@ public class MyClubResponse {
     String location;
     Integer memberCount;
     Integer maxMembers;
+    Double minLevel;
+    Double maxLevel;
     ClubVisibilityEnum visibility;
     Set<String> tags;
     ClubMemberStatusEnum memberStatus;
