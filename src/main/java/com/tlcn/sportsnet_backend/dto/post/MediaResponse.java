@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MediaResponse {
+    String fileName;
     String url;
     MediaTypeEnum type;
 }

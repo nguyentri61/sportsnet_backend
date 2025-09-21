@@ -37,8 +37,6 @@ public class PostService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
 
-        System.out.print(account.getUserInfo().getFullName());
-
         Post post = Post.builder()
                 .content(request.getContent())
                 .author(account)
@@ -75,6 +73,7 @@ public class PostService {
 
         List<MediaResponse> mediaResponses = mediaList.stream()
                 .map(media -> MediaResponse.builder()
+                        .fileName(media.getFilename())
                         .url(fileStorageService.getFileUrl(media.getFilename(), "/posts")) // chỉnh "/post" tùy theo folder bạn lưu
                         .type(media.getType())
                         .build())
