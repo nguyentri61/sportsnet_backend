@@ -13,10 +13,7 @@ import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -92,22 +90,36 @@ public class ClubEventService {
                 events.isLast()
         );
     }
-    public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size) {
+    public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size, String search, String province,String ward) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null); 
         Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutsideAndStatusAndDeadlineAfter( pageable, true,  EventStatusEnum.OPEN, LocalDateTime.now());
-        List<ClubEventResponse> content = events.getContent().stream()
+
+        // Lọc dữ liệu theo search, province và ward
+        List<ClubEvent> filteredEvents = events.getContent().stream()
+                .filter(event -> matchesSearch(event, search))
+                .filter(event -> matchesProvince(event, province))
+                .filter(event -> matchesWard(event, ward))
+                .toList();
+
+        Page<ClubEvent> filteredPage = new PageImpl<>(
+                filteredEvents,
+                pageable,
+                filteredEvents.size()
+        );
+
+        List<ClubEventResponse> content = filteredPage.getContent().stream()
                 .map(event -> toClubEventResponse(event, account))
                 .toList();
 
         return new PagedResponse<>(
                 content,
-                events.getNumber(),
-                events.getSize(),
-                events.getTotalElements(),
-                events.getTotalPages(),
-                events.isLast()
+                filteredPage.getNumber(),
+                filteredPage.getSize(),
+                filteredPage.getTotalElements(),
+                filteredPage.getTotalPages(),
+                filteredPage.isLast()
         );
     }
     public PagedResponse<ClubEventResponse>  getAllMyClubEventClub(int page, int size) {
@@ -317,5 +329,39 @@ public class ClubEventService {
         clubEvent = clubEventRepository.save(clubEvent);
 
         return toClubEventDetailResponse(clubEvent, account);
+    }
+
+    private boolean matchesSearch(ClubEvent event, String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return true;
+        }
+
+        String searchLower = search.toLowerCase();
+        return event.getTitle().toLowerCase().contains(searchLower) ||
+                event.getLocation().toLowerCase().contains(searchLower) ||
+                (event.getClub() != null && event.getClub().getName().toLowerCase().contains(searchLower));
+    }
+
+    private boolean matchesProvince(ClubEvent event, String provinceFilter) {
+        if (provinceFilter == null || provinceFilter.trim().isEmpty()) {
+            return true;
+        }
+
+        String location = event.getLocation().toLowerCase();
+        String provinceLower = provinceFilter.toLowerCase();
+
+        return location.contains(provinceLower);
+    }
+
+    private boolean matchesWard(ClubEvent event, String wardFilter) {
+        if (wardFilter == null || wardFilter.trim().isEmpty()) {
+            return true;
+        }
+
+        String location = event.getLocation().toLowerCase();
+        String wardLower = wardFilter.toLowerCase();
+
+        // Logic đơn giản để tìm phường/xã trong location
+        return location.contains(wardLower);
     }
 }

@@ -53,8 +53,11 @@ public class ClubEventController {
     @GetMapping("/all/public")
     public ResponseEntity<?> getAllPublicEventClub(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(clubEventService.getAllPublicEventClub(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String ward) {
+        return ResponseEntity.ok(clubEventService.getAllPublicEventClub(page, size, search, province, ward));
     }
     @PostMapping
     public ResponseEntity<?> createClubEvent(@RequestBody ClubEventCreateRequest request) {

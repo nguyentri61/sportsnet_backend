@@ -31,7 +31,6 @@ public class Club {
     private String slug;
     String name;
 
-
     @Lob
     String description;
 
