@@ -111,13 +111,12 @@ public class PostService {
         List<PostMedia> currentMedia = postMediaRepository.findByPostId(post.getId());
 
         // 1. Xóa media không còn trong keepFileNames
-        for (PostMedia media : currentMedia) {
-            if (request.getKeepFileNames() == null ||
-                    !request.getKeepFileNames().contains(media.getFilename())) {
-                // Xóa file vật lý
-                fileStorageService.deleteFile(media.getFilename(), "/posts");
-                // Xóa record trong DB
-                postMediaRepository.delete(media);
+        if (request.getKeepFileNames() != null) {
+            for (PostMedia media : currentMedia) {
+                if (!request.getKeepFileNames().contains(media.getFilename())) {
+                    fileStorageService.deleteFile(media.getFilename(), "/posts");
+                    postMediaRepository.delete(media);
+                }
             }
         }
 
