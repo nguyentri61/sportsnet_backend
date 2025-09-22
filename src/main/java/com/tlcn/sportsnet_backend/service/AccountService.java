@@ -43,6 +43,10 @@ public class AccountService {
         return toResponse(account);
     }
 
+    public AccountResponse getOtherAccount(String slug) {
+        Account account = accountRepository.findByUserInfo_Slug(slug).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
+        return toResponse(account);
+    }
     public Account registerAccount(AccountRegisterRequest request) {
         if (accountRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email đã tồn tại, vui lòng chọn email khác.");

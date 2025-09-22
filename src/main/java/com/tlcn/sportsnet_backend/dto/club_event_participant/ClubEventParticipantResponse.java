@@ -26,4 +26,5 @@ public class ClubEventParticipantResponse {
     Double  averageTechnicalScore;
     Double  overallScore;
     String skillLevel;
+    String slug;
 }

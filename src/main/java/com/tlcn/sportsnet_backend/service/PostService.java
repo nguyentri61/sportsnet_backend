@@ -44,7 +44,8 @@ public class PostService {
 
         // Gắn event
         if (request.getEventId() != null) {
-            clubEventRepository.findBySlug(request.getEventId()).ifPresent(post::setEvent);
+            System.out.println(request.getEventId());
+            clubEventRepository.findById(request.getEventId()).ifPresent(post::setEvent);
         }
 
         post = postRepository.save(post);

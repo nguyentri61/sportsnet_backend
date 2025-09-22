@@ -74,6 +74,7 @@ public class PlayerRatingService {
                 .averageTechnicalScore(playerRating.getAverageTechnicalScore())
                 .overallScore(playerRating.getOverallScore())
                 .skillLevel(playerRating.getSkillLevel())
+                .slug(playerRating.getAccount().getUserInfo().getSlug())
                 .build();
     }
 

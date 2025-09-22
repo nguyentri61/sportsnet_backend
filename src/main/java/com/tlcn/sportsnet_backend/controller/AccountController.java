@@ -32,6 +32,11 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getAccount());
     }
 
+    @GetMapping("/other-profile/{slug}")
+    public ResponseEntity<?> getOtherAccount(@PathVariable String slug) {
+        return ResponseEntity.ok(accountService.getOtherAccount(slug));
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(accountService.updateProfile(request));

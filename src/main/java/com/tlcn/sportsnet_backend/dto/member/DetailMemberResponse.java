@@ -29,4 +29,5 @@ public class DetailMemberResponse {
     String phone;
     Instant createdAt;
     String note;
+    String slug;
 }

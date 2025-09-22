@@ -11,5 +11,6 @@ import java.util.Set;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, String> {
     Optional<Account> findByEmail(String email);
+    Optional<Account> findByUserInfo_Slug(String slug);
     boolean existsByEmail(String email);
 }

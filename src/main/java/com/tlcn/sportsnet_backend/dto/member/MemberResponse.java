@@ -24,5 +24,6 @@ public class MemberResponse {
     @Enumerated(EnumType.STRING)
     ClubMemberStatusEnum status; // ACTIVE, BANNED, PENDING_APPROVAL
     Instant joinedAt;
+    String slug;
 
 }

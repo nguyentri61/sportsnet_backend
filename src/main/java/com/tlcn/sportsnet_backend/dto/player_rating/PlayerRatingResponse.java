@@ -25,4 +25,5 @@ public class PlayerRatingResponse {
     private double averageTechnicalScore;
     private double overallScore;
     private String skillLevel;
+    String slug;
 }

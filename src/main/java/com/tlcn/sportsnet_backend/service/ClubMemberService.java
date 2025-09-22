@@ -145,6 +145,7 @@ public class ClubMemberService {
                         .joinedAt(clubMember.getJoinedAt())
                         .status(clubMember.getStatus())
                         .role(clubMember.getRole())
+                        .slug(clubMember.getAccount().getUserInfo().getSlug())
                         .build()
                 )
                 .toList();
@@ -182,6 +183,7 @@ public class ClubMemberService {
                 .stamina(playerRating != null ? playerRating.getStamina() : null)
                 .overallScore(playerRating != null ? playerRating.getOverallScore() : null)
                 .skillLevel(playerRating != null ? playerRating.getSkillLevel() : "")
+                .slug(clubMember.getAccount().getUserInfo().getSlug())
                 .build();
     }
 }

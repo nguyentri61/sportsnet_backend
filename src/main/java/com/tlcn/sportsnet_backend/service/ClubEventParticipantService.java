@@ -104,6 +104,7 @@ public class ClubEventParticipantService {
                 .stamina(playerRating != null ? playerRating.getStamina() : null)
                 .overallScore(playerRating != null ? playerRating.getOverallScore() : null)
                 .skillLevel(playerRating != null ? playerRating.getSkillLevel() : "")
+                .slug(clubEventParticipant.getParticipant().getUserInfo().getSlug())
                 .build();
 
     }

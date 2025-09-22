@@ -22,4 +22,5 @@ public class PostResponse {
     int commentCount;
     String userId;
     String currentUserId;
+    String slug;
 }
