@@ -134,4 +134,9 @@ public class PostService {
         post = postRepository.save(post);
         return toResponse(post, post.getAuthor());
     }
+
+    public void deletePost(String eventId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
+    }
 }

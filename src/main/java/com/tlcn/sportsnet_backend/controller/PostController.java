@@ -38,6 +38,12 @@ public class PostController {
         return ResponseEntity.ok(postService.updatePost(request));
     }
 
+    @DeleteMapping
+    public ResponseEntity<?> deletePost(@PathVariable String eventId) {
+        postService.deletePost(eventId);
+        return ResponseEntity.ok("Xóa thành công");
+    }
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFiles(@RequestParam("files") List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
