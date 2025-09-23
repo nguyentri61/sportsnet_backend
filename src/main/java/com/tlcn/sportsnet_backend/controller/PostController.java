@@ -38,9 +38,9 @@ public class PostController {
         return ResponseEntity.ok(postService.updatePost(request));
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deletePost(@PathVariable String eventId) {
-        postService.deletePost(eventId);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePost(@PathVariable String id) {
+        postService.deletePost(id);
         return ResponseEntity.ok("Xóa thành công");
     }
 

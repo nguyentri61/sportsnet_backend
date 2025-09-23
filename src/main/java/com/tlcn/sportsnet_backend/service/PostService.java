@@ -4,9 +4,7 @@ import com.tlcn.sportsnet_backend.dto.post.MediaResponse;
 import com.tlcn.sportsnet_backend.dto.post.PostCreateRequest;
 import com.tlcn.sportsnet_backend.dto.post.PostResponse;
 import com.tlcn.sportsnet_backend.dto.post.PostUpdateRequest;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.Post;
-import com.tlcn.sportsnet_backend.entity.PostMedia;
+import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +42,6 @@ public class PostService {
 
         // Gắn event
         if (request.getEventId() != null) {
-            System.out.println(request.getEventId());
             clubEventRepository.findById(request.getEventId()).ifPresent(post::setEvent);
         }
 
@@ -136,8 +133,29 @@ public class PostService {
         return toResponse(post, post.getAuthor());
     }
 
-    public void deletePost(String eventId) {
+    public void deletePost(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
+
+        Post post = postRepository.findById(id).orElseThrow(() -> new InvalidDataException("Post not found"));
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> "ROLE_ADMIN".equals(grantedAuthority.getAuthority()));
+        boolean isClubOwner = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> "ROLE_CLUB_OWNER".equals(grantedAuthority.getAuthority()));
+        boolean isAuthor = post.getAuthor() != null && post.getAuthor().getId().equals(account.getId());
+
+        if (!(isAdmin || isClubOwner || isAuthor)) {
+            throw new SecurityException("Bạn không có quyền xóa bài viết này");
+        }
+
+        List<PostMedia> postMedia = postMediaRepository.findByPostId(post.getId());
+
+        for (PostMedia media : postMedia) {
+            fileStorageService.deleteFile(media.getFilename(), "/posts");
+        }
+        postMediaRepository.deleteAll(postMedia);
+
+        postRepository.delete(post);
     }
 }
