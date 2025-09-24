@@ -41,6 +41,8 @@ public class ClubEventParticipant {
     @Enumerated(EnumType.STRING)
     ClubEventParticipantStatusEnum status;
 
+    boolean deductedForAbsent = false; // đã trừ điểm hay chưa
+
     @PrePersist
     public void handleBeforeCreate(){
         joinedAt = Instant.now();

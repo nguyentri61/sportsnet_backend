@@ -30,6 +30,7 @@ public class ClubEventService {
     private final ClubRepository clubRepository;
     private final ClubEventRepository clubEventRepository;
     private final ClubEventParticipantRepository clubEventParticipantRepository;
+    private final AbsentReasonRepository absentReasonRepository;
     private final AccountRepository accountRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final FileStorageService fileStorageService;
@@ -276,6 +277,7 @@ public class ClubEventService {
                 .maxLevel(event.getMaxLevel())
                 .minLevel(event.getMinLevel())
                 .participantStatus(clubEventParticipant != null ? clubEventParticipant.getStatus() : null)
+                .isSendReason(absentReasonRepository.existsByParticipation(clubEventParticipant))
                 .build();
     }
     public ClubEvent calculateStatus(ClubEvent event) {

@@ -16,6 +16,7 @@ public interface ClubEventParticipantRepository extends JpaRepository<ClubEventP
 
     Page<ClubEventParticipant> findAllByClubEvent(ClubEvent clubEvent, Pageable pageable);
     Optional<ClubEventParticipant> findByClubEventAndParticipant(ClubEvent clubEvent, Account account);
+    Optional<ClubEventParticipant> findByClubEvent_IdAndParticipant(String id, Account account);
     List<ClubEventParticipant> findAllByClubEventOrderByJoinedAtDesc(ClubEvent clubEvent);
     Page<ClubEventParticipant> findByParticipant_Id(String accountId, Pageable pageable);
 }

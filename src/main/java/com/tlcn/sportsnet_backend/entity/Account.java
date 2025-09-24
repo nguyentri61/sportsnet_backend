@@ -98,4 +98,12 @@ public class Account {
 
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PlayerRating playerRating;
+
+    private int totalParticipatedEvents =0;
+    @Column(nullable = false)
+    int reputationScore = 100;
+
+    // Lịch sử thay đổi điểm uy tín
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<ReputationHistory> reputationHistories = new ArrayList<>();
 }

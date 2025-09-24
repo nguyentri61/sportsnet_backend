@@ -3,6 +3,8 @@ package com.tlcn.sportsnet_backend.controller;
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventUpdateRequest;
+import com.tlcn.sportsnet_backend.dto.club_event_participant.ClubEventParticipantUpdate;
+import com.tlcn.sportsnet_backend.enums.ParticipantStatusEnum;
 import com.tlcn.sportsnet_backend.service.ClubEventParticipantService;
 import com.tlcn.sportsnet_backend.service.ClubEventService;
 import com.tlcn.sportsnet_backend.service.ClubService;
@@ -110,5 +112,10 @@ public class ClubEventController {
     @PutMapping("/{idEvent}/participant/{id}/reject")
     public ResponseEntity<?> rejectParticipant(@PathVariable String id,@PathVariable String idEvent) {
         return ResponseEntity.ok(clubEventParticipantService.rejectParticipant(id, idEvent));
+    }
+
+    @PutMapping("/{idEvent}/participant/{id}")
+    public ResponseEntity<?> updateParticipantStatus(@PathVariable String id, @PathVariable String idEvent, @RequestBody ClubEventParticipantUpdate status) {
+        return ResponseEntity.ok(clubEventParticipantService.updateParticipant(id, idEvent, status));
     }
 }

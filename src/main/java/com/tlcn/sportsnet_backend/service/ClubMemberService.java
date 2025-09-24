@@ -184,6 +184,8 @@ public class ClubMemberService {
                 .overallScore(playerRating != null ? playerRating.getOverallScore() : null)
                 .skillLevel(playerRating != null ? playerRating.getSkillLevel() : "")
                 .slug(clubMember.getAccount().getUserInfo().getSlug())
+                .reputationScore(clubMember.getAccount().getReputationScore())
+                .totalParticipatedEvents(clubMember.getAccount().getTotalParticipatedEvents())
                 .build();
     }
 }

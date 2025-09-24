@@ -27,4 +27,6 @@ public class ClubEventParticipantResponse {
     Double  overallScore;
     String skillLevel;
     String slug;
+    int reputationScore;
+    int totalParticipatedEvents;
 }
