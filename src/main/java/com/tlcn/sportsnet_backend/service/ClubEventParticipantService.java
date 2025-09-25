@@ -34,6 +34,7 @@ public class ClubEventParticipantService {
     private final PlayerRatingRepository playerRatingRepository;
     private final ReputationHistoryRepository reputationHistoryRepository;
     private final NotificationService notificationService;
+    private final AbsentReasonRepository absentReasonRepository;
     public ClubEventParticipantResponse joinClubEvent(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
@@ -110,6 +111,7 @@ public class ClubEventParticipantService {
                 .slug(clubEventParticipant.getParticipant().getUserInfo().getSlug())
                 .totalParticipatedEvents(clubEventParticipant.getParticipant().getTotalParticipatedEvents())
                 .reputationScore(clubEventParticipant.getParticipant().getReputationScore())
+                .isSendReason(absentReasonRepository.existsByParticipation(clubEventParticipant))
                 .build();
 
     }
@@ -158,6 +160,7 @@ public class ClubEventParticipantService {
                     .change(10)
                     .reason("Đăng ký và tham gia hoạt động "+ clubEvent.getTitle())
                     .build();
+            accountRepository.save(account);
             reputationHistoryRepository.save(reputationHistory);
         }
         else {
@@ -165,13 +168,14 @@ public class ClubEventParticipantService {
             account.setReputationScore(account.getReputationScore() - 20);
             ReputationHistory reputationHistory = ReputationHistory.builder()
                     .account(account)
-                    .change(-10)
+                    .change(-20)
                     .reason("Đăng ký nhưng không tham gia hoạt động "+ clubEvent.getTitle())
                     .build();
+            accountRepository.save(account);
             reputationHistoryRepository.save(reputationHistory);
 
         }
         notificationService.sendToAccount(clubMember.getParticipant(),"Hoạt động: "+clubEvent.getTitle() ,content,"/events/"+clubEvent.getSlug());
-        return "Đã chấp nhận người tham gia";
+        return "Đã xác nhân người tham gia";
     }
 }

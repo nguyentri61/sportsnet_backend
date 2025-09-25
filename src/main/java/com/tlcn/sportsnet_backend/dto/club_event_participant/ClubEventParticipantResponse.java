@@ -29,4 +29,5 @@ public class ClubEventParticipantResponse {
     String slug;
     int reputationScore;
     int totalParticipatedEvents;
+    boolean isSendReason = false;
 }
