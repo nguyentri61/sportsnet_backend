@@ -87,6 +87,7 @@ public class PostService {
                 .commentCount(0)
                 .mediaList(mediaResponses)
                 .userId(account.getId())
+                .slug(account.getUserInfo().getSlug())
                 .currentUserId(currentAccount != null ? currentAccount.getId() : null)
                 .build();
     }

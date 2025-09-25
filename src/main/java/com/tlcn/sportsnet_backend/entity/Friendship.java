@@ -14,16 +14,23 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "friendships")
+@Table(name = "friendships",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"requester_id", "receiver_id"}),
+        indexes = {
+                @Index(columnList = "requester_id"),
+                @Index(columnList = "receiver_id")
+        }
+)
 public class Friendship {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
     @Enumerated(EnumType.STRING)
-    FriendStatusEnum status; // PENDING, ACCEPTED, BLOCKED
+    FriendStatusEnum status; // PENDING, ACCEPTED, REJECTED, BLOCKED
 
     Instant createdAt;
+    Instant updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "requester_id", nullable = false)
@@ -36,5 +43,10 @@ public class Friendship {
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
     }
 }
