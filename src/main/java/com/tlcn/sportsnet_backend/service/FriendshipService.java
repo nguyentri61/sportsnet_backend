@@ -1,19 +1,23 @@
 package com.tlcn.sportsnet_backend.service;
 
+import com.tlcn.sportsnet_backend.dto.account.AccountFriend;
 import com.tlcn.sportsnet_backend.dto.friend.FriendRequest;
 import com.tlcn.sportsnet_backend.dto.friend.FriendResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Friendship;
+import com.tlcn.sportsnet_backend.entity.PlayerRating;
 import com.tlcn.sportsnet_backend.enums.FriendStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.FriendshipRepository;
+import com.tlcn.sportsnet_backend.repository.PlayerRatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,6 +25,8 @@ import java.util.Optional;
 public class FriendshipService {
     private final FriendshipRepository friendshipRepository;
     private final AccountRepository accountRepository;
+    private final FileStorageService fileStorageService;
+    private final PlayerRatingRepository playerRatingRepository;
 
     public FriendResponse getRelationship(String accountId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -162,5 +168,28 @@ public class FriendshipService {
         friendship = friendshipRepository.save(friendship);
 
         return toResponse(friendship);
+    }
+
+    public List<AccountFriend> getAllFriends(String accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        List<Friendship> friendships = friendshipRepository.findAllFriends(account);
+
+        // Chuyển về list Account bạn bè
+        List<Account> listFriendAccount = friendships.stream()
+                .map(f -> f.getRequester().equals(account) ? f.getReceiver() : f.getRequester())
+                .toList();
+
+        return listFriendAccount.stream()
+                .map(x -> AccountFriend.builder()
+                        .id(x.getId())
+                        .avatarUrl(fileStorageService.getFileUrl(x.getUserInfo().getAvatarUrl(), "/avatar"))
+                        .fullName(x.getUserInfo().getFullName())
+                        .skillLevel(playerRatingRepository.findByAccount(x)
+                                .map(PlayerRating::getSkillLevel)
+                                .orElse("Chưa có"))
+                        .build())
+                .toList();
     }
 }

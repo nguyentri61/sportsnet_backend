@@ -18,6 +18,11 @@ public class FriendshipController {
         return ResponseEntity.ok(friendshipService.getRelationship(accountId));
     }
 
+    @GetMapping("/list/{id}")
+    public ResponseEntity<?> getAccountFriend(@PathVariable String id) {
+        return ResponseEntity.ok(friendshipService.getAllFriends(id));
+    }
+
     @PostMapping("/request")
     public ResponseEntity<?> sendFriendRequest(@RequestBody FriendRequest request) {
         FriendResponse response = friendshipService.sendFriendRequest(request);
