@@ -26,5 +26,7 @@ public class AccountResponse {
     Instant updatedAt;
     String createdBy;
     String updatedBy;
+    int reputationScore;
+    int totalParticipatedEvents;
 
 }

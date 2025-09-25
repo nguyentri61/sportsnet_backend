@@ -46,4 +46,5 @@ public class ClubEventDetailResponse {
     String createdBy;
     ParticipantRoleEnum participantRole;
     ClubEventParticipantStatusEnum participantStatus;
+    boolean isSendReason = false;
 }

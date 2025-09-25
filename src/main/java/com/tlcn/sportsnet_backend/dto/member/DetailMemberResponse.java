@@ -30,4 +30,6 @@ public class DetailMemberResponse {
     Instant createdAt;
     String note;
     String slug;
+    int reputationScore;
+    int totalParticipatedEvents;
 }

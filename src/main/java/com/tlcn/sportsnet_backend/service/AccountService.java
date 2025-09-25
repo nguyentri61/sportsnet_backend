@@ -116,6 +116,8 @@ public class AccountService {
                 .updatedAt(account.getUpdatedAt())
                 .createdBy(account.getCreatedBy())
                 .updatedBy(account.getUpdatedBy())
+                .reputationScore(account.getReputationScore())
+                .totalParticipatedEvents(account.getTotalParticipatedEvents())
                 .build();
     }
 

@@ -2,10 +2,12 @@ package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
 import com.tlcn.sportsnet_backend.dto.club_event_participant.ClubEventParticipantResponse;
+import com.tlcn.sportsnet_backend.dto.club_event_participant.ClubEventParticipantUpdate;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.ClubEventParticipantStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
+import com.tlcn.sportsnet_backend.enums.ParticipantStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.*;
@@ -30,7 +32,9 @@ public class ClubEventParticipantService {
     private final AccountRepository accountRepository;
     private final FileStorageService fileStorageService;
     private final PlayerRatingRepository playerRatingRepository;
+    private final ReputationHistoryRepository reputationHistoryRepository;
     private final NotificationService notificationService;
+    private final AbsentReasonRepository absentReasonRepository;
     public ClubEventParticipantResponse joinClubEvent(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
@@ -105,6 +109,9 @@ public class ClubEventParticipantService {
                 .overallScore(playerRating != null ? playerRating.getOverallScore() : null)
                 .skillLevel(playerRating != null ? playerRating.getSkillLevel() : "")
                 .slug(clubEventParticipant.getParticipant().getUserInfo().getSlug())
+                .totalParticipatedEvents(clubEventParticipant.getParticipant().getTotalParticipatedEvents())
+                .reputationScore(clubEventParticipant.getParticipant().getReputationScore())
+                .isSendReason(absentReasonRepository.existsByParticipation(clubEventParticipant))
                 .build();
 
     }
@@ -135,5 +142,40 @@ public class ClubEventParticipantService {
             throw new InvalidDataException("You are not allowed to view participants");
         }
         return clubEvent;
+    }
+
+    public String updateParticipant(String id, String idEvent, ClubEventParticipantUpdate status) {
+        ClubEvent clubEvent = checkPermission(idEvent);
+        ClubEventParticipant clubMember = clubEventParticipantRepository.findById(id).orElseThrow(() -> new InvalidDataException("Member not found"));
+        clubMember.setStatus(status.getStatus());
+        clubEventParticipantRepository.save(clubMember);
+        Account account = clubMember.getParticipant();
+        String content;
+        if(status.getStatus() == ClubEventParticipantStatusEnum.ATTENDED){
+            content = "Bạn đã được đánh giá là đã tham gia hoạt động, bạn được cộng 20 điểm uy tín ";
+            account.setTotalParticipatedEvents(account.getTotalParticipatedEvents() + 1);
+            account.setReputationScore(Math.min(account.getReputationScore() + 10, 100));
+            ReputationHistory reputationHistory = ReputationHistory.builder()
+                    .account(account)
+                    .change(10)
+                    .reason("Đăng ký và tham gia hoạt động "+ clubEvent.getTitle())
+                    .build();
+            accountRepository.save(account);
+            reputationHistoryRepository.save(reputationHistory);
+        }
+        else {
+            content = "Bạn đã bị đánh giá là không tham gia hoạt động, bạn bị trừ 10 điểm uy tín";
+            account.setReputationScore(account.getReputationScore() - 20);
+            ReputationHistory reputationHistory = ReputationHistory.builder()
+                    .account(account)
+                    .change(-20)
+                    .reason("Đăng ký nhưng không tham gia hoạt động "+ clubEvent.getTitle())
+                    .build();
+            accountRepository.save(account);
+            reputationHistoryRepository.save(reputationHistory);
+
+        }
+        notificationService.sendToAccount(clubMember.getParticipant(),"Hoạt động: "+clubEvent.getTitle() ,content,"/events/"+clubEvent.getSlug());
+        return "Đã xác nhân người tham gia";
     }
 }

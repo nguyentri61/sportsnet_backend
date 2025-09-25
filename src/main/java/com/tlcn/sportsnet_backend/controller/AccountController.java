@@ -9,6 +9,7 @@ import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.service.AccountService;
 import com.tlcn.sportsnet_backend.service.FileStorageService;
 import com.tlcn.sportsnet_backend.service.PlayerRatingService;
+import com.tlcn.sportsnet_backend.service.ReputationHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,7 +27,7 @@ public class AccountController {
     private final AccountService accountService;
     private final PlayerRatingService playerRatingService;
     private final FileStorageService fileStorageService;
-
+    private final ReputationHistoryService reputationHistoryService;
     @GetMapping
     public ResponseEntity<?> getAccount() {
         return ResponseEntity.ok(accountService.getAccount());
@@ -66,5 +67,10 @@ public class AccountController {
     @GetMapping("/player-rating")
     public ResponseEntity<?> getPlayerRating() {
         return ResponseEntity.ok(playerRatingService.getPlayerRating());
+    }
+
+    @GetMapping("/reputation-history")
+    public ResponseEntity<?> getReputationHistory() {
+        return ResponseEntity.ok(reputationHistoryService.getAll());
     }
 }
