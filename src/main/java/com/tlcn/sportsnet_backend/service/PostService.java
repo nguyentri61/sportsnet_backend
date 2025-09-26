@@ -126,6 +126,7 @@ public class PostService {
         Post post = postRepository.findById(request.getId()).orElseThrow(() -> new InvalidDataException("Post not found"));
 
         post.setContent(request.getContent());
+        post = postRepository.save(post);
 
         // Lấy danh sách media hiện có trong DB
         List<PostMedia> currentMedia = postMediaRepository.findByPostId(post.getId());
@@ -151,7 +152,23 @@ public class PostService {
                 postMediaRepository.save(media);
             }
         }
-        post = postRepository.save(post);
+
+        if (request.getTaggedFriendIds() != null) {
+            // xóa tag cũ
+            List<PostTag> tagList = postTagRepository.findByPostId(post.getId());
+            postTagRepository.deleteAll(tagList);
+            // thêm tag mới
+            for (String friendId : request.getTaggedFriendIds()) {
+                Account friend = accountRepository.findById(friendId)
+                        .orElseThrow(() -> new InvalidDataException("Friend not found with id: " + friendId));
+                PostTag tag = PostTag.builder()
+                        .post(post)
+                        .taggedFriend(friend)
+                        .build();
+                postTagRepository.save(tag);
+            }
+        }
+
         return toResponse(post, post.getAuthor());
     }
 
@@ -173,10 +190,17 @@ public class PostService {
 
         List<PostMedia> postMedia = postMediaRepository.findByPostId(post.getId());
 
-        for (PostMedia media : postMedia) {
-            fileStorageService.deleteFile(media.getFilename(), "/posts");
+        if(postMedia != null && !postMedia.isEmpty()) {
+            for (PostMedia media : postMedia) {
+                fileStorageService.deleteFile(media.getFilename(), "/posts");
+            }
+            postMediaRepository.deleteAll(postMedia);
         }
-        postMediaRepository.deleteAll(postMedia);
+
+        List<PostTag> postTagList = postTagRepository.findByPostId(post.getId());
+        if(postTagList != null && !postTagList.isEmpty()) {
+            postTagRepository.deleteAll(postTagList);
+        }
 
         postRepository.delete(post);
     }

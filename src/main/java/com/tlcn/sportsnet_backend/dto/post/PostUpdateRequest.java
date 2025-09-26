@@ -15,4 +15,5 @@ public class PostUpdateRequest {
     String content;
     List<String> newFileNames;
     List<String> keepFileNames;
+    List<String> taggedFriendIds;
 }
