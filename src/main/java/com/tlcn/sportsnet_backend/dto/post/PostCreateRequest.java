@@ -14,4 +14,5 @@ public class PostCreateRequest {
     String eventId;
     String content;
     List<String> fileNames;
+    List<String> taggedFriendIds;
 }

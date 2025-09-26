@@ -1,9 +1,6 @@
 package com.tlcn.sportsnet_backend.service;
 
-import com.tlcn.sportsnet_backend.dto.post.MediaResponse;
-import com.tlcn.sportsnet_backend.dto.post.PostCreateRequest;
-import com.tlcn.sportsnet_backend.dto.post.PostResponse;
-import com.tlcn.sportsnet_backend.dto.post.PostUpdateRequest;
+import com.tlcn.sportsnet_backend.dto.post.*;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.*;
@@ -28,6 +25,7 @@ public class PostService {
     private final AccountRepository accountRepository;
     private final FileStorageService fileStorageService;
     private final PostMediaRepository postMediaRepository;
+    private final PostTagRepository postTagRepository;
 
     @Transactional
     public PostResponse createPost(PostCreateRequest request) {
@@ -59,6 +57,19 @@ public class PostService {
             }
         }
 
+        // xử lý tag
+        if (request.getTaggedFriendIds() != null) {
+            for (String friendId : request.getTaggedFriendIds()) {
+                Account friend = accountRepository.findById(friendId)
+                        .orElseThrow(() -> new InvalidDataException("Friend not found"));
+                PostTag tag = PostTag.builder()
+                        .post(post)
+                        .taggedFriend(friend)
+                        .build();
+                postTagRepository.save(tag);
+            }
+        }
+
         return toResponse(post, account);
     }
 
@@ -68,12 +79,21 @@ public class PostService {
         Account currentAccount = accountRepository.findByEmail(authentication.getName()).orElse(null);
 
         List<PostMedia> mediaList = postMediaRepository.findByPostId(post.getId());
+        List<PostTag> tagList = postTagRepository.findByPostId(post.getId());
 
         List<MediaResponse> mediaResponses = mediaList.stream()
                 .map(media -> MediaResponse.builder()
                         .fileName(media.getFilename())
                         .url(fileStorageService.getFileUrl(media.getFilename(), "/posts")) // chỉnh "/post" tùy theo folder bạn lưu
                         .type(media.getType())
+                        .build())
+                .toList();
+
+        List<PostTagResponse> tagResponseList = tagList.stream()
+                .map(tag -> PostTagResponse.builder()
+                        .id(tag.getTaggedFriend().getId())
+                        .fullName(tag.getTaggedFriend().getUserInfo().getFullName())
+                        .slug(tag.getTaggedFriend().getUserInfo().getSlug())
                         .build())
                 .toList();
 
@@ -86,6 +106,7 @@ public class PostService {
                 .likeCount(0)
                 .commentCount(0)
                 .mediaList(mediaResponses)
+                .taggedList(tagResponseList)
                 .userId(account.getId())
                 .slug(account.getUserInfo().getSlug())
                 .currentUserId(currentAccount != null ? currentAccount.getId() : null)

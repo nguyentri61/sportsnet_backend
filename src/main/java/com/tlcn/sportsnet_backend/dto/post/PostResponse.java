@@ -18,6 +18,7 @@ public class PostResponse {
     String authorAvatar;
     Instant createdAt;
     List<MediaResponse> mediaList;
+    List<PostTagResponse> taggedList;
     int likeCount;
     int commentCount;
     String userId;

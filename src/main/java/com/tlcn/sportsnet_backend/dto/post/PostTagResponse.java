@@ -1,17 +1,15 @@
-package com.tlcn.sportsnet_backend.dto.account;
+package com.tlcn.sportsnet_backend.dto.post;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Data
 @Builder
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AccountFriend {
+public class PostTagResponse {
     String id;
     String fullName;
-    String avatarUrl;
-    String skillLevel;
     String slug;
 }

@@ -189,6 +189,7 @@ public class FriendshipService {
                         .skillLevel(playerRatingRepository.findByAccount(x)
                                 .map(PlayerRating::getSkillLevel)
                                 .orElse("Chưa có"))
+                        .slug(x.getUserInfo().getSlug())
                         .build())
                 .toList();
     }
