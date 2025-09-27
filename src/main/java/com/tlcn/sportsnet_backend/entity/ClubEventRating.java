@@ -1,15 +1,11 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tlcn.sportsnet_backend.util.SecurityUtil;
-import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "club_event_ratings")
@@ -45,6 +41,9 @@ public class ClubEventRating {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     Instant replyAt;
+
+    @Column(nullable = false)
+    private boolean clubMember;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reply_by") // Ai trả lời (thường là chủ CLB)

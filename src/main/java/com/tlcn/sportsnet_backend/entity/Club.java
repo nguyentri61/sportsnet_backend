@@ -85,6 +85,8 @@ public class Club {
 
     String updatedBy;
 
+    Double reputation;
+
     @PrePersist
     public void handleBeforeCreate(){
         createdAt = Instant.now();
@@ -110,4 +112,5 @@ public class Club {
             this.slug = slug + "-" + randomSuffix;
         }
     }
+
 }

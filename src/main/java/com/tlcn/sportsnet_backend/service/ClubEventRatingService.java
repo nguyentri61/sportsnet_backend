@@ -9,13 +9,11 @@ import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
 import com.tlcn.sportsnet_backend.entity.ClubEventParticipant;
 import com.tlcn.sportsnet_backend.entity.ClubEventRating;
+import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.ClubEventParticipantRepository;
-import com.tlcn.sportsnet_backend.repository.ClubEventRatingRepository;
-import com.tlcn.sportsnet_backend.repository.ClubEventRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +33,9 @@ public class ClubEventRatingService {
     private final AccountRepository accountRepository;
     private final ClubEventRepository clubEventRepository;
     private final FileStorageService fileStorageService;
+    private final ClubMemberRepository clubMemberRepository;
+    private final ClubService clubService;
+
     public ClubEventRatingResponse createClubEvent(ClubEventRatingCreateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
@@ -54,7 +55,9 @@ public class ClubEventRatingService {
         clubEventRating.setAccount(account);
         clubEventRating.setRating(request.getRating());
         clubEventRating.setComment(request.getComment());
+        clubEventRating.setClubMember(clubMemberRepository.existsByClubAndAccountAndStatus(clubEvent.getClub(),account, ClubMemberStatusEnum.APPROVED));
         clubEventRating = clubEventRatingRepository.save(clubEventRating);
+        clubService.calculateReputation(clubEvent.getClub());
         return toClubEventRatingResponse(clubEventRating);
     }
     public List<ClubEventRatingResponse> getAllByClubEventId(String clubEventId) {
@@ -88,7 +91,7 @@ public class ClubEventRatingService {
         PageRequest pageRequest = PageRequest.of(0, 5); // trang 0, size 5
         List<ClubEventRating> ratings = clubEventRatingRepository.findAllByClubEvent_Club_IdOrderByCreatedAtDesc(clubId, pageRequest);
         Long total = clubEventRatingRepository.countByClubEvent_Club_Id(clubId);
-        Double avg = clubEventRatingRepository.getAverageRatingByClubId(clubId);
+        Double avg = clubEventRatingRepository.getWeightedAverageRatingByClubId(clubId);
 
         // init count 0 cho từng sao
         long one = 0, two = 0, three = 0, four = 0, five = 0;
@@ -167,6 +170,7 @@ public class ClubEventRatingService {
                 .createdAt(clubEventRating.getCreatedAt())
                 .replyComment(clubEventRating.getReplyComment())
                 .replyCreatedAt(clubEventRating.getReplyAt())
+                .isClubMember(clubEventRating.isClubMember())
                 .build();
     }
 

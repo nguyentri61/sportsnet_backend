@@ -4,21 +4,14 @@ import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
 import com.tlcn.sportsnet_backend.dto.club.JoinClubRequest;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
-import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
-import com.tlcn.sportsnet_backend.payload.exception.CustomUnauthorizedException;
-import com.tlcn.sportsnet_backend.entity.ClubMember;
 import com.tlcn.sportsnet_backend.service.ClubMemberService;
 import com.tlcn.sportsnet_backend.service.ClubService;
 import com.tlcn.sportsnet_backend.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -108,4 +101,10 @@ public class ClubController {
     public ResponseEntity<?> getMyClubMember(@PathVariable String id) {
         return ResponseEntity.ok(clubMemberService.getDetailMember(id));
     }
+
+//    @PostMapping("/update")
+//    public String update() {
+//        clubService.calculateAllClubReputationOnStartup();
+//        return "Update thành công";
+//    }
 }

@@ -21,11 +21,17 @@ public interface ClubEventRatingRepository extends JpaRepository<ClubEventRating
     // Tổng số lượt đánh giá
     Long countByClubEvent_Club_Id(String clubId);
 
-    // Điểm trung bình
-    @Query("SELECT COALESCE(AVG(r.rating), 0) " +
-            "FROM ClubEventRating r " +
-            "WHERE r.clubEvent.club.id = :clubId")
-    Double getAverageRatingByClubId(@Param("clubId") String clubId);
+    // Điểm trung bình có trọng số (30% thành viên CLB, 70% khách vãng lai)
+    @Query(
+            "SELECT " +
+                    "COALESCE((SELECT AVG(r1.rating) FROM ClubEventRating r1 " +
+                    "WHERE r1.clubEvent.club.id = :clubId AND r1.clubMember = true), 0) * 0.3 " +
+                    "+ COALESCE((SELECT AVG(r2.rating) FROM ClubEventRating r2 " +
+                    "WHERE r2.clubEvent.club.id = :clubId AND r2.clubMember = false), 0) * 0.7 " +
+                    "FROM Club c " +
+                    "WHERE c.id = :clubId"
+    )
+    Double getWeightedAverageRatingByClubId(@Param("clubId") String clubId);
 
     // Đếm số lượng theo từng sao (1 → 5)
     @Query("SELECT r.rating, COUNT(r) " +
@@ -33,4 +39,6 @@ public interface ClubEventRatingRepository extends JpaRepository<ClubEventRating
             "WHERE r.clubEvent.club.id = :clubId " +
             "GROUP BY r.rating")
     List<Object[]> getRatingCountsByClubId(@Param("clubId") String clubId);
+
+
 }
