@@ -3,9 +3,12 @@ package com.tlcn.sportsnet_backend.repository;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
 import com.tlcn.sportsnet_backend.entity.ClubEventParticipant;
+import com.tlcn.sportsnet_backend.enums.ClubEventParticipantStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.List;
@@ -19,4 +22,11 @@ public interface ClubEventParticipantRepository extends JpaRepository<ClubEventP
     Optional<ClubEventParticipant> findByClubEvent_IdAndParticipant(String id, Account account);
     List<ClubEventParticipant> findAllByClubEventOrderByJoinedAtDesc(ClubEvent clubEvent);
     Page<ClubEventParticipant> findByParticipant_Id(String accountId, Pageable pageable);
+
+    @Query("SELECT COUNT(p) " +
+            "FROM ClubEventParticipant p " +
+            "WHERE p.clubEvent.club.id = :clubId " +
+            "AND p.status = :status")
+    Long  countByClubIdAndStatus(@Param("clubId") String clubId,
+                                @Param("status") ClubEventParticipantStatusEnum status);
 }

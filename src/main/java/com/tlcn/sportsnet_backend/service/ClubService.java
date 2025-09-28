@@ -4,20 +4,12 @@ import com.tlcn.sportsnet_backend.dto.club.ClubAdminResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
 import com.tlcn.sportsnet_backend.dto.club.ClubResponse;
 import com.tlcn.sportsnet_backend.dto.club.MyClubResponse;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.Club;
-import com.tlcn.sportsnet_backend.entity.ClubMember;
-import com.tlcn.sportsnet_backend.entity.Role;
-import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
-import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
-import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
-import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
+import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.ClubMemberRepository;
-import com.tlcn.sportsnet_backend.repository.ClubRepository;
-import com.tlcn.sportsnet_backend.repository.RoleRepository;
+import com.tlcn.sportsnet_backend.repository.*;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +25,8 @@ import org.springframework.data.domain.Pageable;
 
 import java.security.Permission;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -46,7 +40,10 @@ public class ClubService {
     private final ClubMemberRepository clubMemberRepository;
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
+    private final ClubEventRatingRepository clubEventRatingRepository;
     private final FileStorageService fileStorageService;
+    private final ClubEventRepository clubEventRepository;
+    private final ClubEventParticipantRepository clubEventParticipantRepository;
 
     public ClubResponse createClub(ClubCreateRequest request) {
 
@@ -93,7 +90,10 @@ public class ClubService {
         Account account = accountRepository.findByEmail(authentication.getName())
                 .orElse(null);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(
+                Sort.Order.desc("reputation"),
+                Sort.Order.desc("createdAt")
+        ));
         Page<Club> clubs;
 
         if (account != null) {
@@ -266,5 +266,68 @@ public class ClubService {
     public void deleteClub(String id) {
         Club club = clubRepository.findBySlug(id).orElseThrow(() -> new InvalidDataException("Club not found"));
         clubRepository.delete(club);
+    }
+
+    public double calculateReputation(Club club) {
+        // ----- 1. Weighted Event Rating -----
+        double weightedEventRating = clubEventRatingRepository.getWeightedAverageRatingByClubId(club.getId());
+        if (Double.isNaN(weightedEventRating)) weightedEventRating = 0.0;
+        System.out.println("WeightedEventRating: " + weightedEventRating);
+
+        // ----- 2. Activity Score -----
+        long countEvent = clubEventRepository.countByClubIdAndStatus(club.getId(), EventStatusEnum.FINISHED);
+        Long maxCountEventLong = clubEventRepository.findMaxEventCount(EventStatusEnum.FINISHED);
+        long maxCountEvent = (maxCountEventLong != null) ? maxCountEventLong : 0L;
+        System.out.println("CountEvent: " + countEvent + ", MaxCountEvent: " + maxCountEvent);
+
+        double activityScore = 0.0;
+        if (maxCountEvent > 0) {
+            activityScore = Math.log(1 + countEvent) / Math.log(1 + maxCountEvent) * 100;
+            if (Double.isNaN(activityScore) || Double.isInfinite(activityScore)) activityScore = 0.0;
+        }
+        System.out.println("ActivityScore: " + activityScore);
+
+        // ----- 3. Engagement Score -----
+        long totalApprovedParticipants = clubEventParticipantRepository.countByClubIdAndStatus(club.getId(), ClubEventParticipantStatusEnum.APPROVED);
+        Long totalEventCapacityLong = clubEventRepository.sumTotalMemberByClubId(club.getId());
+        long totalEventCapacity = (totalEventCapacityLong != null) ? totalEventCapacityLong : 0L;
+
+        double engagementScore = 0.0;
+        if (totalEventCapacity > 0) {
+            engagementScore = (double) totalApprovedParticipants / totalEventCapacity * 100;
+            if (Double.isNaN(engagementScore) || Double.isInfinite(engagementScore)) engagementScore = 0.0;
+        }
+        System.out.println("EngagementScore: " + engagementScore + " (" + totalApprovedParticipants + "/" + totalEventCapacity + ")");
+
+        // ----- 4. Longevity Score -----
+        int currentYear = ZonedDateTime.now(ZoneId.systemDefault()).getYear();
+        int createdYear = ZonedDateTime.ofInstant(club.getCreatedAt(), ZoneId.systemDefault()).getYear();
+        int yearsSinceFounded = Math.max(currentYear - createdYear, 0); // tránh âm
+        int longevityScore = Math.min(yearsSinceFounded * 10, 20);
+        System.out.println("LongevityScore: " + longevityScore);
+
+        // ----- 5. Tính tổng uy tín -----
+        double clubReputation = 0.4 * (weightedEventRating / 5) * 100
+                + 0.2 * activityScore
+                + 0.2 * engagementScore
+                + 0.2 * longevityScore;
+
+
+        // ----- 6. Lưu vào DB -----
+        club.setReputation(clubReputation);
+        clubRepository.save(club);
+
+        return clubReputation;
+    }
+
+
+
+    public void calculateAllClubReputationOnStartup() {
+        List<Club> clubs = clubRepository.findAll();
+        for (Club club : clubs) {
+            double reputation = calculateReputation(club);
+            System.out.println("CLB: " + club.getName() + " - Reputation: " + reputation);
+            // Bạn có thể lưu vào DB nếu cần
+        }
     }
 }

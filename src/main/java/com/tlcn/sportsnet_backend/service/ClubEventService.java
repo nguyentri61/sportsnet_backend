@@ -35,6 +35,7 @@ public class ClubEventService {
     private final ClubMemberRepository clubMemberRepository;
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
+    private final ClubService clubService;
 
     @Transactional
     public ClubEventCreateResponse createClubEvent(ClubEventCreateRequest request) {
@@ -282,17 +283,21 @@ public class ClubEventService {
     }
     public ClubEvent calculateStatus(ClubEvent event) {
         EventStatusEnum newStatus = event.getStatus();
-
+        if(newStatus == EventStatusEnum.FINISHED){
+            return event;
+        }
         LocalDateTime now = LocalDateTime.now();
         if(event.getTotalMember() == event.getParticipants().size() && newStatus == EventStatusEnum.OPEN ){
             newStatus = EventStatusEnum.CLOSED;
         }
         if (now.isAfter(event.getDeadline()) && now.isBefore(event.getStartTime()) && newStatus == EventStatusEnum.OPEN ) {
             newStatus = EventStatusEnum.CLOSED;
-        } else if (now.isAfter(event.getStartTime()) && now.isBefore(event.getEndTime()) && newStatus != EventStatusEnum.FINISHED) {
+        } else if (now.isAfter(event.getStartTime()) && now.isBefore(event.getEndTime())) {
             newStatus = EventStatusEnum.ONGOING;
         } else if (now.isAfter(event.getEndTime()) ) {
             newStatus = EventStatusEnum.FINISHED;
+            clubService.calculateReputation(event.getClub());
+
         }
 
         // Nếu status thay đổi, lưu vào DB
@@ -322,12 +327,16 @@ public class ClubEventService {
         clubEvent.setEndTime(request.getEndTime());
         clubEvent.setDeadline(request.getDeadline());
         clubEvent.setOpenForOutside(request.isOpenForOutside());
-        clubEvent.setStatus(request.getStatus());
         clubEvent.setFee(request.getFee());
         clubEvent.setDeadline(request.getDeadline());
         clubEvent.setCategories(request.getCategories());
         clubEvent.setMaxLevel(request.getMaxLevel());
         clubEvent.setMinLevel(request.getMinLevel());
+        if(clubEvent.getStatus()!=request.getStatus() && request.getStatus() == EventStatusEnum.FINISHED){
+            clubService.calculateReputation(clubEvent.getClub());
+        }
+        clubEvent.setStatus(request.getStatus());
+
         clubEvent = clubEventRepository.save(clubEvent);
 
         return toClubEventDetailResponse(clubEvent, account);

@@ -20,4 +20,5 @@ public class ClubRatingResponse {
     private Long fourStars;
     private Long fiveStars;
     List<ClubEventRatingResponse> clubEventRatingResponses = new ArrayList<>();
+    boolean isClubMember;
 }

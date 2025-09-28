@@ -21,4 +21,5 @@ public class ClubEventRatingResponse {
     private Instant createdAt;
     private String replyComment;
     private Instant replyCreatedAt;
+    boolean isClubMember;
 }
