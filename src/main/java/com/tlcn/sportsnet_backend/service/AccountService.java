@@ -4,6 +4,7 @@ import com.tlcn.sportsnet_backend.dto.account.AccountRegisterRequest;
 import com.tlcn.sportsnet_backend.dto.account.AccountResponse;
 import com.tlcn.sportsnet_backend.dto.account.UpdateProfileRequest;
 import com.tlcn.sportsnet_backend.entity.Account;
+import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.Role;
 import com.tlcn.sportsnet_backend.entity.UserInfo;
 import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -101,6 +103,11 @@ public class AccountService {
     }
 
     public AccountResponse toResponse(Account account) {
+        List<Club> clubs = clubRepository.findAllByOwner(account);
+        List<AccountResponse.OwnerClub> ownerClubs = new ArrayList<>();
+        for(Club club : clubs){
+            ownerClubs.add(new AccountResponse.OwnerClub(club.getName(), club.getSlug()));
+        }
         return AccountResponse.builder()
                 .id(account.getId())
                 .email(account.getEmail())
@@ -118,6 +125,7 @@ public class AccountService {
                 .updatedBy(account.getUpdatedBy())
                 .reputationScore(account.getReputationScore())
                 .totalParticipatedEvents(account.getTotalParticipatedEvents())
+                .ownerClubs(ownerClubs)
                 .build();
     }
 

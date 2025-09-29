@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -28,5 +29,16 @@ public class AccountResponse {
     String updatedBy;
     int reputationScore;
     int totalParticipatedEvents;
+    List<OwnerClub> ownerClubs;
+
+    @AllArgsConstructor
+    public static class OwnerClub{
+        String clubName;
+        String slug;
+
+    }
 
 }
+
+
+

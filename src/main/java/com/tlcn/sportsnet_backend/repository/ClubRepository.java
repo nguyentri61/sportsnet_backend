@@ -54,5 +54,6 @@ public interface ClubRepository extends JpaRepository<Club, String> {
             @Param("status") ClubMemberStatusEnum status
     );
 
+    List<Club> findAllByOwner(Account owner);
 
 }

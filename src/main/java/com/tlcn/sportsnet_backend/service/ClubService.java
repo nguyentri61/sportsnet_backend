@@ -272,21 +272,16 @@ public class ClubService {
         // ----- 1. Weighted Event Rating -----
         double weightedEventRating = clubEventRatingRepository.getWeightedAverageRatingByClubId(club.getId());
         if (Double.isNaN(weightedEventRating)) weightedEventRating = 0.0;
-        System.out.println("WeightedEventRating: " + weightedEventRating);
-
         // ----- 2. Activity Score -----
         long countEvent = clubEventRepository.countByClubIdAndStatus(club.getId(), EventStatusEnum.FINISHED);
         Long maxCountEventLong = clubEventRepository.findMaxEventCount(EventStatusEnum.FINISHED);
         long maxCountEvent = (maxCountEventLong != null) ? maxCountEventLong : 0L;
-        System.out.println("CountEvent: " + countEvent + ", MaxCountEvent: " + maxCountEvent);
 
         double activityScore = 0.0;
         if (maxCountEvent > 0) {
             activityScore = Math.log(1 + countEvent) / Math.log(1 + maxCountEvent) * 100;
             if (Double.isNaN(activityScore) || Double.isInfinite(activityScore)) activityScore = 0.0;
         }
-        System.out.println("ActivityScore: " + activityScore);
-
         // ----- 3. Engagement Score -----
         long totalApprovedParticipants = clubEventParticipantRepository.countByClubIdAndStatus(club.getId(), ClubEventParticipantStatusEnum.APPROVED);
         Long totalEventCapacityLong = clubEventRepository.sumTotalMemberByClubId(club.getId());
@@ -297,14 +292,14 @@ public class ClubService {
             engagementScore = (double) totalApprovedParticipants / totalEventCapacity * 100;
             if (Double.isNaN(engagementScore) || Double.isInfinite(engagementScore)) engagementScore = 0.0;
         }
-        System.out.println("EngagementScore: " + engagementScore + " (" + totalApprovedParticipants + "/" + totalEventCapacity + ")");
+
 
         // ----- 4. Longevity Score -----
         int currentYear = ZonedDateTime.now(ZoneId.systemDefault()).getYear();
         int createdYear = ZonedDateTime.ofInstant(club.getCreatedAt(), ZoneId.systemDefault()).getYear();
         int yearsSinceFounded = Math.max(currentYear - createdYear, 0); // tránh âm
         int longevityScore = Math.min(yearsSinceFounded * 10, 20);
-        System.out.println("LongevityScore: " + longevityScore);
+
 
         // ----- 5. Tính tổng uy tín -----
         double clubReputation = 0.4 * (weightedEventRating / 5) * 100
