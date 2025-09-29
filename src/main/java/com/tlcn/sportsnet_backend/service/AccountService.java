@@ -104,7 +104,7 @@ public class AccountService {
     }
 
     public AccountResponse toResponse(Account account) {
-        List<Club> clubs = clubRepository.findAllByOwnerAndStatus(account, ClubStatusEnum.ACTIVE);
+        List<Club> clubs = clubRepository.findAllByOwnerAndStatusOrderByReputationDesc(account, ClubStatusEnum.ACTIVE);
         List<AccountResponse.OwnerClub> ownerClubs = new ArrayList<>();
         for(Club club : clubs){
             ownerClubs.add(new AccountResponse.OwnerClub(club.getName(), club.getSlug(), fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo") ));

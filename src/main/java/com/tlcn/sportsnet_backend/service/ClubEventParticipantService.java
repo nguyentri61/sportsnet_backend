@@ -152,7 +152,7 @@ public class ClubEventParticipantService {
         Account account = clubMember.getParticipant();
         String content;
         if(status.getStatus() == ClubEventParticipantStatusEnum.ATTENDED){
-            content = "Bạn đã được đánh giá là đã tham gia hoạt động, bạn được cộng 20 điểm uy tín ";
+            content = "Bạn đã được đánh giá là đã tham gia hoạt động, bạn được cộng 10 điểm uy tín ";
             account.setTotalParticipatedEvents(account.getTotalParticipatedEvents() + 1);
             account.setReputationScore(Math.min(account.getReputationScore() + 10, 100));
             ReputationHistory reputationHistory = ReputationHistory.builder()
@@ -164,7 +164,7 @@ public class ClubEventParticipantService {
             reputationHistoryRepository.save(reputationHistory);
         }
         else {
-            content = "Bạn đã bị đánh giá là không tham gia hoạt động, bạn bị trừ 10 điểm uy tín";
+            content = "Bạn đã bị đánh giá là không tham gia hoạt động, bạn bị trừ 20 điểm uy tín";
             account.setReputationScore(account.getReputationScore() - 20);
             ReputationHistory reputationHistory = ReputationHistory.builder()
                     .account(account)

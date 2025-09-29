@@ -63,7 +63,7 @@ public class AbsentReasonService {
         accountRepository.save(account);
         absentReasonRepository.save(absentReason);
         reputationHistoryRepository.save(reputationHistory);
-        notificationService.sendToAccount(account,"Phê duyệt lý do vắng mặt " ,"Lý do vắng mặt tại hoạt động "+ absentReason.getParticipation().getClubEvent().getTitle() +"đã được phê duyệt và khôi phụ điểm uy tín","/profile");
+        notificationService.sendToAccount(account,"Phê duyệt lý do vắng mặt " ,"Lý do vắng mặt tại hoạt động "+ absentReason.getParticipation().getClubEvent().getTitle() +" đã được phê duyệt và khôi phụ điểm uy tín","/profile");
         return "Đã chấp nhận lý do vắng";
     }
 
