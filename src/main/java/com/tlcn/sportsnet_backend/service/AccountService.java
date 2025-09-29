@@ -9,6 +9,7 @@ import com.tlcn.sportsnet_backend.entity.Role;
 import com.tlcn.sportsnet_backend.entity.UserInfo;
 import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
+import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.error.UnauthorizedException;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.ClubRepository;
@@ -103,10 +104,10 @@ public class AccountService {
     }
 
     public AccountResponse toResponse(Account account) {
-        List<Club> clubs = clubRepository.findAllByOwner(account);
+        List<Club> clubs = clubRepository.findAllByOwnerAndStatus(account, ClubStatusEnum.ACTIVE);
         List<AccountResponse.OwnerClub> ownerClubs = new ArrayList<>();
         for(Club club : clubs){
-            ownerClubs.add(new AccountResponse.OwnerClub(club.getName(), club.getSlug()));
+            ownerClubs.add(new AccountResponse.OwnerClub(club.getName(), club.getSlug(), fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo") ));
         }
         return AccountResponse.builder()
                 .id(account.getId())

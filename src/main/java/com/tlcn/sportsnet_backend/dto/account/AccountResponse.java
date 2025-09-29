@@ -32,9 +32,12 @@ public class AccountResponse {
     List<OwnerClub> ownerClubs;
 
     @AllArgsConstructor
+    @NoArgsConstructor
+    @Data
     public static class OwnerClub{
         String clubName;
         String slug;
+        String urlLogo;
 
     }
 
