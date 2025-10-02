@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -92,7 +94,9 @@ public class ClubEventService {
                 events.isLast()
         );
     }
-    public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size, String search, String province,String ward) {
+    public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size, String search, String province,String ward,
+                                                                   String quickTimeFilter, Boolean isFree, BigDecimal minFee, BigDecimal maxFee,
+                                                                   LocalDateTime startDate, LocalDateTime endDate) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null); 
@@ -103,6 +107,9 @@ public class ClubEventService {
                 .filter(event -> matchesSearch(event, search))
                 .filter(event -> matchesProvince(event, province))
                 .filter(event -> matchesWard(event, ward))
+                .filter(event -> matchesQuickTimeFilter(event, quickTimeFilter))
+                .filter(event -> matchesFeeFilter(event, isFree, minFee, maxFee))
+                .filter(event -> matchesDateRange(event, startDate, endDate))
                 .toList();
 
         Page<ClubEvent> filteredPage = new PageImpl<>(
@@ -340,6 +347,74 @@ public class ClubEventService {
         clubEvent = clubEventRepository.save(clubEvent);
 
         return toClubEventDetailResponse(clubEvent, account);
+    }
+
+    private boolean matchesQuickTimeFilter(ClubEvent event, String quickTimeFilter) {
+        if (quickTimeFilter == null || quickTimeFilter.isEmpty()) {
+            return true;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime eventStart = event.getStartTime();
+
+        switch (quickTimeFilter) {
+            case "Tuyển gấp":
+                // Sự kiện có deadline trong vòng 24 giờ tới
+                return event.getDeadline().isBefore(now.plusHours(24));
+
+            case "Hôm nay":
+                // Sự kiện diễn ra trong ngày hôm nay
+                LocalDate today = now.toLocalDate();
+                return eventStart.toLocalDate().equals(today);
+
+            case "Cuối tuần":
+                // Sự kiện diễn ra vào thứ 7 hoặc chủ nhật
+                DayOfWeek dayOfWeek = eventStart.getDayOfWeek();
+                return dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
+
+            case "Tuần này":
+                // Sự kiện diễn ra trong tuần hiện tại
+                LocalDate todayDate = now.toLocalDate();
+                LocalDate startOfWeek = todayDate.with(DayOfWeek.MONDAY);
+                LocalDate endOfWeek = startOfWeek.plusDays(6);
+                LocalDate eventDate = eventStart.toLocalDate();
+                return !eventDate.isBefore(startOfWeek) && !eventDate.isAfter(endOfWeek);
+
+            default:
+                return true;
+        }
+    }
+
+    private boolean matchesFeeFilter(ClubEvent event, Boolean isFree, BigDecimal minFee, BigDecimal maxFee) {
+        // Lọc theo checkbox miễn phí
+        if (isFree != null && isFree) {
+            return event.getFee() == null || event.getFee().compareTo(BigDecimal.ZERO) == 0;
+        }
+
+        // Lọc theo range slider
+        if (minFee != null && maxFee != null) {
+            BigDecimal eventFee = event.getFee() != null ? event.getFee() : BigDecimal.ZERO;
+            return eventFee.compareTo(minFee) >= 0 && eventFee.compareTo(maxFee) <= 0;
+        }
+
+        return true;
+    }
+
+    private boolean matchesDateRange(ClubEvent event, LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null && endDate == null) {
+            return true;
+        }
+
+        LocalDateTime eventStart = event.getStartTime();
+
+        if (startDate != null && endDate != null) {
+            return (eventStart.isAfter(startDate) || eventStart.isEqual(startDate))
+                    && (eventStart.isBefore(endDate) || eventStart.isEqual(endDate));
+        } else if (startDate != null) {
+            return eventStart.isAfter(startDate) || eventStart.isEqual(startDate);
+        } else {
+            return eventStart.isBefore(endDate) || eventStart.isEqual(endDate);
+        }
     }
 
     private boolean matchesSearch(ClubEvent event, String search) {
