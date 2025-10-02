@@ -1,36 +1,47 @@
 package com.tlcn.sportsnet_backend.entity;
 
+import com.tlcn.sportsnet_backend.entity.Account;
+import com.tlcn.sportsnet_backend.entity.Conversation;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "messages")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Message {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
 
-    String content;
-    LocalDateTime sentAt;
-    Boolean seen;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    String id;
+
+    @ManyToOne
+    @JoinColumn(name = "conversation_id", nullable = false)
+    Conversation conversation;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
     Account sender;
 
-    @ManyToOne
-    @JoinColumn(name = "receiver_id")
-    Account receiver; // private chat (null nếu group chat)
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    String content;
 
-    @ManyToOne
-    @JoinColumn(name = "chat_group_id")
-    ChatGroup chatGroup; // null nếu private chat
+    Instant createdAt = Instant.now();
+
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<MessageStatus> statuses = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+    }
 }
