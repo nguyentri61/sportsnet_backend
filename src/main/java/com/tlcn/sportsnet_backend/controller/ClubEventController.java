@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.controller;
 
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
+import com.tlcn.sportsnet_backend.dto.club_event.ClubEventFilterRequest;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventUpdateRequest;
 import com.tlcn.sportsnet_backend.dto.club_event_participant.ClubEventParticipantUpdate;
 import com.tlcn.sportsnet_backend.enums.ParticipantStatusEnum;
@@ -54,7 +55,7 @@ public class ClubEventController {
         return ResponseEntity.ok(clubEventService.getAllMyJoinedClubEvents(page, size));
     }
 
-    @GetMapping("/all/public")
+    @PostMapping("/all/public")
     public ResponseEntity<?> getAllPublicEventClub(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -66,8 +67,9 @@ public class ClubEventController {
             @RequestParam(required = false) BigDecimal minFee,
             @RequestParam(required = false) BigDecimal maxFee,
             @RequestParam(required = false) LocalDateTime startDate,
-            @RequestParam(required = false) LocalDateTime endDate) {
-        return ResponseEntity.ok(clubEventService.getAllPublicEventClub(page, size, search, province, ward, quickTimeFilter, isFree, minFee, maxFee, startDate, endDate));
+            @RequestParam(required = false) LocalDateTime endDate,
+            @RequestBody(required = false) ClubEventFilterRequest advancedFilter) {
+        return ResponseEntity.ok(clubEventService.getAllPublicEventClub(page, size, search, province, ward, quickTimeFilter, isFree, minFee, maxFee, startDate, endDate, advancedFilter));
     }
     @PostMapping
     public ResponseEntity<?> createClubEvent(@RequestBody ClubEventCreateRequest request) {
