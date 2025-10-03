@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @Repository
 public interface MessageRepository  extends JpaRepository<Message, String> {
-    List<Message> findAllByConversationIdOrderByCreatedAtAsc(String conversationId);
     Page<Message> findAllByConversationId(String conversationId, Pageable pageable);
     Optional<Message> findFirstByConversationIdOrderByCreatedAtDesc(String conversationId);
 }

@@ -9,6 +9,7 @@ import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.ConversationRepository;
 import com.tlcn.sportsnet_backend.repository.MessageRepository;
+import com.tlcn.sportsnet_backend.repository.MessageStatusRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +25,7 @@ public class ConversationService {
     private final AccountRepository accountRepository;
     private final MessageRepository messageRepository;
     private final FileStorageService fileStorageService;
+    private final MessageStatusRepository messageStatusRepository;
     public List<ConversationResponse> findAll() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
@@ -35,6 +37,7 @@ public class ConversationService {
     }
 
     public ConversationResponse toConversationResponse(Conversation conversation, Account account) {
+        Long unRead = messageStatusRepository.countUnreadMessagesByConversation(account.getId(), conversation.getId());
         ConversationResponse conversationResponse = new ConversationResponse();
         Message message = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.getId()).orElse(null);
         for(ConversationParticipant conversationParticipant : conversation.getParticipants()) {
@@ -44,6 +47,7 @@ public class ConversationService {
                 conversationResponse.setName(accountCheck.getUserInfo().getFullName());
                 conversationResponse.setAvatarUrl(fileStorageService.getFileUrl(accountCheck.getUserInfo().getAvatarUrl(), "/avatar"));
                 conversationResponse.setFirstMessage(message != null ? message.getContent() : null);
+                conversationResponse.setUnreadCount(unRead);
                 break;
             }
         }
