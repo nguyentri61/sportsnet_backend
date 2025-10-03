@@ -5,15 +5,15 @@ import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Service
@@ -71,6 +71,20 @@ public class PostService {
         }
 
         return toResponse(post, account);
+    }
+
+    public List<PostResponse> getPostsOfUsers(String accountId) {
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> new InvalidDataException("Account not found"));
+
+        List<Post> authoredPosts = postRepository.findByAuthor(account, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<Post> taggedPosts = postRepository.findByTaggedFriends_TaggedFriend_Id(accountId);
+
+        List<Post> posts = Stream.concat(authoredPosts.stream(), taggedPosts.stream()).toList();
+        // Kết hợp và sắp xếp
+        return posts.stream()
+                .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
+                .map(post -> toResponse(post, post.getAuthor()))
+                .toList();
     }
 
     private PostResponse toResponse(Post post, Account account) {
