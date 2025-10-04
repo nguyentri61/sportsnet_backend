@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.controller;
 
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventCreateRequest;
+import com.tlcn.sportsnet_backend.dto.club_event.ClubEventFilterRequest;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventUpdateRequest;
 import com.tlcn.sportsnet_backend.dto.club_event_participant.ClubEventParticipantUpdate;
 import com.tlcn.sportsnet_backend.enums.ParticipantStatusEnum;
@@ -14,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -52,14 +55,21 @@ public class ClubEventController {
         return ResponseEntity.ok(clubEventService.getAllMyJoinedClubEvents(page, size));
     }
 
-    @GetMapping("/all/public")
+    @PostMapping("/all/public")
     public ResponseEntity<?> getAllPublicEventClub(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String province,
-            @RequestParam(required = false) String ward) {
-        return ResponseEntity.ok(clubEventService.getAllPublicEventClub(page, size, search, province, ward));
+            @RequestParam(required = false) String ward,
+            @RequestParam(required = false) String quickTimeFilter,
+            @RequestParam(required = false) Boolean isFree,
+            @RequestParam(required = false) BigDecimal minFee,
+            @RequestParam(required = false) BigDecimal maxFee,
+            @RequestParam(required = false) LocalDateTime startDate,
+            @RequestParam(required = false) LocalDateTime endDate,
+            @RequestBody(required = false) ClubEventFilterRequest advancedFilter) {
+        return ResponseEntity.ok(clubEventService.getAllPublicEventClub(page, size, search, province, ward, quickTimeFilter, isFree, minFee, maxFee, startDate, endDate, advancedFilter));
     }
     @PostMapping
     public ResponseEntity<?> createClubEvent(@RequestBody ClubEventCreateRequest request) {

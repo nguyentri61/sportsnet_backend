@@ -26,6 +26,10 @@ public class PostController {
         return ResponseEntity.ok(postService.getAllPostsByEvent(eventId));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getAllPostsByAccount(@PathVariable String userId) {
+        return ResponseEntity.ok(postService.getPostsOfUsers(userId));
+    }
 
     @PostMapping
     public ResponseEntity<PostResponse> createPost(@RequestBody PostCreateRequest request) {

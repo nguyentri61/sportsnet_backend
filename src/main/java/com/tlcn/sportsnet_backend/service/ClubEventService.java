@@ -1,14 +1,8 @@
 package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.club_event.*;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.Club;
-import com.tlcn.sportsnet_backend.entity.ClubEvent;
-import com.tlcn.sportsnet_backend.entity.ClubEventParticipant;
-import com.tlcn.sportsnet_backend.enums.ClubEventParticipantStatusEnum;
-import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
-import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
-import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
+import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.*;
@@ -20,8 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -92,17 +89,29 @@ public class ClubEventService {
                 events.isLast()
         );
     }
-    public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size, String search, String province,String ward) {
+    public PagedResponse<ClubEventResponse> getAllPublicEventClub( int page, int size, String search, String province,String ward,
+                                                                   String quickTimeFilter, Boolean isFree, BigDecimal minFee, BigDecimal maxFee,
+                                                                   LocalDateTime startDate, LocalDateTime endDate,
+                                                                   ClubEventFilterRequest filterRequest) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null); 
         Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutsideAndStatusAndDeadlineAfter( pageable, true,  EventStatusEnum.OPEN, LocalDateTime.now());
 
-        // Lọc dữ liệu theo search, province và ward
+        // Lọc dữ liệu
         List<ClubEvent> filteredEvents = events.getContent().stream()
                 .filter(event -> matchesSearch(event, search))
                 .filter(event -> matchesProvince(event, province))
                 .filter(event -> matchesWard(event, ward))
+                .filter(event -> matchesQuickTimeFilter(event, quickTimeFilter))
+                .filter(event -> matchesFeeFilter(event, isFree, minFee, maxFee))
+                .filter(event -> matchesDateRange(event, startDate, endDate))
+                .filter(event -> matchesLevels(event, filterRequest.getLevels()))
+                .filter(event -> matchesCategories(event, filterRequest.getCategories()))
+                .filter(event -> matchesMinRating(event, filterRequest.getMinRating()))
+                .filter(event -> matchesParticipantSize(event, filterRequest.getParticipantSize()))
+                .filter(event -> matchesClubName(event, filterRequest.getClubNames()))
+                .filter(event -> matchesStatuses(event, filterRequest.getStatuses()))
                 .toList();
 
         Page<ClubEvent> filteredPage = new PageImpl<>(
@@ -340,6 +349,147 @@ public class ClubEventService {
         clubEvent = clubEventRepository.save(clubEvent);
 
         return toClubEventDetailResponse(clubEvent, account);
+    }
+
+    private boolean matchesLevels(ClubEvent event, List<String> levels) {
+        if (levels == null || levels.isEmpty()) return true;
+        System.out.print(levels);
+        return levels.stream().anyMatch(level -> {
+            switch (level) {
+                case "Mới tập chơi":
+                    return event.getMinLevel() >= 0 && event.getMaxLevel() <= 1.5;
+                case "Cơ bản":
+                    return event.getMinLevel() >= 1.0 && event.getMaxLevel() <= 2.5;
+                case "Trung bình":
+                    return event.getMinLevel() >= 2.0 && event.getMaxLevel() <= 3.5;
+                case "Trung bình khá":
+                    return event.getMinLevel() >= 3.0 && event.getMaxLevel() <= 4.0;
+                case "Khá":
+                    return event.getMinLevel() >= 3.5 && event.getMaxLevel() <= 4.5;
+                case "Bán chuyên":
+                    return event.getMinLevel() >= 4.0 && event.getMaxLevel() <= 5.0;
+                default:
+                    return false;
+            }
+        });
+    }
+
+    private boolean matchesCategories(ClubEvent event, List<BadmintonCategoryEnum> categories) {
+        if (categories == null || categories.isEmpty()) return true;
+        return event.getCategories().stream().anyMatch(categories::contains);
+    }
+
+    private boolean matchesParticipantSize(ClubEvent event, String participantSize) {
+        if (participantSize == null || participantSize.isEmpty()) return true;
+
+        int totalParticipants = event.getParticipants().size();
+        switch (participantSize) {
+            case "NHO":
+                return totalParticipants < 10;
+            case "VUA":
+                return totalParticipants >= 10 && totalParticipants <= 20;
+            case "DONG":
+                return totalParticipants > 20;
+            default:
+                return true;
+        }
+    }
+
+    private boolean matchesMinRating(ClubEvent event, Double minRating) {
+        if (minRating == null) return true;
+
+        double averageRating = event.getClubEventRatings().stream()
+                .mapToDouble(ClubEventRating::getRating)
+                .average()
+                .orElse(0.0);
+
+        return averageRating >= minRating;
+    }
+
+    private boolean matchesClubName(ClubEvent event, List<String> clubNames) {
+        if (clubNames == null || clubNames.isEmpty()) return true;
+        if (event.getClub() == null || event.getClub().getName() == null) return false;
+
+        String eventClubName = event.getClub().getName().toLowerCase();
+
+        // Kiểm tra nếu bất kỳ tên nào trong danh sách xuất hiện trong tên CLB sự kiện
+        return clubNames.stream()
+                .filter(Objects::nonNull)
+                .map(String::toLowerCase)
+                .anyMatch(eventClubName::contains);
+    }
+
+    private boolean matchesStatuses(ClubEvent event, List<EventStatusEnum> statuses) {
+        if (statuses == null || statuses.isEmpty()) return true;
+        return statuses.contains(event.getStatus());
+    }
+
+    private boolean matchesQuickTimeFilter(ClubEvent event, String quickTimeFilter) {
+        if (quickTimeFilter == null || quickTimeFilter.isEmpty()) {
+            return true;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime eventStart = event.getStartTime();
+
+        switch (quickTimeFilter) {
+            case "Tuyển gấp":
+                // Sự kiện có deadline trong vòng 24 giờ tới
+                return event.getDeadline().isBefore(now.plusHours(24));
+
+            case "Hôm nay":
+                // Sự kiện diễn ra trong ngày hôm nay
+                LocalDate today = now.toLocalDate();
+                return eventStart.toLocalDate().equals(today);
+
+            case "Cuối tuần":
+                // Sự kiện diễn ra vào thứ 7 hoặc chủ nhật
+                DayOfWeek dayOfWeek = eventStart.getDayOfWeek();
+                return dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
+
+            case "Tuần này":
+                // Sự kiện diễn ra trong tuần hiện tại
+                LocalDate todayDate = now.toLocalDate();
+                LocalDate startOfWeek = todayDate.with(DayOfWeek.MONDAY);
+                LocalDate endOfWeek = startOfWeek.plusDays(6);
+                LocalDate eventDate = eventStart.toLocalDate();
+                return !eventDate.isBefore(startOfWeek) && !eventDate.isAfter(endOfWeek);
+
+            default:
+                return true;
+        }
+    }
+
+    private boolean matchesFeeFilter(ClubEvent event, Boolean isFree, BigDecimal minFee, BigDecimal maxFee) {
+        // Lọc theo checkbox miễn phí
+        if (isFree != null && isFree) {
+            return event.getFee() == null || event.getFee().compareTo(BigDecimal.ZERO) == 0;
+        }
+
+        // Lọc theo range slider
+        if (minFee != null && maxFee != null) {
+            BigDecimal eventFee = event.getFee() != null ? event.getFee() : BigDecimal.ZERO;
+            return eventFee.compareTo(minFee) >= 0 && eventFee.compareTo(maxFee) <= 0;
+        }
+
+        return true;
+    }
+
+    private boolean matchesDateRange(ClubEvent event, LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null && endDate == null) {
+            return true;
+        }
+
+        LocalDateTime eventStart = event.getStartTime();
+
+        if (startDate != null && endDate != null) {
+            return (eventStart.isAfter(startDate) || eventStart.isEqual(startDate))
+                    && (eventStart.isBefore(endDate) || eventStart.isEqual(endDate));
+        } else if (startDate != null) {
+            return eventStart.isAfter(startDate) || eventStart.isEqual(startDate);
+        } else {
+            return eventStart.isBefore(endDate) || eventStart.isEqual(endDate);
+        }
     }
 
     private boolean matchesSearch(ClubEvent event, String search) {

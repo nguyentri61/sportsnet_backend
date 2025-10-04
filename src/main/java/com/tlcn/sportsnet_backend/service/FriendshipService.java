@@ -10,6 +10,7 @@ import com.tlcn.sportsnet_backend.enums.FriendStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -220,5 +221,33 @@ public class FriendshipService {
                         .slug(x.getUserInfo().getSlug())
                         .build())
                 .toList();
+    }
+
+    public List<AccountFriend> getAllRequesters() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
+
+        List<Friendship> friendships = friendshipRepository.findAllFriendsByReceiverAndStatus(
+                account,
+                FriendStatusEnum.PENDING,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<Account> listAccountRequest = friendships.stream()
+                .map(Friendship::getRequester)
+                .toList();
+
+        return listAccountRequest.stream()
+                .map(x -> AccountFriend.builder()
+                        .id(x.getId())
+                        .avatarUrl(fileStorageService.getFileUrl(x.getUserInfo().getAvatarUrl(), "/avatar"))
+                        .fullName(x.getUserInfo().getFullName())
+                        .skillLevel(playerRatingRepository.findByAccount(x)
+                                .map(PlayerRating::getSkillLevel)
+                                .orElse("Chưa có"))
+                        .slug(x.getUserInfo().getSlug())
+                        .build())
+                .toList();
+
+
     }
 }

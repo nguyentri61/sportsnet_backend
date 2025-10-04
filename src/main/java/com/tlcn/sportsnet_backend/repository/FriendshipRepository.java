@@ -2,6 +2,8 @@ package com.tlcn.sportsnet_backend.repository;
 
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Friendship;
+import com.tlcn.sportsnet_backend.enums.FriendStatusEnum;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +23,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, String> 
             "(f.requester = :account OR f.receiver = :account) " +
             "AND f.status = 'ACCEPTED'")
     List<Friendship> findAllFriends(@Param("account") Account account);
+
+    List<Friendship> findAllFriendsByReceiverAndStatus(Account receiver, FriendStatusEnum status, Sort sort);
+
 }
