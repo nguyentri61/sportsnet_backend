@@ -23,7 +23,7 @@ public interface ClubEventRepository extends JpaRepository<ClubEvent, String> {
     Optional<ClubEvent> findBySlug(String slug);
 
     Page<ClubEvent> findAllByOpenForOutsideAndStatusAndDeadlineAfter(Pageable pageable, Boolean openForOutside, EventStatusEnum status, LocalDateTime deadline);
-    List<ClubEvent> findAllByOpenForOutsideAndStatusAndDeadlineAfter(Boolean openForOutside, EventStatusEnum status, LocalDateTime deadline);
+    List<ClubEvent> findAllByOpenForOutsideAndStatusAndDeadlineAfterOrderByCreatedAtDesc(Boolean openForOutside, EventStatusEnum status, LocalDateTime deadline);
 
     Page<ClubEvent> findByClub_Members_Account_IdAndClub_Members_StatusAndStatusAndDeadlineAfter(
             String accountId,

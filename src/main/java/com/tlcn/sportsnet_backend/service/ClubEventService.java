@@ -99,7 +99,7 @@ public class ClubEventService {
 //        Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutsideAndStatusAndDeadlineAfter( pageable, true,  EventStatusEnum.OPEN, LocalDateTime.now());
 
         List<ClubEvent> allEvents = clubEventRepository
-                .findAllByOpenForOutsideAndStatusAndDeadlineAfter(true, EventStatusEnum.OPEN, LocalDateTime.now());
+                .findAllByOpenForOutsideAndStatusAndDeadlineAfterOrderByCreatedAtDesc(true, EventStatusEnum.OPEN, LocalDateTime.now());
 
 //         Lọc dữ liệu
         List<ClubEvent> filteredEvents = allEvents.stream()
