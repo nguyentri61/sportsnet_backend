@@ -96,10 +96,13 @@ public class ClubEventService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null); 
-        Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutsideAndStatusAndDeadlineAfter( pageable, true,  EventStatusEnum.OPEN, LocalDateTime.now());
+//        Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutsideAndStatusAndDeadlineAfter( pageable, true,  EventStatusEnum.OPEN, LocalDateTime.now());
 
-        // Lọc dữ liệu
-        List<ClubEvent> filteredEvents = events.getContent().stream()
+        List<ClubEvent> allEvents = clubEventRepository
+                .findAllByOpenForOutsideAndStatusAndDeadlineAfter(true, EventStatusEnum.OPEN, LocalDateTime.now());
+
+//         Lọc dữ liệu
+        List<ClubEvent> filteredEvents = allEvents.stream()
                 .filter(event -> matchesSearch(event, search))
                 .filter(event -> matchesProvince(event, province))
                 .filter(event -> matchesWard(event, ward))
@@ -114,23 +117,22 @@ public class ClubEventService {
                 .filter(event -> matchesStatuses(event, filterRequest.getStatuses()))
                 .toList();
 
-        Page<ClubEvent> filteredPage = new PageImpl<>(
-                filteredEvents,
-                pageable,
-                filteredEvents.size()
-        );
+        int totalElements = filteredEvents.size();
+        int start = Math.min((int) pageable.getOffset(), totalElements);
+        int end = Math.min(start + pageable.getPageSize(), totalElements);
+        List<ClubEvent> paginatedList = filteredEvents.subList(start, end);
 
-        List<ClubEventResponse> content = filteredPage.getContent().stream()
+        List<ClubEventResponse> content = paginatedList.stream()
                 .map(event -> toClubEventResponse(event, account))
                 .toList();
 
         return new PagedResponse<>(
                 content,
-                filteredPage.getNumber(),
-                filteredPage.getSize(),
-                filteredPage.getTotalElements(),
-                filteredPage.getTotalPages(),
-                filteredPage.isLast()
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                totalElements,
+                (int) Math.ceil((double) totalElements / pageable.getPageSize()),
+                end >= totalElements
         );
     }
     public PagedResponse<ClubEventResponse>  getAllMyClubEventClub(int page, int size) {
