@@ -357,17 +357,18 @@ public class ClubEventService {
         return levels.stream().anyMatch(level -> {
             switch (level) {
                 case "Mới tập chơi":
-                    return event.getMinLevel() >= 0 && event.getMaxLevel() <= 1.5;
+                    // Event phù hợp nếu có CHỨA bất kỳ phần nào của trình độ mới tập chơi
+                    return event.getMaxLevel() >= 0.0 && event.getMinLevel() <= 1.5;
                 case "Cơ bản":
-                    return event.getMinLevel() >= 1.0 && event.getMaxLevel() <= 2.5;
+                    return event.getMaxLevel() >= 1.0 && event.getMinLevel() <= 2.5;
                 case "Trung bình":
-                    return event.getMinLevel() >= 2.0 && event.getMaxLevel() <= 3.5;
+                    return event.getMaxLevel() >= 2.0 && event.getMinLevel() <= 3.5;
                 case "Trung bình khá":
-                    return event.getMinLevel() >= 3.0 && event.getMaxLevel() <= 4.0;
+                    return event.getMaxLevel() >= 3.0 && event.getMinLevel() <= 4.0;
                 case "Khá":
-                    return event.getMinLevel() >= 3.5 && event.getMaxLevel() <= 4.5;
+                    return event.getMaxLevel() >= 3.5 && event.getMinLevel() <= 4.5;
                 case "Bán chuyên":
-                    return event.getMinLevel() >= 4.0 && event.getMaxLevel() <= 5.0;
+                    return event.getMaxLevel() >= 4.0 && event.getMinLevel() <= 5.0;
                 default:
                     return false;
             }
