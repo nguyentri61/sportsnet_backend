@@ -3,14 +3,12 @@ package com.tlcn.sportsnet_backend.service;
 import com.tlcn.sportsnet_backend.dto.account.AccountFriend;
 import com.tlcn.sportsnet_backend.dto.friend.FriendRequest;
 import com.tlcn.sportsnet_backend.dto.friend.FriendResponse;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.Friendship;
-import com.tlcn.sportsnet_backend.entity.PlayerRating;
+import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.ChatRole;
+import com.tlcn.sportsnet_backend.enums.ConversationType;
 import com.tlcn.sportsnet_backend.enums.FriendStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.FriendshipRepository;
-import com.tlcn.sportsnet_backend.repository.PlayerRatingRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
@@ -18,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +28,8 @@ public class FriendshipService {
     private final FileStorageService fileStorageService;
     private final PlayerRatingRepository playerRatingRepository;
     private final NotificationService notificationService;
+    private final ConversationRepository conversationRepository;
+    private final ConversationParticipantRepository conversationParticipantRepository;
 
     public FriendResponse getRelationship(String accountId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -146,7 +147,31 @@ public class FriendshipService {
         friendship.setStatus(FriendStatusEnum.ACCEPTED);
         friendship = friendshipRepository.save(friendship);
 
+        Optional<Conversation> existing = conversationRepository.findPrivateBetweenUsers(requester.getId(), receiver.getId(), ConversationType.PRIVATE);
+        if (existing.isEmpty()) {
+            Conversation conversation = new Conversation();
+            conversation.setType(ConversationType.PRIVATE);
+
+            // Lưu conversation
+            conversation = conversationRepository.save(conversation);
+
+            // Thêm participants
+            ConversationParticipant p1 = new ConversationParticipant();
+            p1.setConversation(conversation);
+            p1.setAccount(requester);
+            p1.setRole(ChatRole.MEMBER);
+
+            ConversationParticipant p2 = new ConversationParticipant();
+            p2.setConversation(conversation);
+            p2.setAccount(receiver);
+            p2.setRole(ChatRole.MEMBER);
+
+            conversationParticipantRepository.saveAll(List.of(p1, p2));
+        }
+
+
         notificationService.sendToAccount(requester,"Chấp nhận lời mời kết bạn!" ,receiver.getUserInfo().getFullName() + " đã chấp nhận lời mời kết bạn của bạn ","/profile/" + receiver.getUserInfo().getSlug());
+
         return toResponse(friendship);
     }
 

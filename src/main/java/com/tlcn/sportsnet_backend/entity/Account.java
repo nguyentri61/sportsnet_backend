@@ -86,11 +86,8 @@ public class Account {
     Set<Post> posts = new HashSet<>();
 
     // Messaging
-    @OneToMany(mappedBy = "sender")
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Message> sentMessages = new HashSet<>();
-
-    @OneToMany(mappedBy = "receiver")
-    Set<Message> receivedMessages = new HashSet<>();
 
     // Event organizing
     @OneToMany(mappedBy = "organizer")
