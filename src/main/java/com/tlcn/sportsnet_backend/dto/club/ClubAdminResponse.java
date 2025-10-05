@@ -22,5 +22,6 @@ public class ClubAdminResponse {
     Integer memberCount;
     Integer maxMembers;
     ClubStatusEnum status;
+    Double reputation;
     Instant createdAt;
 }

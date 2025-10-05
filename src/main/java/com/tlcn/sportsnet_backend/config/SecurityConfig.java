@@ -38,6 +38,8 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthEntryPoint jwtAuthEntryPoint;
 
+    @Autowired
+    private CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
     private final String[] API_ALLOWED = {
             "/", "/api/auth/login", "/api/auth/refresh", "/api/auth/register" ,"/uploads/**",
             "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html","/api/clubs/*",
@@ -58,14 +60,7 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(jwtAuthEntryPoint)
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(token -> {
-                            List<String> permission = token.getClaimAsStringList("authorities");
-                            if (permission == null) permission = Collections.emptyList();
-                            return new JwtAuthenticationToken(
-                                    token,
-                                    permission.stream().map(SimpleGrantedAuthority::new).toList()
-                            );
-                        }))
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(customJwtAuthenticationConverter))
                 )
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
