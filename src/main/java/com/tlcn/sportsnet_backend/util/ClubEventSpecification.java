@@ -38,12 +38,18 @@ public class ClubEventSpecification {
         return (root, query, cb) -> {
             if (Boolean.TRUE.equals(isFree)) {
                 return cb.equal(root.get("fee"), BigDecimal.ZERO);
-            } else if (minFee != null && maxFee != null) {
-                return cb.between(root.get("fee"), minFee, maxFee);
-            } else if (minFee != null) {
-                return cb.greaterThanOrEqualTo(root.get("fee"), minFee);
-            } else if (maxFee != null) {
-                return cb.lessThanOrEqualTo(root.get("fee"), maxFee);
+            }
+
+            BigDecimal scale = new BigDecimal(1000);
+            BigDecimal scaledMinFee = (minFee != null) ? minFee.multiply(scale) : null;
+            BigDecimal scaledMaxFee = (maxFee != null) ? maxFee.multiply(scale) : null;
+
+            if (scaledMinFee != null && scaledMaxFee != null) {
+                return cb.between(root.get("fee"), scaledMinFee, scaledMaxFee);
+            } else if (scaledMinFee != null) {
+                return cb.greaterThanOrEqualTo(root.get("fee"), scaledMinFee);
+            } else if (scaledMaxFee != null) {
+                return cb.lessThanOrEqualTo(root.get("fee"), scaledMaxFee);
             }
             return null;
         };
@@ -169,16 +175,16 @@ public class ClubEventSpecification {
     public static Specification<ClubEvent> participantSize(String size) {
         return (root, query, cb) -> {
             if (size == null || size.isEmpty()) return null;
-            assert query != null;
-            query.distinct(true);
-            Join<Object, Object> participants = root.join("participants", JoinType.LEFT);
-            query.groupBy(root.get("id"));
-            Expression<Long> count = cb.count(participants);
-            switch (size) {
-                case "NHO": return cb.lessThan(count, 10L);
-                case "VUA": return cb.between(count, 10L, 20L);
-                case "DONG": return cb.greaterThan(count, 20L);
-                default: return null;
+
+            switch (size.toUpperCase()) {
+                case "NHO":
+                    return cb.lessThan(root.get("totalMember"), 10);
+                case "VUA":
+                    return cb.between(root.get("totalMember"), 10, 20);
+                case "DONG":
+                    return cb.greaterThan(root.get("totalMember"), 20);
+                default:
+                    return null;
             }
         };
     }
