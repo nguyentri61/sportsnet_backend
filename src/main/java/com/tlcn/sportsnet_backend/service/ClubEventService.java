@@ -528,4 +528,5 @@ public class ClubEventService {
         // Logic đơn giản để tìm phường/xã trong location
         return location.contains(wardLower);
     }
+
 }

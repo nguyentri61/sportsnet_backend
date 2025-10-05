@@ -152,23 +152,6 @@ public class ClubService {
         }
         return toMyClubResponse(club, account);
     }
-    public void updateClubStatus(String id, ClubStatusEnum newStatus) {
-        Club club = clubRepository.findBySlug(id).orElseThrow(() -> new InvalidDataException("Club not found"));
-
-        club.setStatus(newStatus);
-
-        if(newStatus == ClubStatusEnum.ACTIVE) {
-            Account account = club.getOwner();
-            Role ownerRole = roleRepository.findByName("ROLE_CLUB_OWNER")
-                    .orElseThrow(() -> new InvalidDataException("Role OWNER_CLUB not found"));
-
-            account.getRoles().add(ownerRole);
-            clubRepository.save(club);
-            accountRepository.save(account);
-        }
-
-        clubRepository.save(club);
-    }
 
     public ClubResponse getClubInformation(String slug) {
         Club club = clubRepository.findBySlug(slug).orElseThrow(() -> new InvalidDataException("Club not found"));
@@ -228,45 +211,8 @@ public class ClubService {
                 .build();
     }
 
-    private ClubAdminResponse toClubAdminResponse(Club club) {
-        List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
-
-        return ClubAdminResponse.builder()
-                .id(club.getId())
-                .slug(club.getSlug())
-                .email(club.getCreatedBy())
-                .name(club.getName())
-                .maxMembers(club.getMaxMembers())
-                .status(club.getStatus())
-                .ownerName(club.getOwner().getUserInfo().getFullName())
-                .createdAt(club.getCreatedAt())
-                .memberCount(members.size())
-                .build();
-    }
 
 
-    public PagedResponse<ClubAdminResponse> getAllClubs(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Club> clubs = clubRepository.findAll(pageable);
-
-        List<ClubAdminResponse> content = clubs.stream()
-                .map(this::toClubAdminResponse)
-                .toList();
-
-        return new PagedResponse<>(
-                content,
-                clubs.getNumber(),
-                clubs.getSize(),
-                clubs.getTotalElements(),
-                clubs.getTotalPages(),
-                clubs.isLast()
-        );
-    }
-
-    public void deleteClub(String id) {
-        Club club = clubRepository.findBySlug(id).orElseThrow(() -> new InvalidDataException("Club not found"));
-        clubRepository.delete(club);
-    }
 
     public double calculateReputation(Club club) {
         // ----- 1. Weighted Event Rating -----
