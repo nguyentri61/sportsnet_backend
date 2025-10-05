@@ -2,18 +2,13 @@ package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.member.DetailMemberResponse;
 import com.tlcn.sportsnet_backend.dto.member.MemberResponse;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.Club;
-import com.tlcn.sportsnet_backend.entity.ClubMember;
-import com.tlcn.sportsnet_backend.entity.PlayerRating;
+import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.ChatRole;
 import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.ClubMemberRepository;
-import com.tlcn.sportsnet_backend.repository.ClubRepository;
-import com.tlcn.sportsnet_backend.repository.PlayerRatingRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +33,10 @@ public class ClubMemberService {
     private final PlayerRatingRepository playerRatingRepository;
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
-    
+    private final ConversationParticipantRepository convParticipantRepository;
+    private final ConversationRepository conversationRepository;
+    private final ConversationParticipantRepository conversationParticipantRepository;
+
     public String joinClub(String clubId, String notification) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -89,6 +87,13 @@ public class ClubMemberService {
 
         if (approve) {
             member.setStatus(ClubMemberStatusEnum.APPROVED);
+            Conversation conversation = conversationRepository.findByClubId(clubId).orElseThrow(() -> new InvalidDataException("Conversation not found"));
+            ConversationParticipant conversationParticipant = ConversationParticipant.builder()
+                    .conversation(conversation)
+                    .account(member.getAccount())
+                    .role(ChatRole.MEMBER)
+                    .build();
+            conversationParticipantRepository.save(conversationParticipant);
             clubMemberRepository.save(member);
         } else {
             // Reject thì xóa record luôn

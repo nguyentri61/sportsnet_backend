@@ -44,6 +44,7 @@ public class ClubService {
     private final FileStorageService fileStorageService;
     private final ClubEventRepository clubEventRepository;
     private final ClubEventParticipantRepository clubEventParticipantRepository;
+    private final ConversationService conversationService;
 
     public ClubResponse createClub(ClubCreateRequest request) {
 
@@ -83,6 +84,7 @@ public class ClubService {
                 .build();
 
         clubMemberRepository.save(clubMember);
+        conversationService.createConversationByClub(club);
         return toClubResponse(club);
     }
     public PagedResponse<ClubResponse> getAllClubPublic(int page, int size) {

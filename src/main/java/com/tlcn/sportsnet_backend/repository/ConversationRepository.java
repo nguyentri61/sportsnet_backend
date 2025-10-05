@@ -42,4 +42,6 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
     boolean existsByIdAndUser(@Param("conversationId") String conversationId,
                               @Param("userId") String userId);
 
+
+    Optional<Conversation> findByClubId(String clubId);
 }

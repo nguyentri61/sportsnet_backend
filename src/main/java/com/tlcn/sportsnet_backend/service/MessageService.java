@@ -42,7 +42,8 @@ public class MessageService {
         if (!conversationRepository.existsByIdAndUser(request.getConservationId(), account.getId())) {
             throw new InvalidDataException("User is not in this conversation");
         }
-
+        conversation.setUpdatedAt(Instant.now());
+        conversationRepository.save(conversation);
         Message message = new Message();
         message.setContent(request.getContent());
         message.setSender(account);

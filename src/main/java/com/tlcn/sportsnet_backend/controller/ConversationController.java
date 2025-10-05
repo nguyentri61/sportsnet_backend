@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,5 +21,11 @@ public class ConversationController {
     public ResponseEntity<?> findAll() {
         List<ConversationResponse> conversationResponses = conversationService.findAll();
         return ResponseEntity.ok(conversationResponses);
+    }
+
+    @PostMapping("/all-club")
+    public ResponseEntity<?> createAllChatConversation() {
+        conversationService.createAllChatConversation();
+        return ResponseEntity.ok("Tạo chat thành công");
     }
 }
