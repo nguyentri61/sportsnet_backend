@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.service;
 
+import com.tlcn.sportsnet_backend.util.ClubEventSpecification;
 import com.tlcn.sportsnet_backend.dto.club_event.*;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.*;
@@ -8,6 +9,7 @@ import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -98,41 +99,35 @@ public class ClubEventService {
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null); 
 //        Page<ClubEvent> events = clubEventRepository.findAllByOpenForOutsideAndStatusAndDeadlineAfter( pageable, true,  EventStatusEnum.OPEN, LocalDateTime.now());
 
-        List<ClubEvent> allEvents = clubEventRepository
-                .findAllByOpenForOutsideAndStatusAndDeadlineAfter(true, EventStatusEnum.OPEN, LocalDateTime.now());
+        Specification<ClubEvent> spec = Specification.allOf(
+                ClubEventSpecification.baseSpec(),
+                ClubEventSpecification.matchesSearch(search),
+                ClubEventSpecification.quickTime(quickTimeFilter),
+                ClubEventSpecification.matchesProvince(province),
+                ClubEventSpecification.matchesWard(ward),
+                ClubEventSpecification.matchesDateRange(startDate, endDate),
+                ClubEventSpecification.matchesFee(isFree, minFee, maxFee),
+                ClubEventSpecification.hasClubNames(filterRequest.getClubNames()),
+                ClubEventSpecification.hasCategories(filterRequest.getCategories()),
+                ClubEventSpecification.hasLevels(filterRequest.getLevels()),
+                ClubEventSpecification.participantSize(filterRequest.getParticipantSize()),
+                ClubEventSpecification.minRating(filterRequest.getMinRating()),
+                ClubEventSpecification.hasStatuses(filterRequest.getStatuses())
+        );
 
-//         Lọc dữ liệu
-        List<ClubEvent> filteredEvents = allEvents.stream()
-                .filter(event -> matchesSearch(event, search))
-                .filter(event -> matchesProvince(event, province))
-                .filter(event -> matchesWard(event, ward))
-                .filter(event -> matchesQuickTimeFilter(event, quickTimeFilter))
-                .filter(event -> matchesFeeFilter(event, isFree, minFee, maxFee))
-                .filter(event -> matchesDateRange(event, startDate, endDate))
-                .filter(event -> matchesLevels(event, filterRequest.getLevels()))
-                .filter(event -> matchesCategories(event, filterRequest.getCategories()))
-                .filter(event -> matchesMinRating(event, filterRequest.getMinRating()))
-                .filter(event -> matchesParticipantSize(event, filterRequest.getParticipantSize()))
-                .filter(event -> matchesClubName(event, filterRequest.getClubNames()))
-                .filter(event -> matchesStatuses(event, filterRequest.getStatuses()))
-                .toList();
+        Page<ClubEvent> events = clubEventRepository.findAll(spec, pageable);
 
-        int totalElements = filteredEvents.size();
-        int start = Math.min((int) pageable.getOffset(), totalElements);
-        int end = Math.min(start + pageable.getPageSize(), totalElements);
-        List<ClubEvent> paginatedList = filteredEvents.subList(start, end);
-
-        List<ClubEventResponse> content = paginatedList.stream()
+        List<ClubEventResponse> content = events.getContent().stream()
                 .map(event -> toClubEventResponse(event, account))
                 .toList();
 
         return new PagedResponse<>(
                 content,
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                totalElements,
-                (int) Math.ceil((double) totalElements / pageable.getPageSize()),
-                end >= totalElements
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
         );
     }
     public PagedResponse<ClubEventResponse>  getAllMyClubEventClub(int page, int size) {
@@ -436,21 +431,21 @@ public class ClubEventService {
         LocalDateTime eventStart = event.getStartTime();
 
         switch (quickTimeFilter) {
-            case "Tuyển gấp":
+            case "urgent":
                 // Sự kiện có deadline trong vòng 24 giờ tới
                 return event.getDeadline().isBefore(now.plusHours(24));
 
-            case "Hôm nay":
+            case "today":
                 // Sự kiện diễn ra trong ngày hôm nay
                 LocalDate today = now.toLocalDate();
                 return eventStart.toLocalDate().equals(today);
 
-            case "Cuối tuần":
+            case "weekend":
                 // Sự kiện diễn ra vào thứ 7 hoặc chủ nhật
                 DayOfWeek dayOfWeek = eventStart.getDayOfWeek();
                 return dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
 
-            case "Tuần này":
+            case "week":
                 // Sự kiện diễn ra trong tuần hiện tại
                 LocalDate todayDate = now.toLocalDate();
                 LocalDate startOfWeek = todayDate.with(DayOfWeek.MONDAY);
