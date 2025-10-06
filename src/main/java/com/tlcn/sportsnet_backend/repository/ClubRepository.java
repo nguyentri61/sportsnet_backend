@@ -8,6 +8,7 @@ import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ClubRepository extends JpaRepository<Club, String> {
+public interface ClubRepository extends JpaRepository<Club, String>, JpaSpecificationExecutor<Club> {
     Page<Club> findAllByVisibilityAndStatus(ClubVisibilityEnum visibility, ClubStatusEnum status, Pageable pageable);
     Optional<Club> findBySlug(String slug);
 

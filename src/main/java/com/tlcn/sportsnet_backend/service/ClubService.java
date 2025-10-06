@@ -9,11 +9,13 @@ import com.tlcn.sportsnet_backend.enums.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.*;
+import com.tlcn.sportsnet_backend.util.ClubSpecification;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
@@ -27,11 +29,7 @@ import java.security.Permission;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -85,22 +83,43 @@ public class ClubService {
         clubMemberRepository.save(clubMember);
         return toClubResponse(club);
     }
-    public PagedResponse<ClubResponse> getAllClubPublic(int page, int size) {
+    public PagedResponse<ClubResponse> getAllClubPublic(
+            int page,
+            int size,
+            String search,
+            String province,
+            String ward,
+            List<String> selectedLevels,
+            String reputationSort,
+            List<String> clubNames
+    ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account account = accountRepository.findByEmail(authentication.getName())
-                .orElse(null);
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(
-                Sort.Order.desc("reputation"),
+        Sort sort = Sort.by(
+                reputationSort != null && reputationSort.equalsIgnoreCase("asc")
+                        ? Sort.Order.asc("reputation")
+                        : Sort.Order.desc("reputation"),
                 Sort.Order.desc("createdAt")
-        ));
-        Page<Club> clubs;
+        );
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Club> spec = Specification.allOf(
+                ClubSpecification.hasVisibilityAndStatus(ClubVisibilityEnum.PUBLIC, ClubStatusEnum.ACTIVE),
+                ClubSpecification.matchesSearch(search),
+                ClubSpecification.matchesProvince(province),
+                ClubSpecification.matchesWard(ward),
+                ClubSpecification.matchesLevels(selectedLevels),
+                ClubSpecification.matchesClubNames(clubNames)
+        );
 
         if (account != null) {
-            clubs = clubRepository.findAvailableClubsForUserAndStatus(ClubVisibilityEnum.PUBLIC, ClubStatusEnum.ACTIVE, account, pageable);
-        } else {
-            clubs = clubRepository.findAllByVisibilityAndStatus(ClubVisibilityEnum.PUBLIC, ClubStatusEnum.ACTIVE, pageable);
+            spec = spec.and(ClubSpecification.notJoinedBy(account));
         }
+
+        Page<Club> clubs = clubRepository.findAll(spec, pageable);
+
+
         List<ClubResponse> content = clubs.stream()
                 .map(this::toClubResponse)
                 .toList();

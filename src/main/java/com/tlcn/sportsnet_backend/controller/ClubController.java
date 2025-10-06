@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,8 +31,14 @@ public class ClubController {
     @GetMapping("/all_public")
     public ResponseEntity<?> getAllPublicClubs(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(clubService.getAllClubPublic(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String ward,
+            @RequestParam(required = false) List<String> selectedLevels,
+            @RequestParam(required = false) String reputationSort,
+            @RequestParam(required = false) List<String> clubNames){
+        return ResponseEntity.ok(clubService.getAllClubPublic(page, size, search, province, ward, selectedLevels, reputationSort, clubNames));
     }
 
     @GetMapping("/my_clubs/all")
