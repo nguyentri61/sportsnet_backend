@@ -17,4 +17,5 @@ public class ConversationResponse {
     String avatarUrl;
     Instant lastMessageTime;
     Long unreadCount;
+    boolean isGroupChat;
 }

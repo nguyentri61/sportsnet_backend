@@ -40,6 +40,10 @@ public class Conversation {
 
     String updatedBy;
 
+    @OneToOne
+    @JoinColumn(name = "club_id", nullable = true)
+    Club club;
+
     @PrePersist
     public void handleBeforeCreate(){
         createdAt = Instant.now();

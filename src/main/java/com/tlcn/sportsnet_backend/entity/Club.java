@@ -87,6 +87,9 @@ public class Club {
 
     Double reputation;
 
+    @OneToOne(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
+    Conversation conversation;
+
     @PrePersist
     public void handleBeforeCreate(){
         createdAt = Instant.now();
