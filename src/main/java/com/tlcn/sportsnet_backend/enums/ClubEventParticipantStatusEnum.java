@@ -7,7 +7,7 @@ public enum ClubEventParticipantStatusEnum {
             case PENDING -> StatusScheduleEnum.PENDING;
             case APPROVED -> StatusScheduleEnum.CONFIRMED;
             case ATTENDED -> StatusScheduleEnum.COMPLETED;
-            case ABSENT -> StatusScheduleEnum.REJECTED;
+            case ABSENT -> StatusScheduleEnum.ABSENT;
             default -> null;
         };
     }

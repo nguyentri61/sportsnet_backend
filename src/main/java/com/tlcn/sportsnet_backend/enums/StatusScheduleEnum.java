@@ -6,6 +6,7 @@ public enum StatusScheduleEnum {
     ONGOING,
     COMPLETED,
     CANCELLED,
+        ABSENT,
     REJECTED;
 
     public String getDisplayName() {
