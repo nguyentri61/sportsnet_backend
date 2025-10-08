@@ -35,6 +35,8 @@ public class ClubEventParticipantService {
     private final ReputationHistoryRepository reputationHistoryRepository;
     private final NotificationService notificationService;
     private final AbsentReasonRepository absentReasonRepository;
+    private final UserScheduleService userScheduleService;
+    private final UserScheduleRepository userScheduleRepository;
     public ClubEventParticipantResponse joinClubEvent(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
@@ -71,6 +73,7 @@ public class ClubEventParticipantService {
         else {
             message = clubEventParticipant.getParticipant().getUserInfo().getFullName() +" đã đăng ký tham gia hoạt động, vui lòng phê duyệt";
         }
+        userScheduleService.createScheduleByClubEvent(clubEvent,clubEventParticipant);
         notificationService.sendToAccount(club.getOwner(),"Hoạt động: "+clubEvent.getTitle() ,message,"/events/"+clubEvent.getSlug());
         return toParticipantResponse(clubEventParticipant);
 
@@ -177,5 +180,25 @@ public class ClubEventParticipantService {
         }
         notificationService.sendToAccount(clubMember.getParticipant(),"Hoạt động: "+clubEvent.getTitle() ,content,"/events/"+clubEvent.getSlug());
         return "Đã xác nhân người tham gia";
+    }
+
+    public boolean canJoin(String eventId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
+        ClubEvent event = clubEventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sự kiện"));
+
+        // Nếu sự kiện đã kết thúc
+        if (event.getEndTime().isBefore(LocalDateTime.now())) {
+            return false;
+        }
+        // Kiểm tra có bị trùng lịch không
+        boolean conflict = userScheduleRepository.hasConflictWithEventTime(
+                account.getId(),
+                event.getStartTime(),
+                event.getEndTime()
+        );
+
+        return !conflict;
     }
 }

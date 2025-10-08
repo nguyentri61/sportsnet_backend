@@ -116,8 +116,6 @@ public class AdminService {
     }
 
     private ClubEventAdminResponse toClubEventAdminResponse(ClubEvent event) {
-        event = clubEventService.calculateStatus(event);
-
         return ClubEventAdminResponse.builder()
                 .id(event.getId())
                 .slug(event.getSlug())
