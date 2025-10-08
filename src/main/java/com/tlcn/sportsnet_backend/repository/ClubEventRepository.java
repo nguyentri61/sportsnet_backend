@@ -35,6 +35,8 @@ public interface ClubEventRepository extends JpaRepository<ClubEvent, String>, J
             Pageable pageable
     );
 
+
+
     @EntityGraph(attributePaths = {})
     @Query("SELECT e FROM ClubEvent e WHERE e.status <> :status")
     List<ClubEvent> findAllByStatusNot(EventStatusEnum status);

@@ -70,7 +70,7 @@ public class UserScheduleService {
         Page<UserSchedule> schedules = userScheduleRepository.findByAccountId(account.getId(), pageable);
 
         List<ScheduleResponse> content = schedules.getContent().stream()
-                .map(this::toScheduleResponse)
+                .map(schedule -> toScheduleResponse(schedule, account))
                 .toList();
 
         return new PagedResponse<>(
@@ -83,16 +83,20 @@ public class UserScheduleService {
         );
     }
 
-    public ScheduleResponse toScheduleResponse(UserSchedule userSchedule) {
+    public ScheduleResponse toScheduleResponse(UserSchedule userSchedule, Account account) {
         LocalDateTime now = LocalDateTime.now();
-        StatusScheduleEnum statusScheduleEnum = userSchedule.getStatus();
+        StatusScheduleEnum oldStatus = userSchedule.getStatus();
+        ClubEvent clubEvent = userSchedule.getClubEvent();
+        ClubEventParticipant clubEventParticipant = participantRepository.findByClubEvent_IdAndParticipant(clubEvent.getId(), account).orElseThrow(() -> new InvalidDataException("Participant not found"));
+
+        StatusScheduleEnum statusScheduleEnum = clubEventParticipant.getStatus().toStatusEnum();
+
         if(now.isBefore(userSchedule.getEndTime()) && now.isAfter(userSchedule.getStartTime()) || now.isEqual(userSchedule.getEndTime())  || now.isEqual(userSchedule.getStartTime()) ) {
             statusScheduleEnum = StatusScheduleEnum.ONGOING;
         }
-
-        ClubEvent clubEvent = null;
-        if(userSchedule.getClubEvent() != null) {
-            clubEvent = userSchedule.getClubEvent();
+        if(oldStatus != statusScheduleEnum) {
+            userSchedule.setStatus(statusScheduleEnum);
+            userScheduleRepository.save(userSchedule);
         }
         return ScheduleResponse.builder()
                 .id(userSchedule.getId())
@@ -101,7 +105,7 @@ public class UserScheduleService {
                 .startTime(userSchedule.getStartTime())
                 .status(statusScheduleEnum)
                 .name(userSchedule.getName())
-                .slug(clubEvent!=null ? clubEvent.getSlug() : null)
+                .slug(clubEvent.getSlug())
                 .build();
     }
 }
