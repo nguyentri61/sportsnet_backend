@@ -87,7 +87,7 @@ public class ClubEventParticipantService {
         if (existingScheduleOpt.isPresent()) {
             UserSchedule existingSchedule = existingScheduleOpt.get();
             if (existingSchedule.getStatus() == StatusScheduleEnum.CANCELLED) {
-                existingSchedule.setStatus(StatusScheduleEnum.CONFIRMED); // hoặc PENDING tùy logic
+                existingSchedule.setStatus(clubEventParticipant.getStatus().toStatusEnum());
                 userScheduleRepository.save(existingSchedule);
             }
         } else {
