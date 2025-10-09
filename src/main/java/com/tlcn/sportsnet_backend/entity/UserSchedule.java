@@ -42,6 +42,7 @@ public class UserSchedule {
 
     // Trạng thái (ví dụ: Đã xác nhận, Đang diễn ra, Đã hủy)
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     StatusScheduleEnum status;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")

@@ -4,10 +4,7 @@ import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
 import com.tlcn.sportsnet_backend.dto.club_event_participant.ClubEventParticipantResponse;
 import com.tlcn.sportsnet_backend.dto.club_event_participant.ClubEventParticipantUpdate;
 import com.tlcn.sportsnet_backend.entity.*;
-import com.tlcn.sportsnet_backend.enums.ClubEventParticipantStatusEnum;
-import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
-import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
-import com.tlcn.sportsnet_backend.enums.ParticipantStatusEnum;
+import com.tlcn.sportsnet_backend.enums.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.*;
@@ -22,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,11 +40,14 @@ public class ClubEventParticipantService {
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
         ClubEvent clubEvent = clubEventRepository.findById(id).orElseThrow(() -> new InvalidDataException("Không tìm thấy hoạt động"));
         Club club = clubEvent.getClub();
+
+        // Chỉ đếm những người vãng lai (không phải thành viên CLB) và có trạng thái KHÁC CANCELLED
         int totalOpenJoinedMembers = (int) clubEvent.getParticipants().stream()
-                .filter(p -> !p.isClubMember() )
+                .filter(p -> !p.isClubMember() && p.getStatus() != ClubEventParticipantStatusEnum.CANCELLED )
                 .count();
 
-        if(clubEventParticipantRepository.existsByClubEventAndParticipant(clubEvent, account)){
+        // Kiểm tra nếu người dùng đã có bản ghi tham gia nhưng chưa hủy thì không cho join lại
+        if(clubEventParticipantRepository.existsByClubEventAndParticipantAndStatusNot(clubEvent, account, ClubEventParticipantStatusEnum.CANCELLED)){
             throw new InvalidDataException("Bạn đã tham gia hoạt động rồi.");
         }
         boolean isMember = clubMemberRepository.existsByClubAndAccountAndStatus(club, account, ClubMemberStatusEnum.APPROVED);
@@ -59,12 +60,19 @@ public class ClubEventParticipantService {
         if(LocalDateTime.now().isAfter(clubEvent.getDeadline()) || clubEvent.getStatus() != EventStatusEnum.OPEN){
             throw new InvalidDataException("Hoạt động đã hết hạn");
         }
-        ClubEventParticipant clubEventParticipant = ClubEventParticipant.builder()
-                .clubEvent(clubEvent)
-                .participant(account)
-                .isClubMember(isMember)
-                .status(isMember ? ClubEventParticipantStatusEnum.APPROVED : ClubEventParticipantStatusEnum.PENDING)
-                .build();
+        ClubEventParticipant clubEventParticipant = clubEventParticipantRepository
+                .findByClubEventAndParticipant(clubEvent, account)
+                .map(existing -> {
+                    existing.setStatus(isMember ? ClubEventParticipantStatusEnum.APPROVED : ClubEventParticipantStatusEnum.PENDING);
+                    return existing;
+                })
+                .orElseGet(() -> ClubEventParticipant.builder()
+                        .clubEvent(clubEvent)
+                        .participant(account)
+                        .isClubMember(isMember)
+                        .status(isMember ? ClubEventParticipantStatusEnum.APPROVED : ClubEventParticipantStatusEnum.PENDING)
+                        .build());
+
         clubEventParticipant = clubEventParticipantRepository.save(clubEventParticipant);
         String message;
         if(clubEventParticipant.isClubMember()){
@@ -73,7 +81,19 @@ public class ClubEventParticipantService {
         else {
             message = clubEventParticipant.getParticipant().getUserInfo().getFullName() +" đã đăng ký tham gia hoạt động, vui lòng phê duyệt";
         }
-        userScheduleService.createScheduleByClubEvent(clubEvent,clubEventParticipant);
+
+        // Xử lý UserSchedule tránh tao moi trùng
+        Optional<UserSchedule> existingScheduleOpt = userScheduleRepository.findByAccountAndClubEvent(account, clubEvent);
+        if (existingScheduleOpt.isPresent()) {
+            UserSchedule existingSchedule = existingScheduleOpt.get();
+            if (existingSchedule.getStatus() == StatusScheduleEnum.CANCELLED) {
+                existingSchedule.setStatus(StatusScheduleEnum.CONFIRMED); // hoặc PENDING tùy logic
+                userScheduleRepository.save(existingSchedule);
+            }
+        } else {
+            userScheduleService.createScheduleByClubEvent(clubEvent, clubEventParticipant);
+        }
+
         notificationService.sendToAccount(club.getOwner(),"Hoạt động: "+clubEvent.getTitle() ,message,"/events/"+clubEvent.getSlug());
         return toParticipantResponse(clubEventParticipant);
 
@@ -119,6 +139,42 @@ public class ClubEventParticipantService {
 
     }
 
+    public String cancelJoinEvent(String eventId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
+
+        ClubEvent clubEvent = clubEventRepository.findById(eventId)
+                .orElseThrow(() -> new InvalidDataException("Không tìm thấy hoạt động"));
+
+        ClubEventParticipant participant = clubEventParticipantRepository
+                .findByClubEventAndParticipant(clubEvent, account)
+                .orElseThrow(() -> new InvalidDataException("Bạn chưa tham gia hoạt động này"));
+
+        if (participant.getStatus() == ClubEventParticipantStatusEnum.CANCELLED) {
+            throw new InvalidDataException("Bạn đã hủy tham gia trước đó");
+        }
+
+        // Kiểm tra thời gian (không cho hủy sau deadline)
+        if (LocalDateTime.now().isAfter(clubEvent.getStartTime())) {
+            throw new InvalidDataException("Không thể hủy khi hoạt động đã bắt đầu");
+        }
+
+        // Cập nhật trạng thái người tham gia
+        participant.setStatus(ClubEventParticipantStatusEnum.CANCELLED);
+        clubEventParticipantRepository.save(participant);
+
+        // Gửi thông báo đến chủ CLB
+        String message = account.getUserInfo().getFullName() + " đã hủy tham gia hoạt động " + clubEvent.getTitle();
+        notificationService.sendToAccount(
+                clubEvent.getClub().getOwner(),
+                "Hoạt động: " + clubEvent.getTitle(),
+                message,
+                "/events/" + clubEvent.getSlug()
+        );
+
+        return "Đã hủy tham gia hoạt động thành công";
+    }
 
     public String approveParticipant(String id, String eventId) {
         ClubEvent clubEvent = checkPermission(eventId);
