@@ -6,10 +6,7 @@ import com.tlcn.sportsnet_backend.dto.account.AccountResponse;
 import com.tlcn.sportsnet_backend.dto.account.UpdateProfileRequest;
 import com.tlcn.sportsnet_backend.dto.player_rating.PlayerRatingCreateRequest;
 import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.service.AccountService;
-import com.tlcn.sportsnet_backend.service.FileStorageService;
-import com.tlcn.sportsnet_backend.service.PlayerRatingService;
-import com.tlcn.sportsnet_backend.service.ReputationHistoryService;
+import com.tlcn.sportsnet_backend.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,6 +25,7 @@ public class AccountController {
     private final PlayerRatingService playerRatingService;
     private final FileStorageService fileStorageService;
     private final ReputationHistoryService reputationHistoryService;
+    private final UserScheduleService userScheduleService;
     @GetMapping
     public ResponseEntity<?> getAccount() {
         return ResponseEntity.ok(accountService.getAccount());
@@ -72,5 +70,17 @@ public class AccountController {
     @GetMapping("/reputation-history")
     public ResponseEntity<?> getReputationHistory() {
         return ResponseEntity.ok(reputationHistoryService.getAll());
+    }
+
+//    @PostMapping("/create-schedule")
+//    public ResponseEntity<?> createSchedule(){
+//        userScheduleService.createAll();
+//        return ResponseEntity.ok("Đã khợi tạo thành công");
+//    }
+
+    @GetMapping("/schedule")
+    public ResponseEntity<?> getSchedule(@RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(userScheduleService.getSchedule(page, size));
     }
 }

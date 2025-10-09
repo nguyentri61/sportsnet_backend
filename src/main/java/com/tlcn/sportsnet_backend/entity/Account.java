@@ -99,4 +99,15 @@ public class Account {
     // Lịch sử thay đổi điểm uy tín
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     List<ReputationHistory> reputationHistories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    List<TournamentParticipant> tournamentParticipants = new ArrayList<>();
+
+    // Các đội mà người này là player1
+    @OneToMany(mappedBy = "player1", fetch = FetchType.LAZY)
+    private List<TournamentTeam> teamsAsPlayer1 = new ArrayList<>();
+
+    // Các đội mà người này là player2
+    @OneToMany(mappedBy = "player2", fetch = FetchType.LAZY)
+    private List<TournamentTeam> teamsAsPlayer2 = new ArrayList<>();
 }

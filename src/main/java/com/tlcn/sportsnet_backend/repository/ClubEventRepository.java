@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -34,6 +35,12 @@ public interface ClubEventRepository extends JpaRepository<ClubEvent, String>, J
             Pageable pageable
     );
 
+
+
+    @EntityGraph(attributePaths = {})
+    @Query("SELECT e FROM ClubEvent e WHERE e.status <> :status")
+    List<ClubEvent> findAllByStatusNot(EventStatusEnum status);
+
     @Query("SELECT COUNT(e) FROM ClubEvent e WHERE e.club.id = :clubId AND e.status = :status")
     Long  countByClubIdAndStatus(@Param("clubId") String clubId,
                                 @Param("status") EventStatusEnum status);
@@ -45,4 +52,7 @@ public interface ClubEventRepository extends JpaRepository<ClubEvent, String>, J
             "FROM ClubEvent e " +
             "WHERE e.club.id = :clubId")
     Long  sumTotalMemberByClubId(@Param("clubId") String clubId);
+
+
+
 }

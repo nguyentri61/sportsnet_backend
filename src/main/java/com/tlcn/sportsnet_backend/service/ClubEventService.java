@@ -10,6 +10,7 @@ import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -237,7 +238,6 @@ public class ClubEventService {
     }
 
     private ClubEventResponse toClubEventResponse(ClubEvent event, Account account) {
-        event = calculateStatus(event);
         Club club = event.getClub();
         ParticipantRoleEnum roleEnum= ParticipantRoleEnum.GUEST;
         if(account!=null) {
@@ -277,7 +277,6 @@ public class ClubEventService {
 
     private ClubEventDetailResponse toClubEventDetailResponse(ClubEvent event, Account account) {
         Club club = event.getClub();
-        event = calculateStatus(event);
         ClubEventParticipant clubEventParticipant = clubEventParticipantRepository.findByClubEventAndParticipant(event,account).orElse(null);
         ParticipantRoleEnum roleEnum= ParticipantRoleEnum.GUEST;
         if(account!=null) {
@@ -324,11 +323,9 @@ public class ClubEventService {
                 .isSendReason(absentReasonRepository.existsByParticipation(clubEventParticipant))
                 .build();
     }
-    public ClubEvent calculateStatus(ClubEvent event) {
+    public void calculateStatus(ClubEvent event) {
         EventStatusEnum newStatus = event.getStatus();
-        if(newStatus == EventStatusEnum.FINISHED){
-            return event;
-        }
+
         LocalDateTime now = LocalDateTime.now();
         if(event.getTotalMember() == event.getParticipants().size() && newStatus == EventStatusEnum.OPEN ){
             newStatus = EventStatusEnum.CLOSED;
@@ -340,15 +337,13 @@ public class ClubEventService {
         } else if (now.isAfter(event.getEndTime()) ) {
             newStatus = EventStatusEnum.FINISHED;
             clubService.calculateReputation(event.getClub());
-
         }
 
         // Nếu status thay đổi, lưu vào DB
         if (!event.getStatus().equals(newStatus)) {
             event.setStatus(newStatus);
-            event = clubEventRepository.save(event);
+            clubEventRepository.save(event);
         }
-        return event;
     }
 
 
@@ -383,5 +378,16 @@ public class ClubEventService {
         clubEvent = clubEventRepository.save(clubEvent);
 
         return toClubEventDetailResponse(clubEvent, account);
+    }
+
+
+    @Scheduled(cron = "0 * * * * *")
+    @Transactional
+    public void autoUpdateEventStatus() {
+        System.out.println("Chạy hàm");
+        List<ClubEvent> events = clubEventRepository.findAllByStatusNot(EventStatusEnum.FINISHED);
+        for (ClubEvent event : events) {
+            calculateStatus(event);
+        }
     }
 }

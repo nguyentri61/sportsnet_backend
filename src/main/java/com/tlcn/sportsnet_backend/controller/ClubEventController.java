@@ -6,10 +6,7 @@ import com.tlcn.sportsnet_backend.dto.club_event.ClubEventFilterRequest;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventUpdateRequest;
 import com.tlcn.sportsnet_backend.dto.club_event_participant.ClubEventParticipantUpdate;
 import com.tlcn.sportsnet_backend.enums.ParticipantStatusEnum;
-import com.tlcn.sportsnet_backend.service.ClubEventParticipantService;
-import com.tlcn.sportsnet_backend.service.ClubEventService;
-import com.tlcn.sportsnet_backend.service.ClubService;
-import com.tlcn.sportsnet_backend.service.FileStorageService;
+import com.tlcn.sportsnet_backend.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +24,7 @@ public class ClubEventController {
     private final ClubEventService clubEventService;
     private final FileStorageService fileStorageService;
     private final ClubEventParticipantService clubEventParticipantService;
-
+    private final UserScheduleService userScheduleService;
     @GetMapping("/{slug}")
     public ResponseEntity<?> getEventClubInfo(@PathVariable String slug) {
         return ResponseEntity.ok(clubEventService.getEventClubInfo(slug));
@@ -133,5 +130,17 @@ public class ClubEventController {
     @PutMapping("/{idEvent}/participant/{id}")
     public ResponseEntity<?> updateParticipantStatus(@PathVariable String id, @PathVariable String idEvent, @RequestBody ClubEventParticipantUpdate status) {
         return ResponseEntity.ok(clubEventParticipantService.updateParticipant(id, idEvent, status));
+    }
+
+    @GetMapping("/can-join/{eventId}")
+    public ResponseEntity<?> canJoinEvent(@PathVariable String eventId) {
+        boolean canJoin = clubEventParticipantService.canJoin( eventId);
+
+        return ResponseEntity.ok(Map.of(
+                "canJoin", canJoin,
+                "message", canJoin
+                        ? "Bạn có thể tham gia sự kiện này"
+                        : "Thời gian của hoạt động bị trùng với lịch hiện có"
+        ));
     }
 }
