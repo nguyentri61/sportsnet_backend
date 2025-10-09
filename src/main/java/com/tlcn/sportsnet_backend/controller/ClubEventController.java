@@ -81,6 +81,12 @@ public class ClubEventController {
         return ResponseEntity.ok(clubEventService.updateClubEvent(request));
     }
 
+    @PostMapping("/cancel/{eventId}")
+    public ResponseEntity<?> cancelClubEvent(@PathVariable String eventId) {
+        clubEventService.cancelEvent(eventId);
+        return ResponseEntity.ok("Hủy hoạt động thành công!");
+    }
+
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFiles(@RequestParam("files") List<MultipartFile> files) {
