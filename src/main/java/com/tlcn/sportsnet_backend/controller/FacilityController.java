@@ -27,6 +27,11 @@ public class FacilityController {
         return ResponseEntity.ok(facilityService.getAllFacility(page, size));
     }
 
+    @GetMapping("/all/filter")
+    public ResponseEntity<?> getAllFacilitiesFilter() {
+        return ResponseEntity.ok(facilityService.getAllFacilitiesFilter());
+    }
+
     @PostMapping
     public ResponseEntity<?> addFacility(@RequestBody FacilityCreateRequest request) {
         return ResponseEntity.ok(facilityService.createFacility(request));

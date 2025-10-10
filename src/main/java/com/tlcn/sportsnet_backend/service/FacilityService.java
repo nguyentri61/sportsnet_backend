@@ -72,4 +72,11 @@ public class FacilityService {
         fileStorageService.deleteFile(facility.getImage(), "/facility");
         facilityRepository.delete(facility);
     }
+
+    public List<FacilityResponse> getAllFacilitiesFilter() {
+        List<Facility> facilityList = facilityRepository.findAllByOrderByNameAsc();
+        return facilityList.stream()
+                .map(this::toFacilityResponse)
+                .toList();
+    }
 }

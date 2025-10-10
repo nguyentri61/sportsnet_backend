@@ -8,4 +8,5 @@ import java.util.List;
 
 @Repository
 public interface FacilityRepository extends JpaRepository<Facility, String> {
+    List<Facility> findAllByOrderByNameAsc();
 }
