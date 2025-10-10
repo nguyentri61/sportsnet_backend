@@ -89,10 +89,6 @@ public class Account {
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Message> sentMessages = new HashSet<>();
 
-    // Event organizing
-    @OneToMany(mappedBy = "organizer")
-    Set<Event> organizedEvents = new HashSet<>();
-
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PlayerRating playerRating;
 

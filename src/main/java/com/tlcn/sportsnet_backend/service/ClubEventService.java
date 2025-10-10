@@ -35,11 +35,15 @@ public class ClubEventService {
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
     private final ClubService clubService;
+    private final FacilityRepository facilityRepository;
 
     @Transactional
     public ClubEventCreateResponse createClubEvent(ClubEventCreateRequest request) {
         Club club = clubRepository.findBySlug(request.getClubSlug())
                 .orElseThrow(() -> new InvalidDataException("Club not found"));
+
+        Facility facility = facilityRepository.findById(request.getFacilityId())
+                .orElseThrow(() -> new InvalidDataException("Facility not found"));
 
         ClubEvent event = ClubEvent.builder()
                 .title(request.getTitle())
@@ -60,6 +64,7 @@ public class ClubEventService {
                 .club(club)
                 .minLevel(request.getMinLevel())
                 .maxLevel(request.getMaxLevel())
+                .facility(facility)
                 .build();
 
         event = clubEventRepository.save(event);
@@ -173,6 +178,38 @@ public class ClubEventService {
         );
     }
 
+    @Transactional
+    public void cancelEvent(String eventId) {
+        ClubEvent event = clubEventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        EventStatusEnum status = event.getStatus();
+        boolean canBeCancelled = status == EventStatusEnum.OPEN || status == EventStatusEnum.CLOSED || status == EventStatusEnum.DRAFT;
+        if (!canBeCancelled) {
+            throw new InvalidDataException("Không thể hủy sự kiện ở trạng thái hiện tại: " + status);
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account currentAccount = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> "ROLE_ADMIN".equals(grantedAuthority.getAuthority()));
+        boolean isClubOwner = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> "ROLE_CLUB_OWNER".equals(grantedAuthority.getAuthority()));
+
+        if(!isAdmin && !isClubOwner) {
+            throw new InvalidDataException("Bạn không có quyền hủy sự kiện này!");
+        }
+
+        event.setStatus(EventStatusEnum.CANCELLED);
+        clubEventRepository.save(event);
+
+        event.getParticipants().forEach(participant -> {
+            notificationService.sendToAccount(participant.getParticipant(), "Hủy hoạt động!",
+                    event.getTitle() + " đã bị hủy.", "/events/" + event.getSlug());
+        });
+    }
+
     private ClubEventCreateResponse toClubEventCreateResponse(ClubEvent event) {
         return ClubEventCreateResponse.builder()
                 .id(event.getId())
@@ -262,7 +299,8 @@ public class ClubEventService {
                 .endTime(event.getEndTime())
                 .totalMember(event.getTotalMember())
                 .joinedMember((int) event.getParticipants().stream()
-                        .filter(p -> !p.getStatus().equals(ClubEventParticipantStatusEnum.PENDING) )
+                        .filter(p -> !p.getStatus().equals(ClubEventParticipantStatusEnum.PENDING)
+                                                    && p.getStatus() != ClubEventParticipantStatusEnum.CANCELLED)
                         .count())
                 .categories(event.getCategories())
                 .status(event.getStatus())
@@ -272,13 +310,15 @@ public class ClubEventService {
                 .maxClubMembers(event.getMaxClubMembers())
                 .maxOutsideMembers(event.getMaxOutsideMembers())
                 .joinedOpenMembers((int) event.getParticipants().stream()
-                        .filter(p -> !p.isClubMember() && !p.getStatus().equals(ClubEventParticipantStatusEnum.PENDING) )
+                        .filter(p -> !p.isClubMember()
+                                                && !p.getStatus().equals(ClubEventParticipantStatusEnum.PENDING)
+                                                && p.getStatus() != ClubEventParticipantStatusEnum.CANCELLED)
                         .count())
                 .clubId(event.getClub().getId())
                 .createdAt(event.getCreatedAt())
                 .createdBy(event.getCreatedBy())
                 .nameClub(event.getClub().getName())
-                .isJoined(clubEventParticipantRepository.existsByClubEventAndParticipant(event, account))
+                .isJoined(clubEventParticipantRepository.existsByClubEventAndParticipantAndStatusNot(event, account, ClubEventParticipantStatusEnum.CANCELLED))
                 .participantRole(roleEnum)
                 .maxLevel(event.getMaxLevel())
                 .minLevel(event.getMinLevel())

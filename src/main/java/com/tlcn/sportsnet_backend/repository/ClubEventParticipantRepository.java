@@ -16,6 +16,7 @@ import java.util.List;
 @Repository
 public interface ClubEventParticipantRepository extends JpaRepository<ClubEventParticipant, String> {
     boolean existsByClubEventAndParticipant(ClubEvent clubEvent, Account account);
+    boolean existsByClubEventAndParticipantAndStatusNot(ClubEvent clubEvent, Account account, ClubEventParticipantStatusEnum status);
 
     Page<ClubEventParticipant> findAllByClubEvent(ClubEvent clubEvent, Pageable pageable);
     Optional<ClubEventParticipant> findByClubEventAndParticipant(ClubEvent clubEvent, Account account);

@@ -78,6 +78,10 @@ public class ClubEvent {
     @Enumerated(EnumType.STRING)
     EventStatusEnum status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "facility_id")
+    Facility facility;
+
     // CLB tổ chức
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id")

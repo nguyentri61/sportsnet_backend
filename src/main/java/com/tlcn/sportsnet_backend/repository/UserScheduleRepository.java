@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.repository;
 
 import com.tlcn.sportsnet_backend.entity.Account;
+import com.tlcn.sportsnet_backend.entity.ClubEvent;
 import com.tlcn.sportsnet_backend.entity.UserSchedule;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,11 +11,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Repository
 public interface UserScheduleRepository extends JpaRepository<UserSchedule, String> {
     UserSchedule findByAccountId(String accountId);
     Page<UserSchedule> findByAccountId(String accountId, Pageable pageable);
+
+    Optional<UserSchedule> findByAccountAndClubEvent(Account account, ClubEvent clubEvent);
 
     @Query("""
     SELECT COUNT(us) > 0
