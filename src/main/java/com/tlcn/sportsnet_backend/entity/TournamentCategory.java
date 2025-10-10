@@ -19,6 +19,8 @@ public class TournamentCategory {
     String id;
     @Enumerated(EnumType.STRING)
     private BadmintonCategoryEnum category;
+    private Double minLevel;
+    private Double maxLevel;
     private Integer maxParticipants;
 
     @ManyToOne

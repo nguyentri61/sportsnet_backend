@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
@@ -32,7 +33,8 @@ public class Tournament {
     private LocalDateTime registrationEndDate;
     private String logoUrl;
     private String bannerUrl;
-
+    @Enumerated(EnumType.STRING)
+    private TournamentStatus status = TournamentStatus.UPCOMING;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     Instant createdAt;
 

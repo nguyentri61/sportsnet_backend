@@ -14,7 +14,7 @@ public class TournamentResult {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    private Integer rank;
+    private Integer ranking;
     private String prize;
 
     // Nếu là đơn → participant != null
