@@ -2,19 +2,17 @@ package com.tlcn.sportsnet_backend.dto.tournament;
 
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import lombok.*;
-import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
-@Builder
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class TournamentResponse {
-
+@Builder
+public class TournamentDetailResponse {
     private String id;
     private String name;
     private String description;
@@ -31,10 +29,10 @@ public class TournamentResponse {
 
     private String logoUrl;
     private String bannerUrl;
-
+    private String rules;
     private Instant createdAt;
     private TournamentStatus status;
     private BigDecimal fee;
     private String createdBy;
-    private List<TournamentCategoryResponse> categories;
+    private List<TournamentCategoryDetailResponse> categories;
 }

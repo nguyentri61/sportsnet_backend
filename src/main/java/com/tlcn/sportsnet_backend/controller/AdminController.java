@@ -88,4 +88,10 @@ public class AdminController {
                     .body(ApiResponse.success(Map.of("fileNames", uploadedFiles)));
         }
     }
+
+    @GetMapping("/tournament/all")
+    public ResponseEntity<?> getTournaments(@RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllAdminTournaments(page, size));
+    }
 }

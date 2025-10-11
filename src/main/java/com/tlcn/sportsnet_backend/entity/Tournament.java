@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,12 +38,16 @@ public class Tournament {
     private TournamentStatus status = TournamentStatus.UPCOMING;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     Instant createdAt;
-
+    BigDecimal fee;
     Instant updatedAt;
 
     String createdBy;
 
     String updatedBy;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String rules;
 
     String slug;
     @PrePersist

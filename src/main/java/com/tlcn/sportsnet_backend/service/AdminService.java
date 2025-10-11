@@ -5,6 +5,9 @@ import com.tlcn.sportsnet_backend.dto.account.AccountResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubAdminResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventAdminResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
+import com.tlcn.sportsnet_backend.dto.tournament.TournamentAdminResponse;
+import com.tlcn.sportsnet_backend.dto.tournament.TournamentCategoryResponse;
+import com.tlcn.sportsnet_backend.dto.tournament.TournamentResponse;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.ClubEventParticipantStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
@@ -37,6 +40,7 @@ public class AdminService {
     private final PlayerRatingRepository playerRatingRepository;
     private final ClubEventService clubEventService;
     private final FileStorageService fileStorageService;
+    private final TournamentRepository tournamentRepository;
     public PagedResponse<ClubAdminResponse> getAllClubs(int page, int size) {
         checkAccount();
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("reputation"),Sort.Order.desc("createdAt") ));
@@ -212,5 +216,51 @@ public class AdminService {
         Account account = accountRepository.findById(id).orElseThrow(() -> new InvalidDataException("Account not found") );
         account.setEnabled(!account.isEnabled());
         account = accountRepository.save(account);
+    }
+
+    public PagedResponse<TournamentAdminResponse> getAllAdminTournaments(int page, int size) {
+        checkAccount();
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc(     "startDate") ));
+        Page<Tournament> tournaments = tournamentRepository.findAll(pageable);
+        List<TournamentAdminResponse> content = new ArrayList<>();
+        for (Tournament tournament : tournaments) {
+            content.add(toTournamentAdminResponse(tournament));
+        }
+        return new PagedResponse<>(
+                content,
+                tournaments.getNumber(),
+                tournaments.getSize(),
+                tournaments.getTotalElements(),
+                tournaments.getTotalPages(),
+                tournaments.isLast()
+        );
+
+    }
+
+    public TournamentAdminResponse toTournamentAdminResponse(Tournament tournament) {
+        List<TournamentCategory> tournamentCategories = tournament.getCategories();
+        List<TournamentCategoryResponse> tournamentCategoryResponses = new ArrayList<>();
+        for (TournamentCategory tournamentCategory : tournamentCategories) {
+            TournamentCategoryResponse tournamentCategoryResponse = TournamentCategoryResponse.builder()
+                    .category(tournamentCategory.getCategory())
+                    .id(tournamentCategory.getId())
+                    .currentParticipantCount(0)
+                    .maxParticipants(tournamentCategory.getMaxParticipants())
+                    .build();
+            tournamentCategoryResponses.add(tournamentCategoryResponse);
+        }
+        return TournamentAdminResponse.builder()
+                .id(tournament.getId())
+                .categories(tournamentCategoryResponses)
+                .endDate(tournament.getEndDate())
+                .startDate(tournament.getStartDate())
+                .registrationStartDate(tournament.getRegistrationStartDate())
+                .registrationEndDate(tournament.getRegistrationEndDate())
+                .createdAt(tournament.getCreatedAt())
+                .status(tournament.getStatus())
+                .location(tournament.getLocation())
+                .slug(tournament.getSlug())
+                .name(tournament.getName())
+                .build();
     }
 }

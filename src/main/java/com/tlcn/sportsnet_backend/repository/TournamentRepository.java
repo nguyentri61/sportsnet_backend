@@ -18,6 +18,9 @@ import java.util.Optional;
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament, String> {
     @NonNull
+    Page<Tournament> findAllByStatusNot(Pageable pageable, TournamentStatus status);
+
+    @NonNull
     Page<Tournament> findAll(Pageable pageable);
 
     Optional<Tournament> findBySlug(String slug);

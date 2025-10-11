@@ -1,8 +1,13 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
+import com.tlcn.sportsnet_backend.util.SecurityUtil;
+import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.Instant;
+
 @Entity
 @Table(name = "tournament_participants")
 @Getter
@@ -24,4 +29,25 @@ public class TournamentParticipant {
     private TournamentCategory category;
 
     private TournamentParticipantEnum status;
+    Instant createdAt;
+    Instant updatedAt;
+    String createdBy;
+    String updatedBy;
+    @PrePersist
+    public void handleBeforeCreate(){
+        createdAt = Instant.now();
+        createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
+
+    }
+
+    @PreUpdate
+    public void handleBeforeUpdate(){
+        updatedAt = Instant.now();
+        updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
+
+    }
 }

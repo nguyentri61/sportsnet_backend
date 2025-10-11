@@ -1,10 +1,7 @@
 package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.club.MyClubResponse;
-import com.tlcn.sportsnet_backend.dto.tournament.TournamentCategoryRequest;
-import com.tlcn.sportsnet_backend.dto.tournament.TournamentCategoryResponse;
-import com.tlcn.sportsnet_backend.dto.tournament.TournamentCreateRequest;
-import com.tlcn.sportsnet_backend.dto.tournament.TournamentResponse;
+import com.tlcn.sportsnet_backend.dto.tournament.*;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
@@ -56,6 +53,8 @@ public class TournamentService {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .status(TournamentStatus.UPCOMING)
+                .fee(request.getFee())
+                .rules(request.getRules())
                 .build();
         tournament = tournamentRepository.save(tournament);
         List<TournamentCategory> tournamentCategories = new ArrayList<>();
@@ -74,13 +73,12 @@ public class TournamentService {
         tournamentCategoryRepository.saveAll(tournamentCategories);
         tournament.setCategories(tournamentCategories);
         return toTournamentResponse(tournament);
-
     }
     public PagedResponse<TournamentResponse> getAllTournament(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
-        Page<Tournament> tournamentPage = tournamentRepository.findAll(pageable);
+        Page<Tournament> tournamentPage = tournamentRepository.findAllByStatusNot(pageable, TournamentStatus.CANCELLED);
         List<TournamentResponse> content = new ArrayList<>();
         for (Tournament tournament : tournamentPage) {
             content.add(toTournamentResponse(tournament));
@@ -95,12 +93,12 @@ public class TournamentService {
         );
     }
 
-    public TournamentResponse getBySlug(String slug) {
+    public TournamentDetailResponse getBySlug(String slug) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
         Tournament tournament = tournamentRepository.findBySlug(slug).orElseThrow(() -> new InvalidDataException("Tournament not found"));
-        return toTournamentResponse(tournament);
+        return tournamentDetailResponse(tournament);
     }
 
     public TournamentResponse toTournamentResponse(Tournament tournament) {
@@ -131,9 +129,45 @@ public class TournamentService {
                 .id(tournament.getId())
                 .name(tournament.getName())
                 .description(tournament.getDescription())
+                .fee(tournament.getFee())
                 .build();
     }
 
+    public TournamentDetailResponse tournamentDetailResponse(Tournament tournament){
+        List<TournamentCategory> tournamentCategories = tournament.getCategories();
+        List<TournamentCategoryDetailResponse> tournamentCategoryResponses = new ArrayList<>();
+        for (TournamentCategory tournamentCategory : tournamentCategories) {
+            TournamentCategoryDetailResponse tournamentCategoryResponse = TournamentCategoryDetailResponse.builder()
+                    .category(tournamentCategory.getCategory())
+                    .id(tournamentCategory.getId())
+                    .currentParticipantCount(0)
+                    .maxParticipants(tournamentCategory.getMaxParticipants())
+                    .minLevel(tournamentCategory.getMinLevel())
+                    .maxLevel(tournamentCategory.getMaxLevel())
+                    .build();
+            tournamentCategoryResponses.add(tournamentCategoryResponse);
+        }
+        return TournamentDetailResponse.builder()
+                .createdAt(tournament.getCreatedAt())
+                .slug(tournament.getSlug())
+                .createdBy(tournament.getCreatedBy())
+                .status(tournament.getStatus())
+                .rules(tournament.getRules())
+                .categories(tournamentCategoryResponses)
+                .bannerUrl(fileStorageService.getFileUrl(tournament.getBannerUrl(), "/tournament"))
+                .logoUrl(fileStorageService.getFileUrl(tournament.getLogoUrl(), "/tournament"))
+                .location(tournament.getLocation())
+                .registrationEndDate(tournament.getRegistrationEndDate())
+                .registrationStartDate(tournament.getRegistrationStartDate())
+                .startDate(tournament.getStartDate())
+                .endDate(tournament.getEndDate())
+                .id(tournament.getId())
+                .name(tournament.getName())
+                .description(tournament.getDescription())
+                .fee(tournament.getFee())
+                .build();
+
+    }
     private void calculateStatus(Tournament tournament) {
         TournamentStatus oldStatus = tournament.getStatus();
         TournamentStatus status =tournament.getStatus();
@@ -165,4 +199,6 @@ public class TournamentService {
             calculateStatus(tournament);
         }
     }
+
+
 }

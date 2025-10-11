@@ -3,6 +3,7 @@ package com.tlcn.sportsnet_backend.dto.tournament;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,7 +18,8 @@ public class TournamentCreateRequest {
     private String location;
     private String bannerUrl;
     private String logoUrl;
-
+    private BigDecimal fee;
+    private String rules;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private LocalDateTime registrationStartDate;

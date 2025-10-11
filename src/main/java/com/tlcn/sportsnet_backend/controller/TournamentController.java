@@ -1,5 +1,8 @@
 package com.tlcn.sportsnet_backend.controller;
 
+import com.tlcn.sportsnet_backend.repository.TournamentRepository;
+import com.tlcn.sportsnet_backend.service.TournamentCategoryService;
+import com.tlcn.sportsnet_backend.service.TournamentParticipantService;
 import com.tlcn.sportsnet_backend.service.TournamentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/tournaments")
 public class TournamentController {
     private final TournamentService tournamentService;
+    private final TournamentCategoryService tournamentCategoryService;
+    private final TournamentParticipantService participantService;
     @GetMapping
     public ResponseEntity<?> getAllMyClubEventClub(
             @RequestParam(defaultValue = "0") int page,
@@ -20,5 +25,15 @@ public class TournamentController {
     @GetMapping("/{slug}")
     public ResponseEntity<?> getTournamentBySlug(@PathVariable String slug) {
         return ResponseEntity.ok(tournamentService.getBySlug(slug));
+    }
+    @PostMapping("/{categoryId}/register/single")
+    public ResponseEntity<?> joinSingleTournament(@PathVariable String categoryId){
+        return ResponseEntity.ok(participantService.joinSingle(categoryId));
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<?> getTournamentByCategory(@PathVariable String categoryId) {
+//        return ResponseEntity.ok(tournamentCategoryService.getBy)
+        return null;
     }
 }

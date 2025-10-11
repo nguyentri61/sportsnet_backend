@@ -1,9 +1,12 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
+import com.tlcn.sportsnet_backend.util.SecurityUtil;
+import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -35,5 +38,17 @@ public class TournamentCategory {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentResult> results;
+
+    private String slug;
+
+    @PrePersist
+    public void handleBeforeCreate(){
+
+        if (this.slug == null || this.slug.isBlank()) {
+            String slug = SlugUtil.toSlug(this.category.getLabel());
+            String randomSuffix = SlugUtil.randomString(8);
+            this.slug = slug + "-" + randomSuffix;
+        }
+    }
 
 }
