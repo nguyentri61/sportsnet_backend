@@ -38,8 +38,9 @@ public interface ClubEventRepository extends JpaRepository<ClubEvent, String>, J
 
 
     @EntityGraph(attributePaths = {})
-    @Query("SELECT e FROM ClubEvent e WHERE e.status <> :status")
-    List<ClubEvent> findAllByStatusNot(EventStatusEnum status);
+    @Query("SELECT e FROM ClubEvent e WHERE e.status NOT IN :statuses")
+    List<ClubEvent> findAllByStatusNotIn(@Param("statuses") List<EventStatusEnum> statuses);
+
 
     @Query("SELECT COUNT(e) FROM ClubEvent e WHERE e.club.id = :clubId AND e.status = :status")
     Long  countByClubIdAndStatus(@Param("clubId") String clubId,

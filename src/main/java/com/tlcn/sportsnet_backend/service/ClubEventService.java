@@ -387,8 +387,14 @@ public class ClubEventService {
     @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void autoUpdateEventStatus() {
-        System.out.println("Chạy hàm");
-        List<ClubEvent> events = clubEventRepository.findAllByStatusNot(EventStatusEnum.FINISHED);
+        List<EventStatusEnum> excludedStatuses = List.of(
+                EventStatusEnum.CANCELLED,
+                EventStatusEnum.FINISHED,
+                EventStatusEnum.DRAFT
+        );
+
+        List<ClubEvent> events = clubEventRepository.findAllByStatusNotIn(excludedStatuses);
+
         for (ClubEvent event : events) {
             calculateStatus(event);
         }

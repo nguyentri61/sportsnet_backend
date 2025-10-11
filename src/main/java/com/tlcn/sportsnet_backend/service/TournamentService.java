@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.dto.tournament.TournamentCategoryResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.TournamentCreateRequest;
 import com.tlcn.sportsnet_backend.dto.tournament.TournamentResponse;
 import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
@@ -18,10 +19,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -75,7 +79,7 @@ public class TournamentService {
     public PagedResponse<TournamentResponse> getAllTournament(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
         Page<Tournament> tournamentPage = tournamentRepository.findAll(pageable);
         List<TournamentResponse> content = new ArrayList<>();
         for (Tournament tournament : tournamentPage) {
@@ -90,6 +94,15 @@ public class TournamentService {
                 tournamentPage.isLast()
         );
     }
+
+    public TournamentResponse getBySlug(String slug) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
+        Tournament tournament = tournamentRepository.findBySlug(slug).orElseThrow(() -> new InvalidDataException("Tournament not found"));
+        return toTournamentResponse(tournament);
+    }
+
     public TournamentResponse toTournamentResponse(Tournament tournament) {
         List<TournamentCategory> tournamentCategories = tournament.getCategories();
         List<TournamentCategoryResponse> tournamentCategoryResponses = new ArrayList<>();
@@ -121,5 +134,35 @@ public class TournamentService {
                 .build();
     }
 
-
+    private void calculateStatus(Tournament tournament) {
+        TournamentStatus oldStatus = tournament.getStatus();
+        TournamentStatus status =tournament.getStatus();
+        LocalDateTime now = LocalDateTime.now();
+        if(now.isAfter(tournament.getRegistrationStartDate()) && now.isBefore(tournament.getRegistrationEndDate())) {
+            status = TournamentStatus.REGISTRATION_OPEN;
+        } else if (now.isAfter(tournament.getRegistrationEndDate()) && now.isBefore(tournament.getStartDate())) {
+            status = TournamentStatus.REGISTRATION_CLOSED;
+        } else if (now.isAfter(tournament.getStartDate()) && now.isBefore(tournament.getEndDate())) {
+            status = TournamentStatus.IN_PROGRESS;
+        } else if (now.isAfter(tournament.getEndDate()) && oldStatus!=TournamentStatus.CANCELLED) {
+            status = TournamentStatus.COMPLETED;
+        }
+        if(oldStatus!=status) {
+            tournament.setStatus(status);
+            tournamentRepository.save(tournament);
+        }
+    }
+    @Scheduled(cron = "0 * * * * *")
+    @Transactional
+    public void autoUpdateTournamentStatus() {
+        System.out.println("Chạy hàm giải đấu");
+        List<TournamentStatus> excludedStatuses = List.of(
+                TournamentStatus.CANCELLED,
+                TournamentStatus.COMPLETED
+        );
+        List<Tournament> tournaments = tournamentRepository.findAllByStatusNot(excludedStatuses);
+        for (Tournament tournament : tournaments) {
+            calculateStatus(tournament);
+        }
+    }
 }

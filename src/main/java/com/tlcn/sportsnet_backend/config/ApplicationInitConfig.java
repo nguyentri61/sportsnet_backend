@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.entity.UserInfo;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.RoleRepository;
 import com.tlcn.sportsnet_backend.service.ClubEventService;
+import com.tlcn.sportsnet_backend.service.TournamentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -23,6 +24,7 @@ public class ApplicationInitConfig implements ApplicationRunner {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final ClubEventService clubEventService;
+    private final TournamentService tournamentService;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -60,6 +62,7 @@ public class ApplicationInitConfig implements ApplicationRunner {
 
         }
         clubEventService.autoUpdateEventStatus();
+        tournamentService.autoUpdateTournamentStatus();
     }
 
     private void createRoleIfNotExists(String roleName) {
