@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.service;
 
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.util.ClubEventSpecification;
 import com.tlcn.sportsnet_backend.dto.club_event.*;
 import com.tlcn.sportsnet_backend.entity.*;
@@ -42,8 +43,15 @@ public class ClubEventService {
         Club club = clubRepository.findBySlug(request.getClubSlug())
                 .orElseThrow(() -> new InvalidDataException("Club not found"));
 
-        Facility facility = facilityRepository.findById(request.getFacilityId())
-                .orElseThrow(() -> new InvalidDataException("Facility not found"));
+        Facility facility = null;
+        if (request.getFacilityId() != null && !request.getFacilityId().isBlank()) {
+            facility = facilityRepository.findById(request.getFacilityId())
+                    .orElseThrow(() -> new InvalidDataException("Facility not found"));
+        }
+
+        if (facility == null && (request.getLocation() == null || request.getLocation().isBlank())) {
+            throw new InvalidDataException("Cần chọn cơ sở hoặc nhập địa điểm tùy chỉnh");
+        }
 
         ClubEvent event = ClubEvent.builder()
                 .title(request.getTitle())
@@ -219,6 +227,7 @@ public class ClubEventService {
                 .requirements(event.getRequirements())
                 .image(fileStorageService.getFileUrl(event.getImage(), "/club/events"))
                 .location(event.getLocation())
+                .facility(event.getFacility() != null ? toFacilityResponse(event.getFacility()) : null)
                 .startTime(event.getStartTime())
                 .endTime(event.getEndTime())
                 .totalMember(event.getTotalMember())
@@ -255,6 +264,7 @@ public class ClubEventService {
                 .startTime(event.getStartTime())
                 .endTime(event.getEndTime())
                 .location(event.getLocation())
+                .facility(event.getFacility() != null ? toFacilityResponse(event.getFacility()) : null)
                 .title(event.getTitle())
                 .fee(event.getFee())
                 .joinedMember((int) event.getParticipants().stream()
@@ -287,6 +297,7 @@ public class ClubEventService {
                 roleEnum = ParticipantRoleEnum.MEMBER;
             }
         }
+
         return ClubEventDetailResponse.builder()
                 .id(event.getId())
                 .slug(event.getSlug())
@@ -295,6 +306,7 @@ public class ClubEventService {
                 .requirements(event.getRequirements())
                 .image(fileStorageService.getFileUrl(event.getImage(), "/club/events"))
                 .location(event.getLocation())
+                .facility(event.getFacility() != null ? toFacilityResponse(event.getFacility()) : null)
                 .startTime(event.getStartTime())
                 .endTime(event.getEndTime())
                 .totalMember(event.getTotalMember())
@@ -326,6 +338,21 @@ public class ClubEventService {
                 .isSendReason(absentReasonRepository.existsByParticipation(clubEventParticipant))
                 .build();
     }
+
+    private FacilityResponse toFacilityResponse(Facility facility) {
+        return FacilityResponse.builder()
+                .id(facility.getId())
+                .name(facility.getName())
+                .address(facility.getAddress())
+                .district(facility.getDistrict())
+                .city(facility.getCity())
+                .location(facility.getLocation())
+                .latitude(facility.getLatitude())
+                .longitude(facility.getLongitude())
+                .image(fileStorageService.getFileUrl(facility.getImage(), "/facility"))
+                .build();
+    }
+
     public void calculateStatus(ClubEvent event) {
         EventStatusEnum newStatus = event.getStatus();
 
@@ -373,6 +400,19 @@ public class ClubEventService {
         clubEvent.setCategories(request.getCategories());
         clubEvent.setMaxLevel(request.getMaxLevel());
         clubEvent.setMinLevel(request.getMinLevel());
+
+        if (request.getFacilityId() != null && !request.getFacilityId().isBlank()) {
+            // Nếu có facilityId thì gán facility và xóa location
+            Facility facility = facilityRepository.findById(request.getFacilityId())
+                    .orElseThrow(() -> new InvalidDataException("Facility not found"));
+            clubEvent.setFacility(facility);
+            clubEvent.setLocation(null);
+        } else {
+            // Nếu không có facilityId thì dùng location như cũ
+            clubEvent.setFacility(null);
+            clubEvent.setLocation(request.getLocation());
+        }
+
         if(clubEvent.getStatus()!=request.getStatus() && request.getStatus() == EventStatusEnum.FINISHED){
             clubService.calculateReputation(clubEvent.getClub());
         }

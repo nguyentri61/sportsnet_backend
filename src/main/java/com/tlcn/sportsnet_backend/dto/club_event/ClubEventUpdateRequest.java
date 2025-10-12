@@ -22,6 +22,7 @@ public class ClubEventUpdateRequest {
     String description;
     String image;
     String location;
+    String facilityId;
     String requirements;
     LocalDateTime startTime;
     LocalDateTime endTime;

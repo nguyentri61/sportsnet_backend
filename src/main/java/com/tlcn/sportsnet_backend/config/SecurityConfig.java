@@ -43,7 +43,7 @@ public class SecurityConfig {
     private final String[] API_ALLOWED = {
             "/", "/api/auth/login", "/api/auth/refresh", "/api/auth/register" ,"/uploads/**",
             "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html","/api/clubs/*",
-            "/api/clubs/all_public", "/api/club-event/all/public","/api/club-event/*","api/club-event-rating/club/**", "/ws/**", "/api/address/**", "/api/address", "/api/tournaments", "/api/tournaments/*"
+            "/api/clubs/all_public", "/api/club-event/all/public","/api/club-event/*","api/club-event-rating/club/**", "/ws/**", "/api/address/**", "/api/address", "/api/tournaments", "/api/tournaments/*", "/api/facilities/all/filter"
     };
     private final String[] API_DENIED = {
             "/api/*/upload"

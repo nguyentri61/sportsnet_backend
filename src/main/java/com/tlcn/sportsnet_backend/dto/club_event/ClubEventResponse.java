@@ -1,5 +1,7 @@
 package com.tlcn.sportsnet_backend.dto.club_event;
 
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
+import com.tlcn.sportsnet_backend.entity.Facility;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ParticipantRoleEnum;
@@ -21,6 +23,7 @@ public class ClubEventResponse {
     String slug;
     String image;
     String location;
+    FacilityResponse facility;
     LocalDateTime startTime;
     LocalDateTime endTime;
     int totalMember;

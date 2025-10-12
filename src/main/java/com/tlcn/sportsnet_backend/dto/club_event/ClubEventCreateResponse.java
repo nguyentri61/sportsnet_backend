@@ -1,5 +1,7 @@
 package com.tlcn.sportsnet_backend.dto.club_event;
 
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
+import com.tlcn.sportsnet_backend.entity.Facility;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import lombok.*;
@@ -22,6 +24,7 @@ public class ClubEventCreateResponse {
     String description;
     String image;
     String location;
+    FacilityResponse facility;
     String requirements;
     LocalDateTime startTime;
     LocalDateTime endTime;

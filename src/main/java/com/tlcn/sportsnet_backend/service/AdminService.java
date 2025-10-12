@@ -5,6 +5,7 @@ import com.tlcn.sportsnet_backend.dto.account.AccountResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubAdminResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventAdminResponse;
 import com.tlcn.sportsnet_backend.dto.club_event.ClubEventResponse;
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.TournamentAdminResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.TournamentCategoryResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.TournamentResponse;
@@ -126,6 +127,7 @@ public class AdminService {
                 .startTime(event.getStartTime())
                 .endTime(event.getEndTime())
                 .location(event.getLocation())
+                .facility(event.getFacility() != null ? toFacilityResponse(event.getFacility()) : null)
                 .title(event.getTitle())
                 .fee(event.getFee())
                 .joinedMember((int) event.getParticipants().stream()
@@ -139,6 +141,20 @@ public class AdminService {
                 .minLevel(event.getMinLevel())
                 .build();
 
+    }
+
+    private FacilityResponse toFacilityResponse(Facility facility) {
+        return FacilityResponse.builder()
+                .id(facility.getId())
+                .name(facility.getName())
+                .address(facility.getAddress())
+                .district(facility.getDistrict())
+                .city(facility.getCity())
+                .location(facility.getLocation())
+                .latitude(facility.getLatitude())
+                .longitude(facility.getLongitude())
+                .image(fileStorageService.getFileUrl(facility.getImage(), "/facility"))
+                .build();
     }
 
     public void checkAccount() {
