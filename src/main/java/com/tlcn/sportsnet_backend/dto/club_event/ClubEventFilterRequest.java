@@ -17,6 +17,6 @@ public class ClubEventFilterRequest {
     List<BadmintonCategoryEnum> categories;
     String participantSize;
     Double minRating;
-    List<String> clubNames;
+    List<String> facilityNames;
     List<EventStatusEnum> statuses;
 }

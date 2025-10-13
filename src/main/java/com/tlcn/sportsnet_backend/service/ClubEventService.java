@@ -121,7 +121,7 @@ public class ClubEventService {
                 ClubEventSpecification.matchesWard(ward),
                 ClubEventSpecification.matchesDateRange(startDate, endDate),
                 ClubEventSpecification.matchesFee(isFree, minFee, maxFee),
-                ClubEventSpecification.hasClubNames(filterRequest.getClubNames()),
+                ClubEventSpecification.hasFacilityNames(filterRequest.getFacilityNames()),
                 ClubEventSpecification.hasCategories(filterRequest.getCategories()),
                 ClubEventSpecification.hasLevels(filterRequest.getLevels()),
                 ClubEventSpecification.participantSize(filterRequest.getParticipantSize()),

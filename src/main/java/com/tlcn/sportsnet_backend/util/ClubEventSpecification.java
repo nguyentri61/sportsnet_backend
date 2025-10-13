@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.util;
 
 import com.tlcn.sportsnet_backend.entity.ClubEvent;
+import com.tlcn.sportsnet_backend.entity.Facility;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import org.springframework.data.jpa.domain.Specification;
@@ -104,13 +105,13 @@ public class ClubEventSpecification {
         };
     }
 
-    public static Specification<ClubEvent> hasClubNames(List<String> clubNames) {
+    public static Specification<ClubEvent> hasFacilityNames(List<String> facilityNames) {
         return (root, query, cb) -> {
-            if (clubNames == null || clubNames.isEmpty()) return null;
-            Join<Object, Object> clubJoin = root.join("club", JoinType.LEFT);
+            if (facilityNames == null || facilityNames.isEmpty()) return null;
+            Join<ClubEvent, Facility> facilityJoin = root.join("facility", JoinType.INNER);
             List<Predicate> predicates = new ArrayList<>();
-            for (String name : clubNames) {
-                predicates.add(cb.like(cb.lower(clubJoin.get("name")), "%" + name.toLowerCase() + "%"));
+            for (String name : facilityNames) {
+                predicates.add(cb.like(cb.lower(facilityJoin.get("name")), "%" + name.toLowerCase() + "%"));
             }
             return cb.or(predicates.toArray(new Predicate[0]));
         };
