@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.dto.club;
 
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
@@ -21,6 +22,7 @@ public class MyClubResponse {
     String description;
     String logoUrl;
     String location;
+    FacilityResponse facility;
     Integer memberCount;
     Integer maxMembers;
     Double minLevel;

@@ -4,6 +4,7 @@ import com.tlcn.sportsnet_backend.dto.club.ClubAdminResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
 import com.tlcn.sportsnet_backend.dto.club.ClubResponse;
 import com.tlcn.sportsnet_backend.dto.club.MyClubResponse;
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
@@ -43,6 +44,7 @@ public class ClubService {
     private final ClubEventRepository clubEventRepository;
     private final ClubEventParticipantRepository clubEventParticipantRepository;
     private final ConversationService conversationService;
+    private final FacilityRepository facilityRepository;
 
     public ClubResponse createClub(ClubCreateRequest request) {
 
@@ -59,11 +61,22 @@ public class ClubService {
         owner.setRoles(roles);
         roleRepository.save(ownerRole);
 
+        Facility facility = null;
+        if (request.getFacilityId() != null && !request.getFacilityId().isBlank()) {
+            facility = facilityRepository.findById(request.getFacilityId())
+                    .orElseThrow(() -> new InvalidDataException("Facility not found"));
+        }
+
+        if (facility == null && (request.getLocation() == null || request.getLocation().isBlank())) {
+            throw new InvalidDataException("Cần chọn cơ sở hoặc nhập địa điểm tùy chỉnh");
+        }
+
         Club club = Club.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .logoUrl(request.getLogoUrl())
                 .location(request.getLocation())
+                .facility(facility)
                 .maxMembers(request.getMaxMembers())
                 .minLevel(request.getMinLevel())
                 .maxLevel(request.getMaxLevel())
@@ -188,6 +201,7 @@ public class ClubService {
                 .description(club.getDescription())
                 .logoUrl(fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo"))
                 .location(club.getLocation())
+                .facility(club.getFacility() != null ? toFacilityResponse(club.getFacility()) : null)
                 .memberCount(members.size())
                 .maxMembers(club.getMaxMembers())
                 .minLevel(club.getMinLevel())
@@ -217,6 +231,7 @@ public class ClubService {
                 .description(club.getDescription())
                 .logoUrl(fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo"))
                 .location(club.getLocation())
+                .facility(club.getFacility() != null ? toFacilityResponse(club.getFacility()) : null)
                 .maxMembers(club.getMaxMembers())
                 .visibility(club.getVisibility())
                 .tags(club.getTags())
@@ -232,7 +247,19 @@ public class ClubService {
                 .build();
     }
 
-
+    private FacilityResponse toFacilityResponse(Facility facility) {
+        return FacilityResponse.builder()
+                .id(facility.getId())
+                .name(facility.getName())
+                .address(facility.getAddress())
+                .district(facility.getDistrict())
+                .city(facility.getCity())
+                .location(facility.getLocation())
+                .latitude(facility.getLatitude())
+                .longitude(facility.getLongitude())
+                .image(fileStorageService.getFileUrl(facility.getImage(), "/facility"))
+                .build();
+    }
 
 
     public double calculateReputation(Club club) {

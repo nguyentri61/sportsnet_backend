@@ -16,6 +16,7 @@ public class ClubCreateRequest {
     String description;
     String logoUrl;
     String location;
+    String facilityId;
     int maxMembers;
     double minLevel;
     double maxLevel;

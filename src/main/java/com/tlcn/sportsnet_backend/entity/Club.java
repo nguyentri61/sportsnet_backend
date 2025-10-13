@@ -36,6 +36,10 @@ public class Club {
 
     String location;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "facility_id")
+    Facility facility;
+
     String logoUrl;
 
     @Enumerated(EnumType.STRING)
