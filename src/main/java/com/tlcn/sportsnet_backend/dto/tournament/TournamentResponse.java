@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.dto.tournament;
 
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -15,26 +16,29 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TournamentResponse {
 
-    private String id;
-    private String name;
-    private String description;
-    private String location;
-    private String slug;
+    String id;
+    String name;
+    String description;
 
-    private LocalDateTime startDate;
+    String location;
+    FacilityResponse facility;
 
-    private LocalDateTime endDate;
+    String slug;
 
-    private LocalDateTime registrationStartDate;
+    LocalDateTime startDate;
 
-    private LocalDateTime registrationEndDate;
+    LocalDateTime endDate;
 
-    private String logoUrl;
-    private String bannerUrl;
+    LocalDateTime registrationStartDate;
 
-    private Instant createdAt;
-    private TournamentStatus status;
-    private BigDecimal fee;
-    private String createdBy;
-    private List<TournamentCategoryResponse> categories;
+    LocalDateTime registrationEndDate;
+
+    String logoUrl;
+    String bannerUrl;
+
+    Instant createdAt;
+    TournamentStatus status;
+    BigDecimal fee;
+    String createdBy;
+    List<TournamentCategoryResponse> categories;
 }

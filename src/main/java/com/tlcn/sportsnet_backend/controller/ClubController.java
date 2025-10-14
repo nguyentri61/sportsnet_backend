@@ -37,8 +37,8 @@ public class ClubController {
             @RequestParam(required = false) String ward,
             @RequestParam(required = false) List<String> selectedLevels,
             @RequestParam(required = false) String reputationSort,
-            @RequestParam(required = false) List<String> clubNames){
-        return ResponseEntity.ok(clubService.getAllClubPublic(page, size, search, province, ward, selectedLevels, reputationSort, clubNames));
+            @RequestParam(required = false) List<String> facilityNames){
+        return ResponseEntity.ok(clubService.getAllClubPublic(page, size, search, province, ward, selectedLevels, reputationSort, facilityNames));
     }
 
     @GetMapping("/my_clubs/all")

@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.dto.tournament;
 
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import lombok.*;
 
@@ -17,6 +18,7 @@ public class TournamentDetailResponse {
     private String name;
     private String description;
     private String location;
+    private FacilityResponse facility;
     private String slug;
 
     private LocalDateTime startDate;

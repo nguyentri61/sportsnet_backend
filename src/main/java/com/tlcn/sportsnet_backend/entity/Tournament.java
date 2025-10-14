@@ -25,17 +25,26 @@ public class Tournament {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    private String name;
-    private String description;
-    private String location;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private LocalDateTime registrationStartDate;
-    private LocalDateTime registrationEndDate;
-    private String logoUrl;
-    private String bannerUrl;
+    String name;
+
+    String description;
+
+    String location;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "facility_id")
+    Facility facility;
+
+    LocalDateTime startDate;
+    LocalDateTime endDate;
+    LocalDateTime registrationStartDate;
+    LocalDateTime registrationEndDate;
+    String logoUrl;
+    String bannerUrl;
+
     @Enumerated(EnumType.STRING)
-    private TournamentStatus status = TournamentStatus.UPCOMING;
+    TournamentStatus status = TournamentStatus.UPCOMING;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     Instant createdAt;
     BigDecimal fee;
@@ -47,7 +56,7 @@ public class Tournament {
 
     @Lob
     @Column(columnDefinition = "LONGTEXT")
-    private String rules;
+    String rules;
 
     String slug;
     @PrePersist
@@ -77,5 +86,5 @@ public class Tournament {
     }
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TournamentCategory> categories;
+    List<TournamentCategory> categories;
 }

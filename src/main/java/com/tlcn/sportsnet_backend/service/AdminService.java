@@ -275,6 +275,7 @@ public class AdminService {
                 .createdAt(tournament.getCreatedAt())
                 .status(tournament.getStatus())
                 .location(tournament.getLocation())
+                .facility(tournament.getFacility() != null ? toFacilityResponse(tournament.getFacility()) : null)
                 .slug(tournament.getSlug())
                 .name(tournament.getName())
                 .build();

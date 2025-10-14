@@ -2,12 +2,10 @@ package com.tlcn.sportsnet_backend.util;
 
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
+import com.tlcn.sportsnet_backend.entity.Facility;
 import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -71,10 +69,15 @@ public class ClubSpecification {
         };
     }
 
-    public static Specification<Club> matchesClubNames(List<String> clubNames) {
+    public static Specification<Club> matchesFacilityNames(List<String> facilityNames) {
         return (root, query, cb) -> {
-            if (clubNames == null || clubNames.isEmpty()) return null;
-            return root.get("name").in(clubNames);
+            if (facilityNames == null || facilityNames.isEmpty()) return null;
+            Join<Club, Facility> facilityJoin = root.join("facility", JoinType.INNER);
+            List<Predicate> predicates = new ArrayList<>();
+            for (String name : facilityNames) {
+                predicates.add(cb.like(cb.lower(facilityJoin.get("name")), "%" + name.toLowerCase() + "%"));
+            }
+            return cb.or(predicates.toArray(new Predicate[0]));
         };
     }
 

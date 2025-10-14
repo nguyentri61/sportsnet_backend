@@ -1,13 +1,13 @@
 package com.tlcn.sportsnet_backend.service;
 
-import com.tlcn.sportsnet_backend.dto.club.MyClubResponse;
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.*;
 import com.tlcn.sportsnet_backend.entity.*;
-import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
+import com.tlcn.sportsnet_backend.repository.FacilityRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentRepository;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,6 +33,8 @@ public class TournamentService {
     private final TournamentCategoryRepository tournamentCategoryRepository;
     private final AccountRepository accountRepository;
     private final FileStorageService fileStorageService;
+    private final FacilityRepository facilityRepository;
+
     public TournamentResponse createTournament(TournamentCreateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
@@ -42,12 +43,24 @@ public class TournamentService {
                 .noneMatch(role -> role.getName().equals("ROLE_ADMIN"))) {
             throw new InvalidDataException("You are not an admin");
         }
+
+        Facility facility = null;
+        if (request.getFacilityId() != null && !request.getFacilityId().isBlank()) {
+            facility = facilityRepository.findById(request.getFacilityId())
+                    .orElseThrow(() -> new InvalidDataException("Facility not found"));
+        }
+
+        if (facility == null && (request.getLocation() == null || request.getLocation().isBlank())) {
+            throw new InvalidDataException("Cần chọn cơ sở hoặc nhập địa điểm tùy chỉnh");
+        }
+
         Tournament tournament = Tournament.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .bannerUrl(request.getBannerUrl())
                 .logoUrl(request.getLogoUrl())
                 .location(request.getLocation())
+                .facility(facility)
                 .registrationEndDate(request.getRegistrationEndDate())
                 .registrationStartDate(request.getRegistrationStartDate())
                 .startDate(request.getStartDate())
@@ -122,6 +135,7 @@ public class TournamentService {
                 .bannerUrl(fileStorageService.getFileUrl(tournament.getBannerUrl(), "/tournament"))
                 .logoUrl(fileStorageService.getFileUrl(tournament.getLogoUrl(), "/tournament"))
                 .location(tournament.getLocation())
+                .facility(tournament.getFacility() != null ? toFacilityResponse(tournament.getFacility()) : null)
                 .registrationEndDate(tournament.getRegistrationEndDate())
                 .registrationStartDate(tournament.getRegistrationStartDate())
                 .startDate(tournament.getStartDate())
@@ -157,6 +171,7 @@ public class TournamentService {
                 .bannerUrl(fileStorageService.getFileUrl(tournament.getBannerUrl(), "/tournament"))
                 .logoUrl(fileStorageService.getFileUrl(tournament.getLogoUrl(), "/tournament"))
                 .location(tournament.getLocation())
+                .facility(tournament.getFacility() != null ? toFacilityResponse(tournament.getFacility()) : null)
                 .registrationEndDate(tournament.getRegistrationEndDate())
                 .registrationStartDate(tournament.getRegistrationStartDate())
                 .startDate(tournament.getStartDate())
@@ -168,6 +183,21 @@ public class TournamentService {
                 .build();
 
     }
+
+    private FacilityResponse toFacilityResponse(Facility facility) {
+        return FacilityResponse.builder()
+                .id(facility.getId())
+                .name(facility.getName())
+                .address(facility.getAddress())
+                .district(facility.getDistrict())
+                .city(facility.getCity())
+                .location(facility.getLocation())
+                .latitude(facility.getLatitude())
+                .longitude(facility.getLongitude())
+                .image(fileStorageService.getFileUrl(facility.getImage(), "/facility"))
+                .build();
+    }
+
     private void calculateStatus(Tournament tournament) {
         TournamentStatus oldStatus = tournament.getStatus();
         TournamentStatus status =tournament.getStatus();

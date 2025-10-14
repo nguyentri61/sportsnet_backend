@@ -106,7 +106,7 @@ public class ClubService {
             String ward,
             List<String> selectedLevels,
             String reputationSort,
-            List<String> clubNames
+            List<String> facilityNames
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
@@ -125,7 +125,7 @@ public class ClubService {
                 ClubSpecification.matchesProvince(province),
                 ClubSpecification.matchesWard(ward),
                 ClubSpecification.matchesLevels(selectedLevels),
-                ClubSpecification.matchesClubNames(clubNames)
+                ClubSpecification.matchesFacilityNames(facilityNames)
         );
 
         if (account != null) {

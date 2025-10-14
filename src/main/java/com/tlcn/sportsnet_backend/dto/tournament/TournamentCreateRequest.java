@@ -13,18 +13,19 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TournamentCreateRequest {
-    private String name;
-    private String description;
-    private String location;
-    private String bannerUrl;
-    private String logoUrl;
-    private BigDecimal fee;
-    private String rules;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private LocalDateTime registrationStartDate;
-    private LocalDateTime registrationEndDate;
+    String name;
+    String description;
+    String location;
+    String facilityId;
+    String bannerUrl;
+    String logoUrl;
+    BigDecimal fee;
+    String rules;
+    LocalDateTime startDate;
+    LocalDateTime endDate;
+    LocalDateTime registrationStartDate;
+    LocalDateTime registrationEndDate;
 
     // Danh sách các hạng mục thi đấu (category) trong giải này
-    private List<TournamentCategoryRequest> categories;
+    List<TournamentCategoryRequest> categories;
 }
