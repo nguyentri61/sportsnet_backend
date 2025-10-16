@@ -127,8 +127,8 @@ public class ClubEventController {
     }
 
     @PutMapping("/{idEvent}/participant/{id}/reject")
-    public ResponseEntity<?> rejectParticipant(@PathVariable String id,@PathVariable String idEvent) {
-        return ResponseEntity.ok(clubEventParticipantService.rejectParticipant(id, idEvent));
+    public ResponseEntity<?> rejectParticipant(@PathVariable String id,@PathVariable String idEvent, @RequestParam(required = false) String reason) {
+        return ResponseEntity.ok(clubEventParticipantService.rejectParticipant(id, idEvent, reason));
     }
 
     @PutMapping("/{idEvent}/participant/{id}")

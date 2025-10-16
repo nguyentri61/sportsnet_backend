@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserScheduleRepository extends JpaRepository<UserSchedule, String> {
-    UserSchedule findByAccountId(String accountId);
+    UserSchedule findByAccountIdAndClubEventId(String accountId, String clubEventId);
     Page<UserSchedule> findByAccountId(String accountId, Pageable pageable);
 
     Optional<UserSchedule> findByAccountAndClubEvent(Account account, ClubEvent clubEvent);

@@ -185,11 +185,17 @@ public class ClubEventParticipantService {
         return "Đã chấp nhận người tham gia";
     }
 
-    public String rejectParticipant(String id, String idEvent) {
+    public String rejectParticipant(String id, String idEvent, String reason) {
         ClubEvent clubEvent = checkPermission(idEvent);
         ClubEventParticipant clubMember = clubEventParticipantRepository.findById(id).orElseThrow(() -> new InvalidDataException("Member not found"));
+        UserSchedule userSchedule = userScheduleRepository.findByAccountIdAndClubEventId(clubMember.getParticipant().getId(), idEvent);
+        userScheduleRepository.delete(userSchedule);
         clubEventParticipantRepository.delete(clubMember);
-        notificationService.sendToAccount(clubMember.getParticipant(),"Hoạt động: "+clubEvent.getTitle() ,"Vì 1 số lý do bạn đã bị từ chối tham gia hoạt động "+ clubEvent.getTitle(),"/events/"+clubEvent.getSlug());
+        String message = "Vì 1 số lý do bạn đã bị từ chối tham gia hoạt động "+ clubEvent.getTitle();
+        if(!reason.isEmpty()){
+            message = reason;
+        }
+        notificationService.sendToAccount(clubMember.getParticipant(),"Hoạt động: "+clubEvent.getTitle() ,message,"/events/"+clubEvent.getSlug());
         return "Đã từ chối người tham gia";
     }
 
