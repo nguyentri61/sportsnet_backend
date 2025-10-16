@@ -62,6 +62,12 @@ public class ClubController {
         return ResponseEntity.ok(clubMemberService.getMembers(page,size, status, id));
     }
 
+    @GetMapping("/my_clubs/{id}/guest")
+    public ResponseEntity<?> getMyClubGuest(@PathVariable String id){
+        return ResponseEntity.ok(clubMemberService.getAllGuest(id));
+
+    }
+
     @PostMapping
     public ResponseEntity<?> createClub(@RequestBody ClubCreateRequest request) {
         return ResponseEntity.ok(clubService.createClub(request));

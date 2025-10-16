@@ -30,4 +30,26 @@ public interface ClubEventParticipantRepository extends JpaRepository<ClubEventP
             "AND p.status = :status")
     Long  countByClubIdAndStatus(@Param("clubId") String clubId,
                                 @Param("status") ClubEventParticipantStatusEnum status);
+
+    @Query("""
+    SELECT DISTINCT p.participant
+    FROM ClubEventParticipant p
+    WHERE p.clubEvent.club.id = :clubId
+      AND p.participant.id NOT IN (
+          SELECT m.account.id
+          FROM ClubMember m
+          WHERE m.club.id = :clubId
+      )
+""")
+    List<Account> findDistinctNonMemberParticipantsByClubId(@Param("clubId") String clubId);
+
+    @Query("""
+    SELECT COUNT(p)
+    FROM ClubEventParticipant p
+    WHERE p.participant.id = :accountId
+      AND p.clubEvent.club.id = :clubId
+""")
+    long countEventsByParticipantInClub(@Param("accountId") String accountId,
+                                        @Param("clubId") String clubId);
+
 }

@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.member.DetailMemberResponse;
+import com.tlcn.sportsnet_backend.dto.member.GuestMemberResponse;
 import com.tlcn.sportsnet_backend.dto.member.MemberResponse;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.ChatRole;
@@ -36,6 +37,7 @@ public class ClubMemberService {
     private final ConversationParticipantRepository convParticipantRepository;
     private final ConversationRepository conversationRepository;
     private final ConversationParticipantRepository conversationParticipantRepository;
+    private final ClubEventParticipantRepository clubEventParticipantRepository;
 
     public String joinClub(String clubId, String notification) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -197,6 +199,33 @@ public class ClubMemberService {
                 .slug(clubMember.getAccount().getUserInfo().getSlug())
                 .reputationScore(clubMember.getAccount().getReputationScore())
                 .totalParticipatedEvents(clubMember.getAccount().getTotalParticipatedEvents())
+                .build();
+    }
+
+    public List<GuestMemberResponse> getAllGuest(String id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+        Club club = clubRepository.findById(id)
+                .orElseThrow(() -> new InvalidDataException("Club not found"));
+        List<Account> accounts = clubEventParticipantRepository.findDistinctNonMemberParticipantsByClubId(club.getId());
+        List<GuestMemberResponse> guestMemberResponses = new ArrayList<>();
+        for (Account acc : accounts) {
+            guestMemberResponses.add(toGuestMemberResponse(acc,id));
+        }
+        return guestMemberResponses;
+    }
+
+    public GuestMemberResponse toGuestMemberResponse(Account account, String id) {
+        Long joinedCount = clubEventParticipantRepository.countEventsByParticipantInClub(account.getId(), id);
+        return GuestMemberResponse.builder()
+                .id(account.getId())
+                .joinedCount(joinedCount)
+                .avatar(account.getUserInfo().getAvatarUrl() != null
+                        ? fileStorageService.getFileUrl(account.getUserInfo().getAvatarUrl(), "/avatar")
+                        : null)
+                .name(account.getUserInfo().getFullName())
+                .slug(account.getUserInfo().getSlug())
                 .build();
     }
 }
