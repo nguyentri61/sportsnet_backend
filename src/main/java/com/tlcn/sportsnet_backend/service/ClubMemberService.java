@@ -65,7 +65,7 @@ public class ClubMemberService {
     }
 
     // Owner duyệt/Reject
-    public void approveMember(String clubId, String memberId, boolean approve) {
+    public void approveMember(String clubId, String memberId, boolean approve, String reason) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account owner = accountRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new InvalidDataException("Account not found"));
@@ -95,9 +95,15 @@ public class ClubMemberService {
                     .build();
             conversationParticipantRepository.save(conversationParticipant);
             clubMemberRepository.save(member);
+            notificationService.sendToAccount(member.getAccount(), "Phê duyệt tham gia CLB: "+ club.getName(),"Bạn đã được phê duyệt tham gia vào CLB "+club.getName()+". Have fun!","/my-clubs/"+club.getSlug());
         } else {
             // Reject thì xóa record luôn
             clubMemberRepository.delete(member);
+            String message = "Vì 1 số lý do bạn đã bị từ chối tham gia CLB";
+            if(!reason.isEmpty()){
+                message = reason;
+            }
+            notificationService.sendToAccount(member.getAccount(), "Từ chối tham gia CLB: "+ club.getName(),"Lý do: "+message,"/clubs/"+club.getSlug());
         }
     }
 

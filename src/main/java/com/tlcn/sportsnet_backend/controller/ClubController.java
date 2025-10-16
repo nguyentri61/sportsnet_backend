@@ -88,13 +88,15 @@ public class ClubController {
     public ResponseEntity<?> approveMember(
             @PathVariable String clubId,
             @PathVariable String memberId,
-            @RequestParam boolean approve) {
+            @RequestParam boolean approve,
+            @RequestParam(required = false) String reason) {
 
-        clubMemberService.approveMember(clubId, memberId, approve);
+        clubMemberService.approveMember(clubId, memberId, approve, reason);
+
         if (approve) {
             return ResponseEntity.ok("Member approved successfully");
         } else {
-            return ResponseEntity.ok("Member rejected successfully");
+            return ResponseEntity.ok("Member rejected successfully with reason: " + reason);
         }
     }
 

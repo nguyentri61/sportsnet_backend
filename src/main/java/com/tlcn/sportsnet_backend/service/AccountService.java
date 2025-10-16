@@ -105,9 +105,14 @@ public class AccountService {
 
     public AccountResponse toResponse(Account account) {
         List<Club> clubs = clubRepository.findAllByOwnerAndStatusOrderByReputationDesc(account, ClubStatusEnum.ACTIVE);
+        List<Club> myClubs = clubRepository.findClubsForUserAndStatus(account, ClubMemberStatusEnum.APPROVED, ClubMemberRoleEnum.MEMBER, ClubStatusEnum.ACTIVE);
         List<AccountResponse.OwnerClub> ownerClubs = new ArrayList<>();
+        List<AccountResponse.OwnerClub> myOwnerClubs = new ArrayList<>();
         for(Club club : clubs){
             ownerClubs.add(new AccountResponse.OwnerClub(club.getName(), club.getSlug(), fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo") ));
+        }
+        for(Club club : myClubs){
+            myOwnerClubs.add(new AccountResponse.OwnerClub(club.getName(), club.getSlug(), fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo") ));
         }
         return AccountResponse.builder()
                 .id(account.getId())
@@ -127,6 +132,7 @@ public class AccountService {
                 .reputationScore(account.getReputationScore())
                 .totalParticipatedEvents(account.getTotalParticipatedEvents())
                 .ownerClubs(ownerClubs)
+                .myClubs(myOwnerClubs)
                 .build();
     }
 

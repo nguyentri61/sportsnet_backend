@@ -31,6 +31,8 @@ public class AccountResponse {
     int totalParticipatedEvents;
     List<OwnerClub> ownerClubs;
 
+    List<OwnerClub> myClubs;
+
     @AllArgsConstructor
     @NoArgsConstructor
     @Data

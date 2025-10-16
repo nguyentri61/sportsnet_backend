@@ -57,4 +57,16 @@ public interface ClubRepository extends JpaRepository<Club, String>, JpaSpecific
 
     List<Club> findAllByOwnerAndStatusOrderByReputationDesc(Account owner, ClubStatusEnum status );
 
+    @Query("""
+    SELECT c FROM Club c
+    WHERE EXISTS (SELECT cm FROM ClubMember cm WHERE cm.club = c AND cm.account = :account AND cm.status = :status AND cm.role = :role)
+    AND c.status = :clubStatus
+""")
+    List<Club> findClubsForUserAndStatus(
+            @Param("account") Account account,
+            @Param("status") ClubMemberStatusEnum status,
+            @Param("role") ClubMemberRoleEnum role,
+            @Param("clubStatus") ClubStatusEnum clubStatus
+
+    );
 }
