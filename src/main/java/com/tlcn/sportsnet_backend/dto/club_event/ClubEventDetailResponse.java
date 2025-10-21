@@ -37,6 +37,7 @@ public class ClubEventDetailResponse {
     List<BadmintonCategoryEnum> categories;
     EventStatusEnum status;
     String clubId;
+    String clubSlug;
     BigDecimal fee;
     LocalDateTime deadline;
     boolean openForOutside;

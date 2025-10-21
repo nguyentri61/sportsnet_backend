@@ -327,6 +327,7 @@ public class ClubEventService {
                                                 && p.getStatus() != ClubEventParticipantStatusEnum.CANCELLED)
                         .count())
                 .clubId(event.getClub().getId())
+                .clubSlug(event.getClub().getSlug())
                 .createdAt(event.getCreatedAt())
                 .createdBy(event.getCreatedBy())
                 .nameClub(event.getClub().getName())
