@@ -30,5 +30,7 @@ public class ClubResponse {
     Set<String> tags;
     ClubStatusEnum status;
     String ownerName;
+    boolean owner;
+    boolean joined;
     Instant createdAt;
 }

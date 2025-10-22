@@ -193,6 +193,19 @@ public class ClubService {
     }
 
     private ClubResponse toClubResponse(Club club) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
+
+        boolean joined = false;
+        boolean owner = false;
+        if(account != null) {
+            ClubMember clubMember = clubMemberRepository.findByClubAndAccount(club, account);
+            if (clubMember != null) {
+                joined = clubMember.getStatus() == ClubMemberStatusEnum.APPROVED;
+            }
+            owner = club.getOwner().getId().equals(account.getId());
+        }
+
         List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
         return ClubResponse.builder()
                 .id(club.getId())
@@ -210,6 +223,8 @@ public class ClubService {
                 .tags(club.getTags())
                 .status(club.getStatus())
                 .ownerName(club.getOwner().getUserInfo().getFullName())
+                .owner(owner)
+                .joined(joined)
                 .createdAt(club.getCreatedAt())
                 .build();
     }
