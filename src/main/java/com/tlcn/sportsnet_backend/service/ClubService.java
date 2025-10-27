@@ -98,6 +98,52 @@ public class ClubService {
         conversationService.createConversationByClub(club);
         return toClubResponse(club);
     }
+
+    public ClubResponse updateClub(String clubId, ClubCreateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        Account currentUser = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản người dùng"));
+
+        // Tìm club
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new InvalidDataException("Không tìm thấy câu lạc bộ"));
+
+        // Chỉ chủ sở hữu mới được chỉnh sửa
+        if (!club.getOwner().getId().equals(currentUser.getId())) {
+            throw new InvalidDataException("Bạn không có quyền chỉnh sửa câu lạc bộ này");
+        }
+
+        // Kiểm tra facility (nếu có)
+        Facility facility = null;
+        if (request.getFacilityId() != null && !request.getFacilityId().isBlank()) {
+            facility = facilityRepository.findById(request.getFacilityId())
+                    .orElseThrow(() -> new InvalidDataException("Không tìm thấy cơ sở"));
+        }
+
+        if (facility == null && (request.getLocation() == null || request.getLocation().isBlank())) {
+            throw new InvalidDataException("Cần chọn cơ sở hoặc nhập địa điểm tùy chỉnh");
+        }
+
+        // Cập nhật thông tin club
+        club.setName(request.getName());
+        club.setDescription(request.getDescription());
+        if(request.getLogoUrl() != null && !request.getLogoUrl().isBlank()) {
+            club.setLogoUrl(request.getLogoUrl());
+        }
+        club.setLocation(request.getLocation());
+        club.setFacility(facility);
+        club.setMaxMembers(request.getMaxMembers());
+        club.setMinLevel(request.getMinLevel());
+        club.setMaxLevel(request.getMaxLevel());
+        club.setVisibility(request.getVisibility());
+        club.setTags(request.getTags() != null ? request.getTags() : new HashSet<>());
+
+        club = clubRepository.save(club);
+
+        return toClubResponse(club);
+    }
+
     public PagedResponse<ClubResponse> getAllClubPublic(
             int page,
             int size,

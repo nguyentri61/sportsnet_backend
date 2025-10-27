@@ -73,6 +73,11 @@ public class ClubController {
         return ResponseEntity.ok(clubService.createClub(request));
     }
 
+    @PutMapping("/{clubId}")
+    public ResponseEntity<?> updateClub(@PathVariable String clubId, @RequestBody ClubCreateRequest request) {
+        return ResponseEntity.ok(clubService.updateClub(clubId, request));
+    }
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
         if (file == null || file.isEmpty()) {
