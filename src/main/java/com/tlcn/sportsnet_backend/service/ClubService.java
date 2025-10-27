@@ -45,6 +45,7 @@ public class ClubService {
     private final ClubEventParticipantRepository clubEventParticipantRepository;
     private final ConversationService conversationService;
     private final FacilityRepository facilityRepository;
+    private final ClubInvitationRepository clubInvitationRepository;
 
     public ClubResponse createClub(ClubCreateRequest request) {
 
@@ -198,10 +199,17 @@ public class ClubService {
 
         boolean joined = false;
         boolean owner = false;
+        String invitationId = null;
+        String invitationMessage = null;
         if(account != null) {
             ClubMember clubMember = clubMemberRepository.findByClubAndAccount(club, account);
             if (clubMember != null) {
                 joined = clubMember.getStatus() == ClubMemberStatusEnum.APPROVED;
+            }
+            ClubInvitation clubInvitation = clubInvitationRepository.findByReceiver_IdAndClub_IdAndStatus(account.getId(), club.getId(), InvitationStatusEnum.PENDING).orElse(null);
+            if (clubInvitation != null) {
+                invitationId = clubInvitation.getId();
+                invitationMessage = clubInvitation.getMessage();
             }
             owner = club.getOwner().getId().equals(account.getId());
         }
@@ -226,6 +234,8 @@ public class ClubService {
                 .owner(owner)
                 .joined(joined)
                 .createdAt(club.getCreatedAt())
+                .invitationId(invitationId)
+                .invitationMessage(invitationMessage)
                 .build();
     }
 

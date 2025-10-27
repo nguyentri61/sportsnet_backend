@@ -33,4 +33,6 @@ public class ClubResponse {
     boolean owner;
     boolean joined;
     Instant createdAt;
+    String invitationId;
+    String invitationMessage;
 }

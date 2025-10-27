@@ -1,7 +1,5 @@
-package com.tlcn.sportsnet_backend.dto.member;
+package com.tlcn.sportsnet_backend.dto.clubInvitation;
 
-import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
-import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.InvitationStatusEnum;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -15,11 +13,14 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class GuestMemberResponse {
+public class ClubInvitationResponse {
     String id;
-    String name;
-    String avatar;
-    Long joinedCount;
-    String slug;
-    InvitationStatusEnum invitationStatus;
+    String clubId;
+    String clubName;
+    String receiverId;
+    String receiverName;
+    String message;
+    InvitationStatusEnum status;
+    Instant sendAt;
+    Instant respondedAt;
 }
