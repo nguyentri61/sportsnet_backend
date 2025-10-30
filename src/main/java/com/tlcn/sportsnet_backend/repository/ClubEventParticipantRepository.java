@@ -48,8 +48,10 @@ public interface ClubEventParticipantRepository extends JpaRepository<ClubEventP
     FROM ClubEventParticipant p
     WHERE p.participant.id = :accountId
       AND p.clubEvent.club.id = :clubId
+      AND p.status = :status
 """)
     long countEventsByParticipantInClub(@Param("accountId") String accountId,
-                                        @Param("clubId") String clubId);
+                                        @Param("clubId") String clubId,
+                                        @Param("status") ClubEventParticipantStatusEnum status);
 
 }

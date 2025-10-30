@@ -3,11 +3,9 @@ package com.tlcn.sportsnet_backend.service;
 import com.tlcn.sportsnet_backend.dto.member.DetailMemberResponse;
 import com.tlcn.sportsnet_backend.dto.member.GuestMemberResponse;
 import com.tlcn.sportsnet_backend.dto.member.MemberResponse;
+import com.tlcn.sportsnet_backend.dto.schedule.ScheduleResponse;
 import com.tlcn.sportsnet_backend.entity.*;
-import com.tlcn.sportsnet_backend.enums.ChatRole;
-import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
-import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
-import com.tlcn.sportsnet_backend.enums.InvitationStatusEnum;
+import com.tlcn.sportsnet_backend.enums.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.*;
@@ -41,6 +39,8 @@ public class ClubMemberService {
     private final ConversationParticipantRepository conversationParticipantRepository;
     private final ClubEventParticipantRepository clubEventParticipantRepository;
     private final ClubInvitationRepository clubInvitationRepository;
+    private final UserScheduleRepository userScheduleRepository;
+    private final UserScheduleService userScheduleService;
     public String joinClub(String clubId, String notification) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -152,7 +152,7 @@ public class ClubMemberService {
                 .stream()
 //                .filter(member -> !member.getAccount().equals(account))
                 .map(clubMember -> MemberResponse.builder()
-                        .id(clubMember.getId())
+                        .id(clubMember.getAccount().getId())
                         .name(clubMember.getAccount().getUserInfo().getFullName())
                         .avatar(clubMember.getAccount().getUserInfo().getAvatarUrl() != null
                                 ? fileStorageService.getFileUrl(clubMember.getAccount().getUserInfo().getAvatarUrl(), "/avatar")
@@ -161,6 +161,7 @@ public class ClubMemberService {
                         .status(clubMember.getStatus())
                         .role(clubMember.getRole())
                         .slug(clubMember.getAccount().getUserInfo().getSlug())
+                        .joinedCount(clubEventParticipantRepository.countEventsByParticipantInClub(clubMember.getAccount().getId(), id, ClubEventParticipantStatusEnum.ATTENDED))
                         .build()
                 )
                 .toList();
@@ -220,7 +221,7 @@ public class ClubMemberService {
     }
 
     public GuestMemberResponse toGuestMemberResponse(Account account, String id) {
-        Long joinedCount = clubEventParticipantRepository.countEventsByParticipantInClub(account.getId(), id);
+        Long joinedCount = clubEventParticipantRepository.countEventsByParticipantInClub(account.getId(), id, ClubEventParticipantStatusEnum.ATTENDED);
         Optional<ClubInvitation> clubInvitation = clubInvitationRepository.findByReceiver_IdAndClub_Id(account.getId(),id);
         return GuestMemberResponse.builder()
                 .id(account.getId())
@@ -233,4 +234,39 @@ public class ClubMemberService {
                 .invitationStatus(clubInvitation.map(ClubInvitation::getStatus).orElse(null))
                 .build();
     }
+
+    public List<ScheduleResponse> getSchedule(String id, String accountId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account owner = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+        Club club = clubRepository.findById(id)
+                .orElseThrow(() -> new InvalidDataException("Club not found"));
+        if (!club.getOwner().getId().equals(owner.getId())) {
+            throw new InvalidDataException("Not club owner");
+        }
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> new InvalidDataException("Account not found"));
+        ClubMember clubMember = clubMemberRepository.findClubMemberByAccountAndClub(account,club);
+        return toScheduleResponses(clubMember.getAccount(), clubMember.getClub());
+    }
+
+    public List<ScheduleResponse> toScheduleResponses(Account account, Club club) {
+        System.out.println("Account Id: "+ account.getId());
+        List<UserSchedule> userSchedules = userScheduleRepository.findByAccount_IdAndClubEvent_Club_Id(account.getId(),club.getId());
+        System.out.println("Dộ dài: "+userSchedules.size());
+        List<ScheduleResponse> scheduleResponses = new ArrayList<>();
+        for (UserSchedule userSchedule : userSchedules) {
+            scheduleResponses.add(ScheduleResponse.builder()
+                            .slug(userSchedule.getClubEvent().getSlug())
+                            .status(userSchedule.getStatus())
+                            .createdAt(userSchedule.getCreatedAt())
+                            .endTime(userSchedule.getEndTime())
+                            .startTime(userSchedule.getStartTime())
+                            .id(userSchedule.getId())
+                            .name(userSchedule.getClubEvent().getTitle())
+                    .build());
+        }
+        return scheduleResponses;
+    }
+
+
 }

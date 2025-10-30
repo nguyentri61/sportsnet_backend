@@ -214,6 +214,9 @@ public class ClubEventParticipantService {
         ClubEventParticipant clubMember = clubEventParticipantRepository.findById(id).orElseThrow(() -> new InvalidDataException("Member not found"));
         clubMember.setStatus(status.getStatus());
         clubEventParticipantRepository.save(clubMember);
+        UserSchedule userSchedule = userScheduleRepository.findByAccountIdAndClubEventId(clubMember.getParticipant().getId(), idEvent);
+        userSchedule.setStatus(status.getStatus().toStatusEnum());
+        userScheduleRepository.save(userSchedule);
         Account account = clubMember.getParticipant();
         String content;
         if(status.getStatus() == ClubEventParticipantStatusEnum.ATTENDED){

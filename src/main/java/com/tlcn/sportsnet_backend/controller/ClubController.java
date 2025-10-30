@@ -62,6 +62,11 @@ public class ClubController {
         return ResponseEntity.ok(clubMemberService.getMembers(page,size, status, id));
     }
 
+    @GetMapping("/my_clubs/{id}/member/{memberId}/schedule")
+    public ResponseEntity<?> getMyClubMemberSchedule(@PathVariable String id, @PathVariable String memberId) {
+        return ResponseEntity.ok(clubMemberService.getSchedule(id,memberId));
+    }
+
     @GetMapping("/my_clubs/{id}/guest")
     public ResponseEntity<?> getMyClubGuest(@PathVariable String id){
         return ResponseEntity.ok(clubMemberService.getAllGuest(id));

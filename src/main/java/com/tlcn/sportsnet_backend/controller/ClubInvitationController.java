@@ -20,8 +20,8 @@ public class ClubInvitationController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateClubInvitation(@RequestBody ClubInvitationUpdateStatus request) {
-        return ResponseEntity.ok(clubInvitationService.updateStatusClubInvitation(request));
+    public ResponseEntity<?> updateClubInvitation(@RequestBody ClubInvitationUpdateStatus request, @RequestParam(required = false) String reason) {
+        return ResponseEntity.ok(clubInvitationService.updateStatusClubInvitation(request, reason));
     }
 
     @GetMapping

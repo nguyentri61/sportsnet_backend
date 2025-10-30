@@ -52,7 +52,7 @@ public class ClubInvitationService {
         return toClubInvitation(clubInvitation);
     }
 
-    public Object updateStatusClubInvitation(ClubInvitationUpdateStatus request) {
+    public Object updateStatusClubInvitation(ClubInvitationUpdateStatus request, String reason) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
         ClubInvitation clubInvitation = clubInvitationRepository.findById(request.getId()).orElseThrow(() -> new InvalidDataException("ClubInvitation not found"));
@@ -73,7 +73,11 @@ public class ClubInvitationService {
             notificationService.sendToAccount(clubInvitation.getClub().getOwner(), "Đồng ý tham gia CLB", account.getUserInfo().getFullName()+" đã đồng ý tham gia vào CLB "+ clubInvitation.getClub().getName() + " của bạn", "/my-clubs/"+ clubInvitation.getClub().getSlug());
         }
         else if(request.getStatus().equals(InvitationStatusEnum.REJECTED)){
-            notificationService.sendToAccount(clubInvitation.getClub().getOwner(), "Từ chối tham gia CLB",account.getUserInfo().getFullName()+" đã từ chối tham gia vào CLB "+ clubInvitation.getClub().getName() + " của bạn", "/my-clubs/"+ clubInvitation.getClub().getSlug());
+            String message = account.getUserInfo().getFullName()+" đã từ chối tham gia vào CLB "+ clubInvitation.getClub().getName() + " của bạn.";
+            if(!reason.isEmpty()){
+                message += " Vì lý do: "+reason;
+            }
+            notificationService.sendToAccount(clubInvitation.getClub().getOwner(), "Từ chối tham gia CLB",message, "/my-clubs/"+ clubInvitation.getClub().getSlug());
         }
         return toClubInvitation(clubInvitation);
     }

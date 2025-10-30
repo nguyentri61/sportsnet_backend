@@ -72,11 +72,11 @@ public class AccountController {
         return ResponseEntity.ok(reputationHistoryService.getAll());
     }
 
-//    @PostMapping("/create-schedule")
-//    public ResponseEntity<?> createSchedule(){
-//        userScheduleService.createAll();
-//        return ResponseEntity.ok("Đã khợi tạo thành công");
-//    }
+    @PostMapping("/create-schedule")
+    public ResponseEntity<?> createSchedule(){
+        userScheduleService.createAll();
+        return ResponseEntity.ok("Đã khợi tạo thành công");
+    }
 
     @GetMapping("/schedule")
     public ResponseEntity<?> getSchedule(@RequestParam(defaultValue = "0") int page,
