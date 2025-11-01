@@ -5,19 +5,8 @@ public enum StatusScheduleEnum {
     CONFIRMED,
     ONGOING,
     COMPLETED,
+    CANCELLATION_PENDING,
     CANCELLED,
         ABSENT,
     REJECTED;
-
-    public String getDisplayName() {
-        return switch (this) {
-            case PENDING -> "Chờ xác nhận";
-            case CONFIRMED -> "Đã xác nhận";
-            case ONGOING -> "Đang diễn ra";
-            case COMPLETED -> "Hoàn thành";
-            case CANCELLED -> "Đã hủy";
-            case REJECTED -> "Bị từ chối";
-            default -> this.name();
-        };
-    }
 }

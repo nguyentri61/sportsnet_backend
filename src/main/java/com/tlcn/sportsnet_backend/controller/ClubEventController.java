@@ -85,8 +85,11 @@ public class ClubEventController {
     }
 
     @PostMapping("/{eventId}/cancel-join")
-    public ResponseEntity<?> cancelJoin(@PathVariable String eventId) {
-        return ResponseEntity.ok(clubEventParticipantService.cancelJoinEvent(eventId));
+    public ResponseEntity<?> cancelJoin(
+            @PathVariable String eventId,
+            @RequestParam(required = false) String reason)
+    {
+        return ResponseEntity.ok(clubEventParticipantService.cancelJoinEvent(eventId, reason));
     }
 
     @PostMapping("/upload")

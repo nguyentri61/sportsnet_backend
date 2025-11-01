@@ -35,6 +35,9 @@ public class ClubEventParticipantService {
     private final AbsentReasonRepository absentReasonRepository;
     private final UserScheduleService userScheduleService;
     private final UserScheduleRepository userScheduleRepository;
+    private final ClubEventCancellationRepository clubEventCancellationRepository;
+
+
     public ClubEventParticipantResponse joinClubEvent(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
@@ -139,7 +142,7 @@ public class ClubEventParticipantService {
 
     }
 
-    public String cancelJoinEvent(String eventId) {
+    public String cancelJoinEvent(String eventId, String reason) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
@@ -160,20 +163,43 @@ public class ClubEventParticipantService {
             throw new InvalidDataException("Không thể hủy khi hoạt động đã bắt đầu");
         }
 
-        // Cập nhật trạng thái người tham gia
-        participant.setStatus(ClubEventParticipantStatusEnum.CANCELLED);
+        // Nếu hủy trước deadline => cho phép hủy trực tiếp
+        if (LocalDateTime.now().isBefore(clubEvent.getDeadline())) {
+            participant.setStatus(ClubEventParticipantStatusEnum.CANCELLED);
+            clubEventParticipantRepository.save(participant);
+
+            String message = account.getUserInfo().getFullName() + " đã hủy tham gia hoạt động " + clubEvent.getTitle();
+            notificationService.sendToAccount(
+                    clubEvent.getClub().getOwner(),
+                    "Hoạt động: " + clubEvent.getTitle(),
+                    message,
+                    "/events/" + clubEvent.getSlug()
+            );
+
+            return "Đã hủy tham gia hoạt động thành công";
+        }
+
+        // Nếu hủy sau deadline => cần gửi yêu cầu phê duyệt
+        ClubEventCancellation cancellation = ClubEventCancellation.builder()
+                .participant(participant)
+                .reason(reason)
+                .approved(null)
+                .build();
+        clubEventCancellationRepository.save(cancellation);
+
+        participant.setStatus(ClubEventParticipantStatusEnum.CANCELLATION_PENDING);
         clubEventParticipantRepository.save(participant);
 
-        // Gửi thông báo đến chủ CLB
-        String message = account.getUserInfo().getFullName() + " đã hủy tham gia hoạt động " + clubEvent.getTitle();
+        String message = account.getUserInfo().getFullName()
+                + " đã gửi yêu cầu hủy tham gia hoạt động " + clubEvent.getTitle() + " (hủy muộn, chờ phê duyệt).";
         notificationService.sendToAccount(
                 clubEvent.getClub().getOwner(),
-                "Hoạt động: " + clubEvent.getTitle(),
+                "Yêu cầu phê duyệt hủy tham gia",
                 message,
                 "/events/" + clubEvent.getSlug()
         );
 
-        return "Đã hủy tham gia hoạt động thành công";
+        return "Hoạt động đã quá hạn hủy. Yêu cầu hủy của bạn đã được gửi đến ban quản lý CLB để phê duyệt.";
     }
 
     public String approveParticipant(String id, String eventId) {

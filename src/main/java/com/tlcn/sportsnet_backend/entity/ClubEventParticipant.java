@@ -43,6 +43,9 @@ public class ClubEventParticipant {
 
     boolean deductedForAbsent = false; // đã trừ điểm hay chưa
 
+    @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<ClubEventCancellation> cancellations = new ArrayList<>();
+
     @PrePersist
     public void handleBeforeCreate(){
         joinedAt = Instant.now();
