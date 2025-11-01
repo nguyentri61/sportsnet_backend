@@ -8,6 +8,8 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -39,4 +41,8 @@ public class ClubMember {
     @ManyToOne
     @JoinColumn(name = "club_id", nullable = false)
     Club club;
+
+    @OneToMany(mappedBy = "clubMember", cascade = CascadeType.ALL)
+    private List<ClubWarning> clubWarnings = new ArrayList<>();
+
 }

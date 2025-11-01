@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.dto.club;
 
+import com.tlcn.sportsnet_backend.dto.clubWarning.ClubWarningResponse;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
@@ -8,6 +9,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 @Builder
@@ -35,4 +37,5 @@ public class MyClubResponse {
     Instant dateJoined;
     String ownerName;
     Instant createdAt;
+    List<ClubWarningResponse> clubWarnings;
 }
