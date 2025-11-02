@@ -27,6 +27,8 @@ public class ClubEventCancellation {
 
     Boolean approved; // null: chưa duyệt, true: duyệt, false: từ chối
 
+    Boolean lateCancellation;
+
     Instant requestedAt;
     Instant reviewedAt;
 
@@ -37,5 +39,8 @@ public class ClubEventCancellation {
     @PrePersist
     public void handleBeforeCreate() {
         requestedAt = Instant.now();
+        if (lateCancellation == null) {
+            lateCancellation = false; // mặc định là không sát giờ
+        }
     }
 }
