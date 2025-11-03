@@ -45,4 +45,6 @@ public class ClubMember {
     @OneToMany(mappedBy = "clubMember", cascade = CascadeType.ALL)
     private List<ClubWarning> clubWarnings = new ArrayList<>();
 
+    @OneToMany(mappedBy = "clubMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<ClubMemberNote> notes = new ArrayList<>();
 }
