@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -189,33 +190,68 @@ public class ClubEventService {
     @Transactional
     public void cancelEvent(String eventId) {
         ClubEvent event = clubEventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new InvalidDataException("Không tìm thấy hoạt động"));
 
+        // Kiểm tra trạng thái cho phép hủy
         EventStatusEnum status = event.getStatus();
-        boolean canBeCancelled = status == EventStatusEnum.OPEN || status == EventStatusEnum.CLOSED || status == EventStatusEnum.DRAFT;
+        if (status == EventStatusEnum.CANCELLED) {
+            throw new InvalidDataException("Hoạt động này đã bị hủy trước đó.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        boolean hasStarted = event.getStartTime() != null && event.getStartTime().isBefore(now);
+
+        // Kiểm tra điều kiện được phép hủy
+        boolean canBeCancelled = false;
+        if (status == EventStatusEnum.DRAFT) {
+            // Bản nháp thì luôn hủy được
+            canBeCancelled = true;
+        } else if ((status == EventStatusEnum.OPEN || status == EventStatusEnum.CLOSED) && !hasStarted) {
+            // OPEN hoặc CLOSED thì chỉ hủy được nếu chưa bắt đầu
+            canBeCancelled = true;
+        }
+
         if (!canBeCancelled) {
-            throw new InvalidDataException("Không thể hủy sự kiện ở trạng thái hiện tại: " + status);
+            throw new InvalidDataException("Không thể hủy sự kiện ở trạng thái hiện tại hoặc sự kiện đã bắt đầu!");
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account currentAccount = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
+        Account currentAccount = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
 
         boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> "ROLE_ADMIN".equals(grantedAuthority.getAuthority()));
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         boolean isClubOwner = authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> "ROLE_CLUB_OWNER".equals(grantedAuthority.getAuthority()));
+                .anyMatch(a -> "ROLE_CLUB_OWNER".equals(a.getAuthority()));
 
-        if(!isAdmin && !isClubOwner) {
-            throw new InvalidDataException("Bạn không có quyền hủy sự kiện này!");
+        // Chỉ admin hoặc chủ CLB sở hữu hoạt động mới được hủy
+        if (!isAdmin && (!isClubOwner || !event.getClub().getOwner().equals(currentAccount))) {
+            throw new InvalidDataException("Bạn không có quyền hủy hoạt động này.");
         }
 
+        // Cập nhật trạng thái hoạt động
         event.setStatus(EventStatusEnum.CANCELLED);
         clubEventRepository.save(event);
 
+
+        // Gửi thông báo cho tất cả người tham gia
         event.getParticipants().forEach(participant -> {
-            notificationService.sendToAccount(participant.getParticipant(), "Hủy hoạt động!",
-                    event.getTitle() + " đã bị hủy.", "/events/" + event.getSlug());
+            notificationService.sendToAccount(
+                    participant.getParticipant(),
+                    "Hoạt động bị hủy",
+                    "Hoạt động \"" + event.getTitle() + "\" đã bị hủy bởi ban quản lý CLB.",
+                    "/events/" + event.getSlug()
+            );
         });
+
+        // Gửi thông báo hệ thống
+        notificationService.sendToAccount(
+                event.getClub().getOwner(),
+                "Đã hủy hoạt động thành công",
+                "Bạn đã hủy hoạt động \"" + event.getTitle() + "\".",
+                "/events/" + event.getSlug()
+        );
     }
 
     private ClubEventCreateResponse toClubEventCreateResponse(ClubEvent event) {
