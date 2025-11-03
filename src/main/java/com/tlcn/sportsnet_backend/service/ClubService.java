@@ -4,6 +4,7 @@ import com.tlcn.sportsnet_backend.dto.club.ClubAdminResponse;
 import com.tlcn.sportsnet_backend.dto.club.ClubCreateRequest;
 import com.tlcn.sportsnet_backend.dto.club.ClubResponse;
 import com.tlcn.sportsnet_backend.dto.club.MyClubResponse;
+import com.tlcn.sportsnet_backend.dto.clubWarning.ClubWarningResponse;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.*;
@@ -46,6 +47,7 @@ public class ClubService {
     private final ConversationService conversationService;
     private final FacilityRepository facilityRepository;
     private final ClubInvitationRepository clubInvitationRepository;
+    private final ClubWarningRepository clubWarningRepository;
 
     public ClubResponse createClub(ClubCreateRequest request) {
 
@@ -206,7 +208,7 @@ public class ClubService {
 
         List<MyClubResponse> content = new ArrayList<>();
         for (Club club : clubs) {
-            content.add(toMyClubResponse(club, account));
+            content.add(toMyClubResponse(club, account, true));
         }
 // Sắp xếp: owner lên đầu
         content.sort((c1, c2) -> Boolean.compare(!c1.isOwner(), !c2.isOwner()));
@@ -231,7 +233,7 @@ public class ClubService {
         if(clubMember.getStatus() != ClubMemberStatusEnum.APPROVED) {
             throw new InvalidDataException("ClubMember is not approved");
         }
-        return toMyClubResponse(club, account);
+        return toMyClubResponse(club, account, false);
     }
 
     public ClubResponse getClubInformation(String slug) {
@@ -285,7 +287,7 @@ public class ClubService {
                 .build();
     }
 
-    private MyClubResponse toMyClubResponse(Club club, Account account) {
+    private MyClubResponse toMyClubResponse(Club club, Account account, boolean getList) {
 
         ClubMember clubMember = clubMemberRepository.findByClubAndAccount(club, account);
         Instant joinAt = club.getCreatedAt();
@@ -294,6 +296,19 @@ public class ClubService {
         }
         List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
         ClubMember member = clubMemberRepository.findClubMemberByAccountAndClub(account, club);
+        List<ClubWarningResponse> clubWarningResponses = new ArrayList<>();
+        if(!getList) {
+            List<ClubWarning> clubWarnings = clubWarningRepository.findAllByClubMemberOrderByCreatedAtDesc(member);
+            for(ClubWarning warning : clubWarnings) {
+                clubWarningResponses.add(ClubWarningResponse.builder()
+                                .reason(warning.getReason())
+                                .updatedAt(warning.getUpdatedAt())
+                                .createdAt(warning.getCreatedAt())
+                                .status(warning.getStatus())
+                                .id(warning.getId())
+                        .build());
+            }
+        }
         assert member != null;
         return MyClubResponse.builder()
                 .id(club.getId())
@@ -315,6 +330,7 @@ public class ClubService {
                 .minLevel(club.getMinLevel())
                 .maxLevel(club.getMaxLevel())
                 .isOwner(club.getOwner()==account)
+                .clubWarnings(clubWarningResponses)
                 .build();
     }
 
