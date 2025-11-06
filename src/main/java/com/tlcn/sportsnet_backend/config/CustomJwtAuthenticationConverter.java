@@ -40,7 +40,10 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
         if (!user.isEnabled()) {
             throw new DisabledException("Tài khoản đã bị khóa");
         }
-
+        System.out.println("Check qua tài khoản");
+        if(!user.isVerified()){
+            throw new DisabledException("Tài khoản chưa được xác thực");
+        }
         // Nếu bạn có thêm field `banned`
         // if (user.isBanned()) throw new DisabledException("Tài khoản đã bị cấm");
 

@@ -43,6 +43,9 @@ public class Account {
 
     String updatedBy;
 
+
+    boolean verified;
+
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClubEventRating> clubEventRatings = new ArrayList<>();
 
@@ -50,6 +53,7 @@ public class Account {
     public void handleBeforeCreate(){
         createdAt = Instant.now();
         enabled = true;
+        verified = false;
         createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
@@ -110,4 +114,7 @@ public class Account {
     // Các đội mà người này là player2
     @OneToMany(mappedBy = "player2", fetch = FetchType.LAZY)
     private List<TournamentTeam> teamsAsPlayer2 = new ArrayList<>();
+
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
+    private OTP otp;
 }
