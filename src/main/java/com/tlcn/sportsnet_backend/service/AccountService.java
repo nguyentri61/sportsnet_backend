@@ -11,10 +11,7 @@ import com.tlcn.sportsnet_backend.enums.ClubMemberRoleEnum;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.error.UnauthorizedException;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.ClubRepository;
-import com.tlcn.sportsnet_backend.repository.RoleRepository;
-import com.tlcn.sportsnet_backend.repository.UserInfoRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,6 +32,7 @@ public class AccountService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
+    private final FriendshipRepository friendshipRepository;
 
     public Optional<Account> findByEmail(String email) {
         return accountRepository.findByEmail(email);
@@ -47,8 +45,10 @@ public class AccountService {
     }
 
     public AccountResponse getOtherAccount(String slug) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account loginAccount = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
         Account account = accountRepository.findByUserInfo_Slug(slug).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
-        return toResponse(account);
+        return toOtherAccountResponse(account,loginAccount);
     }
     public Account registerAccount(AccountRegisterRequest request) {
         if (accountRepository.existsByEmail(request.getEmail())) {
@@ -133,12 +133,58 @@ public class AccountService {
                 .totalParticipatedEvents(account.getTotalParticipatedEvents())
                 .ownerClubs(ownerClubs)
                 .myClubs(myOwnerClubs)
+                .isProfileProtected(account.getUserInfo().isProfileProtected())
                 .build();
     }
-
+    public Object protectProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
+        UserInfo userInfo = account.getUserInfo();
+        userInfo.setProfileProtected(!userInfo.isProfileProtected());
+        account.setUserInfo(userInfo);
+        accountRepository.save(account);
+        return "Chỉnh sửa thành công";
+    }
     public List<String> getAllClubID() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
         return clubRepository.findActiveMemberClubIds(account, ClubMemberRoleEnum.MEMBER, ClubMemberStatusEnum.APPROVED);
     }
+
+    public AccountResponse toOtherAccountResponse(Account account, Account loginAccount) {
+        boolean areFriend = friendshipRepository.areFriends(account.getId(), loginAccount.getId());
+        List<Club> clubs = clubRepository.findAllByOwnerAndStatusOrderByReputationDesc(account, ClubStatusEnum.ACTIVE);
+        List<Club> myClubs = clubRepository.findClubsForUserAndStatus(account, ClubMemberStatusEnum.APPROVED, ClubMemberRoleEnum.MEMBER, ClubStatusEnum.ACTIVE);
+        List<AccountResponse.OwnerClub> ownerClubs = new ArrayList<>();
+        List<AccountResponse.OwnerClub> myOwnerClubs = new ArrayList<>();
+        for(Club club : clubs){
+            ownerClubs.add(new AccountResponse.OwnerClub(club.getName(), club.getSlug(), fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo") ));
+        }
+        for(Club club : myClubs){
+            myOwnerClubs.add(new AccountResponse.OwnerClub(club.getName(), club.getSlug(), fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo") ));
+        }
+        return AccountResponse.builder()
+                .id(account.getId())
+                .email(account.getEmail())
+                .fullName(account.getUserInfo().getFullName())
+                .gender(account.getUserInfo().getGender())
+                .address(account.getUserInfo().getAddress())
+                .birthDate(account.getUserInfo().getBirthDate())
+                .phone(account.getUserInfo().getPhone())
+                .bio(account.getUserInfo().getBio())
+                .avatarUrl(fileStorageService.getFileUrl(account.getUserInfo().getAvatarUrl(), "/avatar"))
+                .enabled(account.isEnabled())
+                .createdAt(account.getCreatedAt())
+                .updatedAt(account.getUpdatedAt())
+                .createdBy(account.getCreatedBy())
+                .updatedBy(account.getUpdatedBy())
+                .reputationScore(account.getReputationScore())
+                .totalParticipatedEvents(account.getTotalParticipatedEvents())
+                .ownerClubs(ownerClubs)
+                .myClubs(myOwnerClubs)
+                .isProfileProtected(!areFriend && account.getUserInfo().isProfileProtected())
+                .build();
+    }
+
+
 }

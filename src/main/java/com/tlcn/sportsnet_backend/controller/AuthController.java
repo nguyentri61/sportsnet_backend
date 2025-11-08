@@ -10,6 +10,7 @@ import com.tlcn.sportsnet_backend.entity.OTP;
 import com.tlcn.sportsnet_backend.entity.RefreshToken;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.error.UnauthorizedException;
+import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.service.AccountService;
 import com.tlcn.sportsnet_backend.service.OTPService;
 import com.tlcn.sportsnet_backend.service.RefreshTokenService;
@@ -45,6 +46,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final AccountService accountService;
     private final RefreshTokenService refreshTokenService;
+    private final AccountRepository accountRepository;
     @Value("${jwt.token-verify-validity-in-seconds}")
     private long refreshTokenExpiration;
     @Value("${jwt.token-create-validity-in-seconds}")
@@ -112,6 +114,13 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             throw new InvalidDataException("Email hoặc mật khẩu không đúng");
         }
+    }
+
+    @GetMapping("/send-otp/{email}")
+    public ResponseEntity<?> sendOtp(@PathVariable String email) {
+        Account account = accountRepository.findByEmail(email).orElseThrow(() -> new UnauthorizedException("Account không tồn tại"));
+        otpService.createOTP(account);
+        return ResponseEntity.ok("Gửi OTP thành công");
     }
 
     @GetMapping("/refresh")

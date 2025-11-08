@@ -25,5 +25,40 @@ public interface FriendshipRepository extends JpaRepository<Friendship, String> 
     List<Friendship> findAllFriends(@Param("account") Account account);
 
     List<Friendship> findAllFriendsByReceiverAndStatus(Account receiver, FriendStatusEnum status, Sort sort);
+    @Query(value = """
+    SELECT COUNT(*) FROM (
+        SELECT DISTINCT 
+            CASE 
+                WHEN f1.requester_id = :accountId1 THEN f1.receiver_id 
+                ELSE f1.requester_id 
+            END AS friend_id
+        FROM friendships f1
+        WHERE (f1.requester_id = :accountId1 OR f1.receiver_id = :accountId1)
+          AND f1.status = 'ACCEPTED'
+        INTERSECT
+        SELECT DISTINCT 
+            CASE 
+                WHEN f2.requester_id = :accountId2 THEN f2.receiver_id 
+                ELSE f2.requester_id 
+            END AS friend_id
+        FROM friendships f2
+        WHERE (f2.requester_id = :accountId2 OR f2.receiver_id = :accountId2)
+          AND f2.status = 'ACCEPTED'
+    ) AS mutual_friends
+    """, nativeQuery = true)
+    long countMutualFriends(@Param("accountId1") String accountId1,
+                            @Param("accountId2") String accountId2);
+
+    @Query("""
+        SELECT COUNT(f) > 0
+        FROM Friendship f
+        WHERE (
+            (f.requester.id = :userId1 AND f.receiver.id = :userId2)
+            OR
+            (f.requester.id = :userId2 AND f.receiver.id = :userId1)
+        )
+        AND f.status = 'ACCEPTED'
+    """)
+    boolean areFriends(@Param("userId1") String userId1, @Param("userId2") String userId2);
 
 }

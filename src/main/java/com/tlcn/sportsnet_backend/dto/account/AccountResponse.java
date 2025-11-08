@@ -32,6 +32,7 @@ public class AccountResponse {
     List<OwnerClub> ownerClubs;
 
     List<OwnerClub> myClubs;
+    boolean isProfileProtected;
 
     @AllArgsConstructor
     @NoArgsConstructor

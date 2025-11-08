@@ -219,6 +219,7 @@ public class FriendshipService {
                                 .map(PlayerRating::getSkillLevel)
                                 .orElse("Chưa có"))
                         .slug(x.getUserInfo().getSlug())
+                        .mutualFriends(friendshipRepository.countMutualFriends(accountId, x.getId()))
                         .build())
                 .toList();
     }

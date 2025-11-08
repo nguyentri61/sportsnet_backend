@@ -36,6 +36,11 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getOtherAccount(slug));
     }
 
+    @PutMapping("/protect_profile")
+    public ResponseEntity<?> protectProfile(){
+        return ResponseEntity.ok(accountService.protectProfile());
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(accountService.updateProfile(request));
@@ -66,6 +71,9 @@ public class AccountController {
     public ResponseEntity<?> getPlayerRating() {
         return ResponseEntity.ok(playerRatingService.getPlayerRating());
     }
+
+    @GetMapping("/player-rating/{id}")
+    public ResponseEntity<?> getPlayerRating(@PathVariable String id) {return ResponseEntity.ok(playerRatingService.getPlayerRatingById(id));}
 
     @GetMapping("/reputation-history")
     public ResponseEntity<?> getReputationHistory() {
