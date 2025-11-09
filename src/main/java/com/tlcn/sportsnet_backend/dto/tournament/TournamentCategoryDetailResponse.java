@@ -2,18 +2,33 @@ package com.tlcn.sportsnet_backend.dto.tournament;
 
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TournamentCategoryDetailResponse {
-    private String id;
-    private BadmintonCategoryEnum category;
-    private Double minLevel;
-    private Double maxLevel;
-    private Integer maxParticipants;
-
-    private int currentParticipantCount;
+    String id;
+    String tournamentName;
+    LocalDateTime startDate;
+    LocalDateTime endDate;
+    BadmintonCategoryEnum category;
+    Double minLevel;
+    Double maxLevel;
+    Integer maxParticipants;
+    int currentParticipantCount;
+    Double registrationFee;
+    String description;
+    List<String> rules;
+    String firstPrize;
+    String secondPrize;
+    String thirdPrize;
+    String format;
+    LocalDateTime registrationDeadline;
 }

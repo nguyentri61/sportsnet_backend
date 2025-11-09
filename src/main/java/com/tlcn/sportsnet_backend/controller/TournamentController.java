@@ -31,9 +31,8 @@ public class TournamentController {
         return ResponseEntity.ok(participantService.joinSingle(categoryId));
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<?> getTournamentByCategory(@PathVariable String categoryId) {
-//        return ResponseEntity.ok(tournamentCategoryService.getBy)
-        return null;
+    @GetMapping("/categories/{categoryId}")
+    public ResponseEntity<?> getDetailCategoryById(@PathVariable String categoryId) {
+        return ResponseEntity.ok(tournamentCategoryService.getDetailCategoryById(categoryId));
     }
 }

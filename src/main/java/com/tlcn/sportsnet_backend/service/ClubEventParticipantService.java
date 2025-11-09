@@ -175,7 +175,7 @@ public class ClubEventParticipantService {
         // Xác định hủy sát giờ (< 24h trước khi bắt đầu)
         boolean isLateCancellation = now.isAfter(clubEvent.getStartTime().minusHours(24));
 
-        // ✅ Trường hợp hủy sớm (trước deadline và không sát giờ)
+        // Trường hợp hủy sớm (trước deadline và không sát giờ)
         if (now.isBefore(clubEvent.getDeadline()) && !isLateCancellation) {
             participant.setStatus(ClubEventParticipantStatusEnum.CANCELLED);
             clubEventParticipantRepository.save(participant);
@@ -206,7 +206,7 @@ public class ClubEventParticipantService {
             return "Đã hủy tham gia hoạt động thành công.";
         }
 
-        // 🚨 Trường hợp hủy muộn (sau deadline hoặc sát giờ)
+        // Trường hợp hủy muộn (sau deadline hoặc sát giờ)
         participant.setStatus(ClubEventParticipantStatusEnum.CANCELLATION_PENDING);
         clubEventParticipantRepository.save(participant);
 
