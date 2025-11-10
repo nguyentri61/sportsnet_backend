@@ -15,6 +15,7 @@ public class TournamentController {
     private final TournamentService tournamentService;
     private final TournamentCategoryService tournamentCategoryService;
     private final TournamentParticipantService participantService;
+
     @GetMapping
     public ResponseEntity<?> getAllMyClubEventClub(
             @RequestParam(defaultValue = "0") int page,

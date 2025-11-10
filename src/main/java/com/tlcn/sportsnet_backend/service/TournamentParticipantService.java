@@ -1,20 +1,27 @@
 package com.tlcn.sportsnet_backend.service;
 
+import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentParticipantResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Tournament;
 import com.tlcn.sportsnet_backend.entity.TournamentCategory;
 import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
+import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -22,6 +29,7 @@ public class TournamentParticipantService {
     private final TournamentParticipantRepository tournamentParticipantRepository;
     private final AccountRepository accountRepository;
     private final TournamentCategoryRepository tournamentCategoryRepository;
+    private final FileStorageService fileStorageService;
 
     public String joinSingle(String categoryId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -67,4 +75,43 @@ public class TournamentParticipantService {
 
         return "Đã đăng ký tham gia thành công";
     }
+
+    public PagedResponse<TournamentParticipantResponse> getAllParticipants(String categoryId, List<TournamentParticipantEnum> status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<TournamentParticipant> participantPage;
+
+        if (status == null || status.isEmpty()) {
+            participantPage = tournamentParticipantRepository.findByCategoryId(categoryId, pageable);
+        } else {
+            participantPage = tournamentParticipantRepository.findByCategoryIdAndStatusIn(categoryId, status, pageable);
+        }
+
+        List<TournamentParticipantResponse> content = participantPage
+                .getContent()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                participantPage.getNumber(),
+                participantPage.getSize(),
+                participantPage.getTotalElements(),
+                participantPage.getTotalPages(),
+                participantPage.isLast()
+        );
+    }
+
+    private TournamentParticipantResponse toResponse(TournamentParticipant p ) {
+        return TournamentParticipantResponse.builder()
+                .id(p.getId())
+                .fullName(p.getAccount().getUserInfo().getFullName())
+                .slug(p.getAccount().getUserInfo().getSlug())
+                .avatarUrl(fileStorageService.getFileUrl(p.getAccount().getUserInfo().getAvatarUrl(), "/avatar"))
+                .email(p.getAccount().getEmail())
+                .status(p.getStatus())
+                .build();
+    }
+
 }

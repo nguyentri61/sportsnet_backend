@@ -70,19 +70,29 @@ public class TournamentService {
                 .rules(request.getRules())
                 .build();
         tournament = tournamentRepository.save(tournament);
-        List<TournamentCategory> tournamentCategories = new ArrayList<>();
-        List<TournamentCategoryRequest> tournamentCategoryRequests = request.getCategories();
-        for (TournamentCategoryRequest tournamentCategoryRequest : tournamentCategoryRequests) {
-            TournamentCategory tournamentCategory = TournamentCategory.builder()
-                    .category(tournamentCategoryRequest.getCategoryType())
-                    .tournament(tournament)
-                    .maxLevel(tournamentCategoryRequest.getMaxLevel())
-                    .minLevel(tournamentCategoryRequest.getMinLevel())
-                    .maxParticipants(tournamentCategoryRequest.getMaxParticipants())
-                    .build();
-            tournamentCategories.add(tournamentCategory);
 
+        List<TournamentCategory> tournamentCategories = new ArrayList<>();
+
+        for (TournamentCategoryRequest c : request.getCategories()) {
+            TournamentCategory category = TournamentCategory.builder()
+                    .category(c.getCategoryType())
+                    .tournament(tournament)
+                    .minLevel(c.getMinLevel())
+                    .maxLevel(c.getMaxLevel())
+                    .maxParticipants(c.getMaxParticipants())
+                    .registrationFee(c.getRegistrationFee())
+                    .description(c.getDescription())
+                    .rules(c.getRules())
+                    .firstPrize(c.getFirstPrize())
+                    .secondPrize(c.getSecondPrize())
+                    .thirdPrize(c.getThirdPrize())
+                    .format(c.getFormat())
+                    .registrationDeadline(c.getRegistrationDeadline())
+                    .build();
+
+            tournamentCategories.add(category);
         }
+
         tournamentCategoryRepository.saveAll(tournamentCategories);
         tournament.setCategories(tournamentCategories);
         return toTournamentResponse(tournament);

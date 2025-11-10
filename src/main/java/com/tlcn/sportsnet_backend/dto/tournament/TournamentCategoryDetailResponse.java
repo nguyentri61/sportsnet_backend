@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.dto.tournament;
 
+import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -16,6 +17,7 @@ import java.util.List;
 public class TournamentCategoryDetailResponse {
     String id;
     String tournamentName;
+    FacilityResponse facility;
     LocalDateTime startDate;
     LocalDateTime endDate;
     BadmintonCategoryEnum category;
@@ -32,3 +34,5 @@ public class TournamentCategoryDetailResponse {
     String format;
     LocalDateTime registrationDeadline;
 }
+
+
