@@ -61,4 +61,6 @@ public interface FriendshipRepository extends JpaRepository<Friendship, String> 
     """)
     boolean areFriends(@Param("userId1") String userId1, @Param("userId2") String userId2);
 
+
+
 }

@@ -3,6 +3,7 @@ package com.tlcn.sportsnet_backend.controller;
 import com.tlcn.sportsnet_backend.dto.ApiResponse;
 import com.tlcn.sportsnet_backend.dto.account.AccountRegisterRequest;
 import com.tlcn.sportsnet_backend.dto.account.AccountResponse;
+import com.tlcn.sportsnet_backend.dto.account.AccountUpdatePassword;
 import com.tlcn.sportsnet_backend.dto.auth.LoginDTO;
 import com.tlcn.sportsnet_backend.dto.auth.VerifyRequest;
 import com.tlcn.sportsnet_backend.entity.*;
@@ -11,10 +12,14 @@ import com.tlcn.sportsnet_backend.error.UnauthorizedException;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.RoleRepository;
 import com.tlcn.sportsnet_backend.service.AccountService;
+import com.tlcn.sportsnet_backend.service.MailService;
 import com.tlcn.sportsnet_backend.service.OTPService;
 import com.tlcn.sportsnet_backend.service.RefreshTokenService;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
+import com.tlcn.sportsnet_backend.util.SlugUtil;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,7 +50,8 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
-
+    private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
     @Value("${jwt.token-verify-validity-in-seconds}")
     private long refreshTokenExpiration;
     @Value("${jwt.token-create-validity-in-seconds}")
@@ -211,7 +217,15 @@ public class AuthController {
         }
     }
 
-
+    @PostMapping("/forget/{email}")
+    public ResponseEntity<?> forget(@PathVariable String email){
+        Account account = accountRepository.findByEmail(email).orElseThrow(()-> new UnauthorizedException("Account không tồn tại"));
+        String newPassword = SlugUtil.randomString(8);
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+        mailService.sendResetPasswordEmail(email,newPassword);
+        return ResponseEntity.ok("Reset password thành công");
+    }
 
     @GetMapping("/send-otp/{email}")
     public ResponseEntity<?> sendOtp(@PathVariable String email) {
@@ -309,4 +323,23 @@ public class AuthController {
         OTP otp = otpService.createOTP(account);
        return ResponseEntity.ok("Đăng ký thành công");
     }
+
+    @PutMapping("/update-password")
+    public ResponseEntity<?> updatePass(@RequestBody AccountUpdatePassword updatePassword) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
+        boolean match = passwordEncoder.matches(updatePassword.getPassword(), account.getPassword());
+        if(!match){
+            throw new InvalidDataException("Mật khẩu hiện tại không đúng");
+        }
+        if(!updatePassword.getNewPassword().equals(updatePassword.getConfirmPassword())) {
+            throw new InvalidDataException("Mật khẩu xác thực không khớp");
+        }
+        account.setPassword(passwordEncoder.encode(updatePassword.getPassword()));
+        accountRepository.save(account);
+        return ResponseEntity.ok("Thay đổi mật khẩu thành công");
+
+    }
+
+
 }

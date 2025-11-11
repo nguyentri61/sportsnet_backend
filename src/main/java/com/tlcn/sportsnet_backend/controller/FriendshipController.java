@@ -38,4 +38,9 @@ public class FriendshipController {
     public ResponseEntity<?> rejectFriend(@PathVariable String requesterId) {
         return ResponseEntity.ok(friendshipService.rejectFriendRequest(requesterId));
     }
+
+    @DeleteMapping("/unfriend/{userId}")
+    public ResponseEntity<?> unfriend(@PathVariable String userId) {
+        return ResponseEntity.ok(friendshipService.unfriend(userId));
+    }
 }

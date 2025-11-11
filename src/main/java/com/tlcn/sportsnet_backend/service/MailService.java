@@ -181,4 +181,76 @@ public class MailService {
         }
     }
 
+
+    /**
+     * Gửi email thông báo reset mật khẩu
+     */
+    public void sendResetPasswordEmail(String toEmail, String newPassword) {
+        String subject = "Khôi phục mật khẩu - BadmintonNet";
+
+        String htmlContent = """
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Mật khẩu - BadmintonNet</title>
+  <style>
+    body { margin:0; padding:0; background:#f3f6fb; font-family:'Segoe UI', Roboto, sans-serif; color:#333; }
+    .container { max-width:600px; margin:40px auto; background:#fff; border-radius:18px; border:1.5px solid #dbeafe; box-shadow:0 6px 20px rgba(0,0,0,0.08); overflow:hidden; }
+    .header { background: linear-gradient(135deg, #005bea, #00c6fb); text-align:center; padding:40px 20px; color:white; border-bottom:3px solid #1d4ed8; }
+    .header h1 { font-size:32px; margin:0; font-weight:900; font-style:italic; }
+    .content { padding:44px 34px; text-align:center; }
+    .content h2 { color:#1d4ed8; font-size:22px; margin-bottom:14px; font-weight:700; }
+    .password-box { background:#eef6ff; border:2px dashed #3b82f6; border-radius:12px; padding:32px 0; margin:30px 0; box-shadow: inset 0 0 6px rgba(59,130,246,0.2); }
+    .password-label { font-size:13px; color:#2563eb; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+    .password-code { font-family:'Courier New', monospace; font-size:32px; font-weight:bold; color:#1e3a8a; letter-spacing:6px; text-shadow:0 1px 3px rgba(29,78,216,0.3); }
+    .note { background:#f1f5ff; border-left:4px solid #2563eb; padding:14px 20px; border-radius:10px; font-size:14px; color:#1e3a8a; text-align:left; line-height:1.5; }
+    .footer { background:#f8fafc; border-top:1px solid #e5e7eb; text-align:center; padding:24px; font-size:13px; color:#6b7280; }
+    .footer strong { color:#1d4ed8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>BadmintonNet</h1>
+      <p>Cộng đồng cầu lông Việt Nam</p>
+    </div>
+    <div class="content">
+      <h2>Mật khẩu mới của bạn</h2>
+      <p>Xin chào,</p>
+      <p>Mật khẩu của bạn đã được reset. Vui lòng sử dụng mật khẩu mới bên dưới để đăng nhập:</p>
+      <div class="password-box">
+        <div class="password-label">Mật khẩu mới</div>
+        <div class="password-code">%s</div>
+      </div>
+      <div class="note">
+        Bạn nên đổi mật khẩu ngay sau khi đăng nhập để đảm bảo an toàn cho tài khoản. Không chia sẻ mật khẩu với bất kỳ ai.
+      </div>
+    </div>
+    <div class="footer">
+      © 2025 <strong>BadmintonNet</strong> — Nền tảng cộng đồng cầu lông Việt Nam
+    </div>
+  </div>
+</body>
+</html>
+""".formatted(newPassword);
+
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+            helper.setFrom("bdmntnnt@gmail.com");
+
+            System.out.println("Gửi email reset mật khẩu: " + toEmail);
+            mailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            System.err.println("Lỗi khi gửi email reset mật khẩu: " + e.getMessage());
+            throw new RuntimeException("Không thể gửi email reset mật khẩu", e);
+        }
+    }
+
 }

@@ -251,4 +251,15 @@ public class FriendshipService {
 
 
     }
+
+    public Object unfriend(String userId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account userA = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+        Account userB = accountRepository.findById(userId)
+                .orElseThrow(() -> new InvalidDataException("Requester not found"));
+        Friendship friendship = friendshipRepository.findBetween(userA,userB).orElseThrow(() -> new InvalidDataException("Friend request not found"));
+        friendshipRepository.delete(friendship);
+        return "Xóa kết bạn thành công";
+    }
 }
