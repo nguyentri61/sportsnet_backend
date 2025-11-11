@@ -15,6 +15,7 @@ public class TournamentController {
     private final TournamentService tournamentService;
     private final TournamentCategoryService tournamentCategoryService;
     private final TournamentParticipantService participantService;
+
     @GetMapping
     public ResponseEntity<?> getAllMyClubEventClub(
             @RequestParam(defaultValue = "0") int page,
@@ -31,9 +32,8 @@ public class TournamentController {
         return ResponseEntity.ok(participantService.joinSingle(categoryId));
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<?> getTournamentByCategory(@PathVariable String categoryId) {
-//        return ResponseEntity.ok(tournamentCategoryService.getBy)
-        return null;
+    @GetMapping("/categories/{categoryId}")
+    public ResponseEntity<?> getDetailCategoryById(@PathVariable String categoryId) {
+        return ResponseEntity.ok(tournamentCategoryService.getDetailCategoryById(categoryId));
     }
 }

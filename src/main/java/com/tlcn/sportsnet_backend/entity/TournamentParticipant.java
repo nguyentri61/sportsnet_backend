@@ -28,7 +28,10 @@ public class TournamentParticipant {
     @JoinColumn(name = "category_id")
     private TournamentCategory category;
 
-    private TournamentParticipantEnum status;
+    @Enumerated(EnumType.STRING)
+    TournamentParticipantEnum status;
+
+
     Instant createdAt;
     Instant updatedAt;
     String createdBy;

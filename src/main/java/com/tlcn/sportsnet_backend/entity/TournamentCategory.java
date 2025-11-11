@@ -1,12 +1,14 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
+import com.tlcn.sportsnet_backend.enums.TournamentFormat;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -20,26 +22,52 @@ public class TournamentCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+
     @Enumerated(EnumType.STRING)
-    private BadmintonCategoryEnum category;
-    private Double minLevel;
-    private Double maxLevel;
-    private Integer maxParticipants;
+    BadmintonCategoryEnum category;
+
+    Double minLevel;
+    Double maxLevel;
+    Integer maxParticipants;
+
+    Double registrationFee; // Lệ phí tham gia
+
+    @Column(columnDefinition = "TEXT")
+    String description; // Mô tả hạng mục
+
+    @ElementCollection
+    @CollectionTable(
+            name = "tournament_category_rules",
+            joinColumns = @JoinColumn(name = "category_id")
+    )
+    @Column(name = "rule", columnDefinition = "TEXT")
+    List<String> rules; // Thể lệ thi đấu
+
+    String firstPrize;
+
+    String secondPrize;
+
+    String thirdPrize;
+
+    @Enumerated(EnumType.STRING)
+    TournamentFormat format; // Loại trực tiếp, vòng tròn, v.v.
+
+    LocalDateTime registrationDeadline;
 
     @ManyToOne
     @JoinColumn(name = "tournament_id")
-    private Tournament tournament;
+    Tournament tournament;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TournamentParticipant> participants;
+    List<TournamentParticipant> participants;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TournamentTeam> teams;
+    List<TournamentTeam> teams;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TournamentResult> results;
+    List<TournamentResult> results;
 
-    private String slug;
+    String slug;
 
     @PrePersist
     public void handleBeforeCreate(){
