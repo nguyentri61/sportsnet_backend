@@ -2,6 +2,7 @@ package com.tlcn.sportsnet_backend.dto.tournament;
 
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
+import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -33,6 +34,8 @@ public class TournamentCategoryDetailResponse {
     String thirdPrize;
     String format;
     LocalDateTime registrationDeadline;
+    boolean admin;
+    TournamentParticipantEnum participantStatus;
 }
 
 

@@ -110,7 +110,9 @@ public class TournamentParticipantService {
                 .slug(p.getAccount().getUserInfo().getSlug())
                 .avatarUrl(fileStorageService.getFileUrl(p.getAccount().getUserInfo().getAvatarUrl(), "/avatar"))
                 .email(p.getAccount().getEmail())
+                .gender(p.getAccount().getUserInfo().getGender())
                 .status(p.getStatus())
+                .createdAt(p.getCreatedAt())
                 .build();
     }
 

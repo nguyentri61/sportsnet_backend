@@ -16,6 +16,8 @@ public interface TournamentParticipantRepository extends JpaRepository<Tournamen
     boolean existsByAccountAndCategory(Account account, TournamentCategory category);
     int countByCategory(TournamentCategory category);
 
+    TournamentParticipant findByAccountAndCategory(Account account, TournamentCategory category);
+
     Page<TournamentParticipant> findByCategoryId(String categoryId, Pageable pageable);
 
     Page<TournamentParticipant> findByCategoryIdAndStatusIn(

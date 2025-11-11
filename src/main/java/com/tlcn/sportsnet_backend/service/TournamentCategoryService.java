@@ -2,12 +2,18 @@ package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.TournamentCategoryDetailResponse;
+import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Facility;
 import com.tlcn.sportsnet_backend.entity.TournamentCategory;
+import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
+import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.FacilityRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
+import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,20 +21,35 @@ import org.springframework.stereotype.Service;
 public class TournamentCategoryService {
     private final TournamentCategoryRepository tournamentCategoryRepository;
     private final FileStorageService fileStorageService;
+    private final AccountRepository accountRepository;
+    private final TournamentParticipantRepository tournamentParticipantRepository;
 
     public TournamentCategoryDetailResponse getDetailCategoryById(String categoryId) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
 
         TournamentCategory category = tournamentCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        return toResponse(category);
+        return toResponse(category, account);
     }
 
-    private TournamentCategoryDetailResponse toResponse(TournamentCategory tournamentCategory) {
+    private TournamentCategoryDetailResponse toResponse(TournamentCategory tournamentCategory, Account account) {
 
         int currentCount = (int) tournamentCategory.getParticipants().stream()
                 .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
                 .count();
+
+        boolean isAdmin = false;
+        TournamentParticipant tournamentParticipant = null;
+
+        if (account != null) {
+            isAdmin = account.getRoles().stream()
+                    .anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
+
+            tournamentParticipant = tournamentParticipantRepository.findByAccountAndCategory(account, tournamentCategory);
+        }
 
         return TournamentCategoryDetailResponse.builder()
                 .id(tournamentCategory.getId())
@@ -49,6 +70,8 @@ public class TournamentCategoryService {
                 .thirdPrize(tournamentCategory.getThirdPrize())
                 .format(tournamentCategory.getFormat().name())
                 .registrationDeadline(tournamentCategory.getRegistrationDeadline())
+                .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : null)
+                .admin(isAdmin)
                 .build();
     }
 

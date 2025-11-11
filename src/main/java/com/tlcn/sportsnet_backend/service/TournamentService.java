@@ -3,13 +3,11 @@ package com.tlcn.sportsnet_backend.service;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.*;
 import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.FacilityRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,6 +32,7 @@ public class TournamentService {
     private final AccountRepository accountRepository;
     private final FileStorageService fileStorageService;
     private final FacilityRepository facilityRepository;
+    private final TournamentParticipantRepository tournamentParticipantRepository;
 
     public TournamentResponse createTournament(TournamentCreateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -121,17 +120,20 @@ public class TournamentService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
         Tournament tournament = tournamentRepository.findBySlug(slug).orElseThrow(() -> new InvalidDataException("Tournament not found"));
-        return tournamentDetailResponse(tournament);
+        return tournamentDetailResponse(tournament, account);
     }
 
     public TournamentResponse toTournamentResponse(Tournament tournament) {
         List<TournamentCategory> tournamentCategories = tournament.getCategories();
         List<TournamentCategoryResponse> tournamentCategoryResponses = new ArrayList<>();
         for (TournamentCategory tournamentCategory : tournamentCategories) {
+            int currentCount = (int) tournamentCategory.getParticipants().stream()
+                    .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
+                    .count();
             TournamentCategoryResponse tournamentCategoryResponse = TournamentCategoryResponse.builder()
                     .category(tournamentCategory.getCategory())
                     .id(tournamentCategory.getId())
-                    .currentParticipantCount(0)
+                    .currentParticipantCount(currentCount)
                     .maxParticipants(tournamentCategory.getMaxParticipants())
                     .build();
             tournamentCategoryResponses.add(tournamentCategoryResponse);
@@ -157,17 +159,27 @@ public class TournamentService {
                 .build();
     }
 
-    public TournamentDetailResponse tournamentDetailResponse(Tournament tournament){
+    public TournamentDetailResponse tournamentDetailResponse(Tournament tournament, Account account){
         List<TournamentCategory> tournamentCategories = tournament.getCategories();
         List<TournamentCategoryDetailResponse> tournamentCategoryResponses = new ArrayList<>();
         for (TournamentCategory tournamentCategory : tournamentCategories) {
+            int currentCount = (int) tournamentCategory.getParticipants().stream()
+                    .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
+                    .count();
+
+            TournamentParticipant tournamentParticipant = null;
+
+            if (account != null) {
+                tournamentParticipant = tournamentParticipantRepository.findByAccountAndCategory(account, tournamentCategory);
+            }
             TournamentCategoryDetailResponse tournamentCategoryResponse = TournamentCategoryDetailResponse.builder()
                     .category(tournamentCategory.getCategory())
                     .id(tournamentCategory.getId())
-                    .currentParticipantCount(0)
+                    .currentParticipantCount(currentCount)
                     .maxParticipants(tournamentCategory.getMaxParticipants())
                     .minLevel(tournamentCategory.getMinLevel())
                     .maxLevel(tournamentCategory.getMaxLevel())
+                    .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : null)
                     .build();
             tournamentCategoryResponses.add(tournamentCategoryResponse);
         }

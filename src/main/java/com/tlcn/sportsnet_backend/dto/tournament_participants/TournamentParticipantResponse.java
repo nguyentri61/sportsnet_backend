@@ -4,6 +4,8 @@ import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,5 +18,8 @@ public class TournamentParticipantResponse {
     String slug;
     String avatarUrl;
     String email;
+    String gender;
     TournamentParticipantEnum status;
+    Instant createdAt;
+
 }
