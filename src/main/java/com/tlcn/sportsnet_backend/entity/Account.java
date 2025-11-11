@@ -53,7 +53,7 @@ public class Account {
     public void handleBeforeCreate(){
         createdAt = Instant.now();
         enabled = true;
-        verified = false;
+
         createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";

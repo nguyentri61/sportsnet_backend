@@ -5,12 +5,11 @@ import com.tlcn.sportsnet_backend.dto.account.AccountRegisterRequest;
 import com.tlcn.sportsnet_backend.dto.account.AccountResponse;
 import com.tlcn.sportsnet_backend.dto.auth.LoginDTO;
 import com.tlcn.sportsnet_backend.dto.auth.VerifyRequest;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.OTP;
-import com.tlcn.sportsnet_backend.entity.RefreshToken;
+import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.error.UnauthorizedException;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
+import com.tlcn.sportsnet_backend.repository.RoleRepository;
 import com.tlcn.sportsnet_backend.service.AccountService;
 import com.tlcn.sportsnet_backend.service.OTPService;
 import com.tlcn.sportsnet_backend.service.RefreshTokenService;
@@ -28,14 +27,12 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -47,6 +44,8 @@ public class AuthController {
     private final AccountService accountService;
     private final RefreshTokenService refreshTokenService;
     private final AccountRepository accountRepository;
+    private final RoleRepository roleRepository;
+
     @Value("${jwt.token-verify-validity-in-seconds}")
     private long refreshTokenExpiration;
     @Value("${jwt.token-create-validity-in-seconds}")
@@ -115,6 +114,104 @@ public class AuthController {
             throw new InvalidDataException("Email hoặc mật khẩu không đúng");
         }
     }
+
+    @PostMapping("/login/firebase")
+    public ResponseEntity<?> loginWithFirebase(@RequestBody Map<String, String> body,
+                                               @RequestHeader(value = "X-Device-Id", required = false) String deviceId,
+                                               HttpServletRequest request) {
+        try {
+            String idToken = body.get("idToken");
+            if (idToken == null || idToken.isBlank()) {
+                throw new InvalidDataException("Thiếu idToken từ Firebase");
+            }
+
+            // Xác thực token Firebase
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+            String email = decodedToken.getEmail();
+            String name = decodedToken.getName();
+
+            // Kiểm tra account đã tồn tại chưa
+            Optional<Account> optionalAccount = accountRepository.findByEmail(email);
+
+            Account account;
+            if (optionalAccount.isPresent()) {
+                account = optionalAccount.get();
+            } else {
+                // Tạo mới account nếu chưa tồn tại
+                Role role = roleRepository.findByName("ROLE_USER")
+                        .orElseThrow(() -> new RuntimeException("Role USER không tồn tại"));
+
+                account = Account.builder()
+                        .email(email)
+                        .enabled(true)
+                        .verified(true)
+                        .roles(Set.of(role))
+                        .password(UUID.randomUUID().toString()) // tránh null
+                        .build();
+
+                UserInfo userInfo = UserInfo.builder()
+                        .fullName(name != null ? name : email)
+                        .account(account)
+                        .build();
+
+                account.setUserInfo(userInfo);
+                account = accountRepository.save(account);
+            }
+
+            // Sinh access token nội bộ
+            String accessToken = securityUtil.createTokenFromAccount(account);
+
+            // Sinh refresh token
+            if (deviceId == null || deviceId.isBlank()) {
+                deviceId = UUID.randomUUID().toString();
+            }
+
+            String refreshToken = refreshTokenService.create(
+                    account,
+                    deviceId,
+                    request.getHeader("User-Agent"),
+                    request.getRemoteAddr()
+            );
+
+            // Tạo cookies
+            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(refreshTokenExpiration)
+                    .build();
+
+            ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(expire_access)
+                    .build();
+
+            ResponseCookie deviceIdCookie = ResponseCookie.from("deviceId", deviceId)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, deviceIdCookie.toString())
+                    .body(ApiResponse.success(Map.of(
+                            "accessToken", accessToken,
+                            "refreshToken", refreshToken,
+                            "deviceId", deviceId,
+                            "email", email
+                    )));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new UnauthorizedException("Đăng nhập bằng Google thất bại: " + e.getMessage());
+        }
+    }
+
+
 
     @GetMapping("/send-otp/{email}")
     public ResponseEntity<?> sendOtp(@PathVariable String email) {
