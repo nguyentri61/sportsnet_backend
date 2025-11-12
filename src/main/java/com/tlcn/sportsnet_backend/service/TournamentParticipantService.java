@@ -11,6 +11,7 @@ import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -116,4 +117,17 @@ public class TournamentParticipantService {
                 .build();
     }
 
+    @Transactional
+    public void updateParticipantStatus(String participantId, TournamentParticipantEnum newStatus) {
+        TournamentParticipant participant = tournamentParticipantRepository.findById(participantId)
+                .orElseThrow(() -> new RuntimeException("Participant not found"));
+
+        if (participant.getStatus() == TournamentParticipantEnum.APPROVED ||
+                participant.getStatus() == TournamentParticipantEnum.REJECTED) {
+            throw new RuntimeException("This participant has already been processed.");
+        }
+
+        participant.setStatus(newStatus);
+        tournamentParticipantRepository.save(participant);
+    }
 }

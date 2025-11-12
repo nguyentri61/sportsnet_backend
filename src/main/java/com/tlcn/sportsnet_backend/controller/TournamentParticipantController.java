@@ -23,4 +23,16 @@ public class TournamentParticipantController {
     ) {
         return ResponseEntity.ok(tournamentParticipantService.getAllParticipants(categoryId, status, page, size));
     }
+
+    @PutMapping("/{participantId}/approve")
+    public ResponseEntity<?> approveParticipant(@PathVariable String participantId) {
+        tournamentParticipantService.updateParticipantStatus(participantId, TournamentParticipantEnum.APPROVED);
+        return ResponseEntity.ok("Participant approved successfully.");
+    }
+
+    @PutMapping("/{participantId}/reject")
+    public ResponseEntity<?> rejectParticipant(@PathVariable String participantId) {
+        tournamentParticipantService.updateParticipantStatus(participantId, TournamentParticipantEnum.REJECTED);
+        return ResponseEntity.ok("Participant rejected successfully.");
+    }
 }
