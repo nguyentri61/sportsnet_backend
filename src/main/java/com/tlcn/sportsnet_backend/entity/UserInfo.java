@@ -29,7 +29,7 @@ public class UserInfo {
     String bio;
     String avatarUrl;
     String phone;
-
+    boolean isProfileProtected = true;
     @OneToOne
     @MapsId
     @JoinColumn(name = "account_id", nullable = false)

@@ -38,6 +38,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
         JOIN c.participants p
         WHERE c.id = :conversationId
           AND p.account.id = :userId
+          AND SIZE(c.messages) > 0
     """)
     boolean existsByIdAndUser(@Param("conversationId") String conversationId,
                               @Param("userId") String userId);

@@ -15,6 +15,18 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: bdmntnnt@gmail.com   # Gmail bạn dùng để gửi
+    password: yeec sxov qrzd lyju        # Mật khẩu ứng dụng (App Password)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    default-encoding: UTF-8
 
   datasource:
     url: "jdbc:mysql://localhost:3306/sports_net"

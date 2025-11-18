@@ -32,10 +32,20 @@ public class ConversationService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
         List<Conversation> conversations = conversationRepository.findAllByUserOrderByUpdated(account.getId());
-        return  conversations.stream()
+        return conversations.stream()
+                .sorted((a, b) -> {
+                    boolean aEmpty = a.getMessages() == null || a.getMessages().isEmpty();
+                    boolean bEmpty = b.getMessages() == null || b.getMessages().isEmpty();
+
+                    // Nếu a rỗng mà b không rỗng → a xuống sau
+                    if (aEmpty && !bEmpty) return 1;
+                    // Nếu b rỗng mà a không rỗng → b xuống sau
+                    if (!aEmpty && bEmpty) return -1;
+                    // Nếu cả hai đều có (hoặc không có) tin nhắn → sắp theo thời gian updated
+                    return b.getUpdatedAt().compareTo(a.getUpdatedAt());
+                })
                 .map(event -> toConversationResponse(event, account))
                 .toList();
-
     }
 
     public ConversationResponse toConversationResponse(Conversation conversation, Account account) {

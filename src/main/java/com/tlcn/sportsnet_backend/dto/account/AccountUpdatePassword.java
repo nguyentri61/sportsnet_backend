@@ -8,11 +8,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AccountFriend {
-    String id;
-    String fullName;
-    String avatarUrl;
-    String skillLevel;
-    String slug;
-    Long mutualFriends;
+public class AccountUpdatePassword {
+    String newPassword;
+    String password;
+    String confirmPassword;
 }

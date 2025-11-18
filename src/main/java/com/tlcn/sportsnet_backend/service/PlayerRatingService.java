@@ -79,4 +79,15 @@ public class PlayerRatingService {
     }
 
 
+    public PlayerRatingResponse getPlayerRatingById(String id) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+        PlayerRating playerRating = playerRatingRepository.findByAccount(account)
+                .orElse(null);
+
+        if (playerRating == null) {
+            return null;
+        }
+        return toPlayerRatingResponse(playerRating);
+    }
 }

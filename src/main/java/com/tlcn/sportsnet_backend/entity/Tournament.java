@@ -26,7 +26,7 @@ public class Tournament {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
     String name;
-
+    @Column(columnDefinition = "TEXT")
     String description;
 
     String location;

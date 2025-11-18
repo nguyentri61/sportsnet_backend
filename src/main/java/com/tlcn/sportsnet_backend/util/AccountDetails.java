@@ -47,7 +47,7 @@ public class AccountDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return account.isEnabled(); // ← dùng để kiểm tra có được phép login hay không
+        return account.isVerified() && account.isEnabled(); // ← dùng để kiểm tra có được phép login hay không
     }
 
     @Override
