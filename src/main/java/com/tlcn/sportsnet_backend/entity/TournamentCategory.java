@@ -9,6 +9,7 @@ import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -59,13 +60,16 @@ public class TournamentCategory {
     Tournament tournament;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<TournamentParticipant> participants;
+    @Builder.Default
+    List<TournamentParticipant> participants = new ArrayList<>();
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<TournamentTeam> teams;
+    @Builder.Default
+    List<TournamentTeam> teams = new ArrayList<>();;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<TournamentResult> results;
+    @Builder.Default
+    List<TournamentResult> results = new ArrayList<>();;
 
     String slug;
 

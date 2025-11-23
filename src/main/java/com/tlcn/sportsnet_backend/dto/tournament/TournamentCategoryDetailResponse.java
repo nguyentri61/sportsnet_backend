@@ -35,6 +35,7 @@ public class TournamentCategoryDetailResponse {
     String format;
     LocalDateTime registrationDeadline;
     boolean admin;
+    boolean isDouble;
     TournamentParticipantEnum participantStatus;
 }
 

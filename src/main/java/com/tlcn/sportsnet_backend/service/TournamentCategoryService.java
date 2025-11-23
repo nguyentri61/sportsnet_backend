@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Facility;
 import com.tlcn.sportsnet_backend.entity.TournamentCategory;
 import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
+import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import com.tlcn.sportsnet_backend.repository.FacilityRepository;
@@ -70,6 +71,7 @@ public class TournamentCategoryService {
                 .thirdPrize(tournamentCategory.getThirdPrize())
                 .format(tournamentCategory.getFormat().name())
                 .registrationDeadline(tournamentCategory.getRegistrationDeadline())
+                .isDouble(tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE)
                 .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : null)
                 .admin(isAdmin)
                 .build();

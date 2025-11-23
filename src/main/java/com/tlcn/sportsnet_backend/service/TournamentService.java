@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.service;
 
+import com.tlcn.sportsnet_backend.dto.account.AccountFriend;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.*;
 import com.tlcn.sportsnet_backend.entity.*;
@@ -33,6 +34,7 @@ public class TournamentService {
     private final FileStorageService fileStorageService;
     private final FacilityRepository facilityRepository;
     private final TournamentParticipantRepository tournamentParticipantRepository;
+    private final FriendshipService friendshipService;
 
     public TournamentResponse createTournament(TournamentCreateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -253,4 +255,10 @@ public class TournamentService {
     }
 
 
+    public Object getAllPartner() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
+        List<AccountFriend> accountFriends = friendshipService.getAllFriends(account.getId());
+        return accountFriends;
+    }
 }
