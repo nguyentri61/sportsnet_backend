@@ -63,5 +63,5 @@ app:
 vnpay:
   tmnCode: "B3FIKCP5"
   hashSecret: "450YTGDKJ6V9AYEPJRS0VGQNDDEXKT4T"
-  returnUrl: "myapp://payment/return"
+  returnUrl: "http://localhost:3000/payment/vnpay-return"
   payUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"

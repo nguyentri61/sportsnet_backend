@@ -17,7 +17,7 @@ import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/payment")
+//@RequestMapping("/api/payment")
 public class PaymentController {
 
     @Value("${vnpay.tmnCode}")
