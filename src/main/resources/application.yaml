@@ -59,3 +59,9 @@ app:
   file:
     upload-dir: uploads/
     base-url: http://localhost:8080/uploads
+
+vnpay:
+  tmnCode: "B3FIKCP5"
+  hashSecret: "450YTGDKJ6V9AYEPJRS0VGQNDDEXKT4T"
+  returnUrl: "myapp://payment/return"
+  payUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
