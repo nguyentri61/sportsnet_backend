@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.enums;
 
 public enum TournamentParticipantEnum {
+    DRAFT,
     PENDING,           // Chờ duyệt / đăng ký tạm thời
     PAYMENT_REQUIRED, // Đã đăng ký, cần thanh toán để xác nhận
     PAID,

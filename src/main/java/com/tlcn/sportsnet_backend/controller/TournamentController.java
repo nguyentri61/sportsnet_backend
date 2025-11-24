@@ -36,4 +36,9 @@ public class TournamentController {
     public ResponseEntity<?> getDetailCategoryById(@PathVariable String categoryId) {
         return ResponseEntity.ok(tournamentCategoryService.getDetailCategoryById(categoryId));
     }
+
+    @GetMapping("/get-all-partner")
+    public ResponseEntity<?> getAllPartner() {
+        return ResponseEntity.ok(tournamentService.getAllPartner());
+    }
 }

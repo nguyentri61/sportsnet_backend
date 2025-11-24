@@ -1,16 +1,14 @@
 package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentParticipantResponse;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.Tournament;
-import com.tlcn.sportsnet_backend.entity.TournamentCategory;
-import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
+import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationRequest;
+import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationUpdate;
+import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.InvitationStatusEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,6 +29,8 @@ public class TournamentParticipantService {
     private final AccountRepository accountRepository;
     private final TournamentCategoryRepository tournamentCategoryRepository;
     private final FileStorageService fileStorageService;
+    private final TournamentPartnerInvitationRepository tournamentPartnerInvitationRepository;
+    private final TournamentTeamRepository tournamentTeamRepository;
 
     public String joinSingle(String categoryId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -129,5 +129,50 @@ public class TournamentParticipantService {
 
         participant.setStatus(newStatus);
         tournamentParticipantRepository.save(participant);
+    }
+
+    public void invitePartner(TournamentPartnerInvitationRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
+        Account invitee = accountRepository.findById(request.getInviteeId())
+                .orElseThrow(()-> new InvalidDataException("Không tìm thấy tài khoản người được mời"));
+        TournamentCategory tournamentCategory = tournamentCategoryRepository.findById(request.getCategoryId())
+                .orElseThrow(()-> new InvalidDataException("KHông tìm thấy nội dung giải đấu"));
+        int currentCount = tournamentParticipantRepository.countByCategory(tournamentCategory);
+        if (tournamentCategory.getMaxParticipants() != null
+                && currentCount >= tournamentCategory.getMaxParticipants()) {
+            throw new InvalidDataException("Hạng mục này đã đủ số lượng người tham gia");
+        }
+        TournamentPartnerInvitation tournamentPartnerInvitation =  TournamentPartnerInvitation.builder()
+                .inviter(account)
+                .invitee(invitee)
+                .message(request.getMessage())
+                .status(InvitationStatusEnum.PENDING)
+                .build();
+        tournamentPartnerInvitationRepository.save(tournamentPartnerInvitation);
+
+    }
+
+    public void updatePartnerStatus(TournamentPartnerInvitationUpdate request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Không tìm thấy tài khoản"));
+        TournamentPartnerInvitation tournamentPartnerInvitation = tournamentPartnerInvitationRepository.findById(request.getId())
+                .orElseThrow(()-> new InvalidDataException("Không tìm thấy lời mời"));
+        if(account.getId() != tournamentPartnerInvitation.getInvitee().getId()) {
+            throw new InvalidDataException("Không đúng quyền");
+        }
+
+        if(request.getStatus() == InvitationStatusEnum.ACCEPTED){
+            TournamentTeam tournamentTeam = TournamentTeam.builder()
+                    .player1(tournamentPartnerInvitation.getInviter())
+                    .player2(tournamentPartnerInvitation.getInvitee())
+                    .category(tournamentPartnerInvitation.getCategory())
+                    .status(TournamentParticipantEnum.DRAFT)
+                    .build();
+            tournamentTeamRepository.save(tournamentTeam);
+        }
+        tournamentPartnerInvitationRepository.delete(tournamentPartnerInvitation);
     }
 }
