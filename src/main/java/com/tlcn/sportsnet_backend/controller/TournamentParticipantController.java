@@ -1,5 +1,7 @@
 package com.tlcn.sportsnet_backend.controller;
 
+import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationRequest;
+import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationUpdate;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import com.tlcn.sportsnet_backend.service.TournamentParticipantService;
 import lombok.RequiredArgsConstructor;
@@ -34,5 +36,17 @@ public class TournamentParticipantController {
     public ResponseEntity<?> rejectParticipant(@PathVariable String participantId) {
         tournamentParticipantService.updateParticipantStatus(participantId, TournamentParticipantEnum.REJECTED);
         return ResponseEntity.ok("Participant rejected successfully.");
+    }
+
+    @PostMapping("/invite-partner")
+    public ResponseEntity<?> invitePartner(@RequestBody TournamentPartnerInvitationRequest request) {
+        tournamentParticipantService.invitePartner(request);
+        return ResponseEntity.ok("Participant invited successfully.");
+    }
+
+    @PutMapping("/partner/update-status")
+    public ResponseEntity<?> updatePartner(@RequestBody TournamentPartnerInvitationUpdate request) {
+        tournamentParticipantService.updatePartnerStatus(request);
+        return ResponseEntity.ok("Participant updated successfully.");
     }
 }
