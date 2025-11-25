@@ -106,6 +106,8 @@ public class TournamentPaymentService {
 
         return VNPayReturnResponse.builder()
                 .status(payment.getStatus().toString())
+                .tournamentId(payment.getParticipant().getCategory().getTournament().getId())
+                .categoryId(payment.getParticipant().getCategory().getId())
                 .build();
     }
 }
