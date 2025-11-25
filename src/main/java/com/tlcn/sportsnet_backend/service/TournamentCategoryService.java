@@ -1,21 +1,20 @@
 package com.tlcn.sportsnet_backend.service;
 
+import com.tlcn.sportsnet_backend.dto.account.AccountFriend;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.TournamentCategoryDetailResponse;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.Facility;
-import com.tlcn.sportsnet_backend.entity.TournamentCategory;
-import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
+import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationResponse;
+import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.FacilityRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +23,9 @@ public class TournamentCategoryService {
     private final FileStorageService fileStorageService;
     private final AccountRepository accountRepository;
     private final TournamentParticipantRepository tournamentParticipantRepository;
+    private final TournamentPartnerInvitationRepository tournamentPartnerInvitationRepository;
+    private final FriendshipRepository friendshipRepository;
+    private final PlayerRatingRepository playerRatingRepository;
 
     public TournamentCategoryDetailResponse getDetailCategoryById(String categoryId) {
 
@@ -51,6 +53,17 @@ public class TournamentCategoryService {
 
             tournamentParticipant = tournamentParticipantRepository.findByAccountAndCategory(account, tournamentCategory);
         }
+        List<TournamentPartnerInvitation> tournamentPartnerInvitations = tournamentPartnerInvitationRepository.findByCategoryAndAccount(tournamentCategory.getId(), account);
+        TournamentPartnerInvitationResponse response = null;
+        List<TournamentPartnerInvitationResponse> requests = new ArrayList<>();
+        for(TournamentPartnerInvitation partnerInvitation : tournamentPartnerInvitations) {
+
+            if(partnerInvitation.getInviter().getEmail().equals(account.getEmail())) {
+                response = toInvitationResponse(partnerInvitation, true);
+            }else {
+                requests.add(toInvitationResponse(partnerInvitation, false));
+            }
+        }
 
         return TournamentCategoryDetailResponse.builder()
                 .id(tournamentCategory.getId())
@@ -74,7 +87,45 @@ public class TournamentCategoryService {
                 .isDouble(tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE)
                 .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : null)
                 .admin(isAdmin)
+                .response(response)
+                .requests(requests)
                 .build();
+    }
+
+    private TournamentPartnerInvitationResponse toInvitationResponse(TournamentPartnerInvitation partnerInvitation, boolean isInviter) {
+        TournamentPartnerInvitationResponse tournamentPartnerInvitationResponse = new TournamentPartnerInvitationResponse();
+        tournamentPartnerInvitationResponse.setId(partnerInvitation.getId());
+        tournamentPartnerInvitationResponse.setCreatedAt(partnerInvitation.getCreatedAt());
+        tournamentPartnerInvitationResponse.setStatus(partnerInvitation.getStatus());
+        tournamentPartnerInvitationResponse.setMessage(partnerInvitation.getMessage());
+        if(isInviter) {
+            Account invitee = partnerInvitation.getInvitee();
+            tournamentPartnerInvitationResponse.setInvitee(AccountFriend.builder()
+                    .id(invitee.getId())
+                    .avatarUrl(fileStorageService.getFileUrl(invitee.getUserInfo().getAvatarUrl(), "/avatar"))
+                    .fullName(invitee.getUserInfo().getFullName())
+                    .skillLevel(playerRatingRepository.findByAccount(invitee)
+                            .map(PlayerRating::getSkillLevel)
+                            .orElse("Chưa có"))
+                    .slug(invitee.getUserInfo().getSlug())
+                    .mutualFriends(friendshipRepository.countMutualFriends(partnerInvitation.getInviter().getId(), invitee.getId()))
+                    .build());
+        }
+        else {
+            Account inviter = partnerInvitation.getInviter();
+            tournamentPartnerInvitationResponse.setInviter(AccountFriend.builder()
+                    .id(inviter.getId())
+                    .avatarUrl(fileStorageService.getFileUrl(inviter.getUserInfo().getAvatarUrl(), "/avatar"))
+                    .fullName(inviter.getUserInfo().getFullName())
+                    .skillLevel(playerRatingRepository.findByAccount(inviter)
+                            .map(PlayerRating::getSkillLevel)
+                            .orElse("Chưa có"))
+                    .slug(inviter.getUserInfo().getSlug())
+                    .mutualFriends(friendshipRepository.countMutualFriends(partnerInvitation.getInvitee().getId(), inviter.getId()))
+                    .build());
+        }
+        tournamentPartnerInvitationResponse.setSend(isInviter);
+        return tournamentPartnerInvitationResponse;
     }
 
     private FacilityResponse toFacilityResponse(Facility facility) {

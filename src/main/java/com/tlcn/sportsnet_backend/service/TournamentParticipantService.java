@@ -149,6 +149,7 @@ public class TournamentParticipantService {
                 .invitee(invitee)
                 .message(request.getMessage())
                 .status(InvitationStatusEnum.PENDING)
+                .category(tournamentCategory  )
                 .build();
         tournamentPartnerInvitationRepository.save(tournamentPartnerInvitation);
 
