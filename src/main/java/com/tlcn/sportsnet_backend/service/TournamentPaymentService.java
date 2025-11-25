@@ -1,6 +1,8 @@
 package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.config.VNPayConfig;
+import com.tlcn.sportsnet_backend.dto.payment.VNPayCreateResponse;
+import com.tlcn.sportsnet_backend.dto.payment.VNPayReturnResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.TournamentCategory;
 import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
@@ -31,7 +33,7 @@ public class TournamentPaymentService {
     private final TournamentCategoryRepository categoryRepo;
 
     // Tạo URL thanh toán
-    public String createPayment(String categoryId, Double amount) {
+    public VNPayCreateResponse createPayment(String categoryId, Double amount) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepo.findByEmail(auth.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
 
@@ -52,7 +54,7 @@ public class TournamentPaymentService {
 
         paymentRepo.save(payment);
 
-        long vnpAmount = Math.round(amount);
+        long vnpAmount = Math.round(amount * 100);
 
         // Build param cho VNPay
         Map<String, String> params = new TreeMap<>();
@@ -75,11 +77,13 @@ public class TournamentPaymentService {
         // Build hash
         String secureHash = VNPayUtil.hmacSHA512(config.getHashSecret(), query);
 
-        return config.getPayUrl() + "?" + query + "&vnp_SecureHash=" + secureHash;
+        return  VNPayCreateResponse.builder()
+                .paymentUrl(config.getPayUrl() + "?" + query + "&vnp_SecureHash=" + secureHash)
+                .build();
     }
 
     // Xử lý callback
-    public String handleReturn(Map<String, String> params) {
+    public VNPayReturnResponse handleReturn(Map<String, String> params) {
         String txnRef = params.get("vnp_TxnRef");
         String responseCode = params.get("vnp_ResponseCode");
         String transactionNo = params.get("vnp_TransactionNo");
@@ -99,7 +103,9 @@ public class TournamentPaymentService {
 
         paymentRepo.save(payment);
 
-        // FE Next.js sẽ đọc status này
-        return payment.getStatus().toString();
+
+        return VNPayReturnResponse.builder()
+                .status(payment.getStatus().toString())
+                .build();
     }
 }

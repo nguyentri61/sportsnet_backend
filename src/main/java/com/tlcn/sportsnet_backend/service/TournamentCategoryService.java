@@ -2,16 +2,11 @@ package com.tlcn.sportsnet_backend.service;
 
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.TournamentCategoryDetailResponse;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.Facility;
-import com.tlcn.sportsnet_backend.entity.TournamentCategory;
-import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
+import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
+import com.tlcn.sportsnet_backend.enums.PaymentStatusEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.FacilityRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +19,7 @@ public class TournamentCategoryService {
     private final FileStorageService fileStorageService;
     private final AccountRepository accountRepository;
     private final TournamentParticipantRepository tournamentParticipantRepository;
+    private final TournamentPaymentRepository tournamentPaymentRepository;
 
     public TournamentCategoryDetailResponse getDetailCategoryById(String categoryId) {
 
@@ -52,6 +48,15 @@ public class TournamentCategoryService {
             tournamentParticipant = tournamentParticipantRepository.findByAccountAndCategory(account, tournamentCategory);
         }
 
+        boolean paid = false;
+
+        if (tournamentParticipant != null) {
+            paid = tournamentPaymentRepository.existsByParticipantAndStatus(
+                    tournamentParticipant,
+                    PaymentStatusEnum.SUCCESS
+            );
+        }
+
         return TournamentCategoryDetailResponse.builder()
                 .id(tournamentCategory.getId())
                 .tournamentName(tournamentCategory.getTournament().getName())
@@ -74,6 +79,7 @@ public class TournamentCategoryService {
                 .isDouble(tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE)
                 .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : null)
                 .admin(isAdmin)
+                .paid(paid)
                 .build();
     }
 

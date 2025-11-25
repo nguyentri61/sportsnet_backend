@@ -37,6 +37,7 @@ public class TournamentCategoryDetailResponse {
     boolean admin;
     boolean isDouble;
     TournamentParticipantEnum participantStatus;
+    boolean paid;
 }
 
 
