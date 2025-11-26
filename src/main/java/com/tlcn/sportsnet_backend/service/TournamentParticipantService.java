@@ -31,7 +31,7 @@ public class TournamentParticipantService {
     private final FileStorageService fileStorageService;
     private final TournamentPartnerInvitationRepository tournamentPartnerInvitationRepository;
     private final TournamentTeamRepository tournamentTeamRepository;
-
+    private final NotificationService notificationService;
     public String joinSingle(String categoryId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName())
@@ -152,7 +152,7 @@ public class TournamentParticipantService {
                 .category(tournamentCategory  )
                 .build();
         tournamentPartnerInvitationRepository.save(tournamentPartnerInvitation);
-
+        notificationService.sendToAccount(invitee,account.getUserInfo().getFullName()+" đã mời bạn ghép đội", account.getUserInfo().getFullName() +" đã mời bạn tham gia nội dung "+ tournamentCategory.getCategory().getLabel() +" giải đấu "+tournamentCategory.getTournament().getName(), "/tournaments/"+tournamentCategory.getTournament().getSlug()+"/categories/"+tournamentCategory.getId() );
     }
 
     public void updatePartnerStatus(TournamentPartnerInvitationUpdate request) {
@@ -173,6 +173,10 @@ public class TournamentParticipantService {
                     .status(TournamentParticipantEnum.DRAFT)
                     .build();
             tournamentTeamRepository.save(tournamentTeam);
+            notificationService.sendToAccount(tournamentPartnerInvitation.getInviter(),tournamentPartnerInvitation.getInvitee().getUserInfo().getFullName()+" đã chấp nhận lời mời tham gia", tournamentPartnerInvitation.getInvitee().getUserInfo().getFullName() +" đã chấp nhận tham gia nội dung "+ tournamentTeam.getCategory().getCategory().getLabel() +" giải đấu "+tournamentTeam.getCategory().getTournament().getName(), "/tournaments/"+tournamentTeam.getCategory().getTournament().getSlug()+"/categories/"+tournamentTeam.getCategory().getId() );
+        }
+        else{
+            notificationService.sendToAccount(tournamentPartnerInvitation.getInviter(),tournamentPartnerInvitation.getInvitee().getUserInfo().getFullName()+" đã từ chối lời mời tham gia", tournamentPartnerInvitation.getInvitee().getUserInfo().getFullName() +" đã từ chối tham gia nội dung "+ tournamentPartnerInvitation.getCategory().getCategory().getLabel() +" giải đấu "+tournamentPartnerInvitation.getCategory().getTournament().getName(), "/tournaments/"+tournamentPartnerInvitation.getCategory().getTournament().getSlug()+"/categories/"+tournamentPartnerInvitation.getCategory().getId() );
         }
         tournamentPartnerInvitationRepository.delete(tournamentPartnerInvitation);
     }
