@@ -43,7 +43,7 @@ public class AbsentReasonService {
                 .participation(clubEventParticipant)
                 .build();
         absentReason = absentReasonRepository.save(absentReason);
-        notificationService.sendToAccount(clubEventParticipant.getClubEvent().getClub().getOwner(),"Lý do vắng "+clubEventParticipant.getClubEvent().getTitle() ,"Người dùng "+ clubEventParticipant.getParticipant().getUserInfo().getFullName()+" đã gửi lý vắng mặt","/events/"+clubEventParticipant.getClubEvent().getSlug());
+        notificationService.sendToAccount(clubEventParticipant.getClubEvent().getClub().getOwner().getEmail(),"Lý do vắng "+clubEventParticipant.getClubEvent().getTitle() ,"Người dùng "+ clubEventParticipant.getParticipant().getUserInfo().getFullName()+" đã gửi lý vắng mặt","/events/"+clubEventParticipant.getClubEvent().getSlug());
         return toAbsentReason(absentReason);
 
     }
@@ -63,7 +63,7 @@ public class AbsentReasonService {
         accountRepository.save(account);
         absentReasonRepository.save(absentReason);
         reputationHistoryRepository.save(reputationHistory);
-        notificationService.sendToAccount(account,"Phê duyệt lý do vắng mặt " ,"Lý do vắng mặt tại hoạt động "+ absentReason.getParticipation().getClubEvent().getTitle() +" đã được phê duyệt và khôi phụ điểm uy tín","/profile");
+        notificationService.sendToAccount(account.getEmail(),"Phê duyệt lý do vắng mặt " ,"Lý do vắng mặt tại hoạt động "+ absentReason.getParticipation().getClubEvent().getTitle() +" đã được phê duyệt và khôi phụ điểm uy tín","/profile");
         return "Đã chấp nhận lý do vắng";
     }
 

@@ -48,7 +48,7 @@ public class ClubInvitationService {
                 .receiver(receiver)
                 .build();
         clubInvitation = clubInvitationRepository.save(clubInvitation);
-        notificationService.sendToAccount(receiver,"Lời mời tham gia CLB", "Bạn nhận được lời mời tham gia vào CLB "+club.getName(), "/clubs/"+ club.getSlug());
+        notificationService.sendToAccount(receiver.getEmail(),"Lời mời tham gia CLB", "Bạn nhận được lời mời tham gia vào CLB "+club.getName(), "/clubs/"+ club.getSlug());
         return toClubInvitation(clubInvitation);
     }
 
@@ -70,14 +70,14 @@ public class ClubInvitationService {
                     .joinedAt(Instant.now())
                     .build();
             clubMemberRepository.save(clubMember);
-            notificationService.sendToAccount(clubInvitation.getClub().getOwner(), "Đồng ý tham gia CLB", account.getUserInfo().getFullName()+" đã đồng ý tham gia vào CLB "+ clubInvitation.getClub().getName() + " của bạn", "/my-clubs/"+ clubInvitation.getClub().getSlug());
+            notificationService.sendToAccount(clubInvitation.getClub().getOwner().getEmail(), "Đồng ý tham gia CLB", account.getUserInfo().getFullName()+" đã đồng ý tham gia vào CLB "+ clubInvitation.getClub().getName() + " của bạn", "/my-clubs/"+ clubInvitation.getClub().getSlug());
         }
         else if(request.getStatus().equals(InvitationStatusEnum.REJECTED)){
             String message = account.getUserInfo().getFullName()+" đã từ chối tham gia vào CLB "+ clubInvitation.getClub().getName() + " của bạn.";
             if(!reason.isEmpty()){
                 message += " Vì lý do: "+reason;
             }
-            notificationService.sendToAccount(clubInvitation.getClub().getOwner(), "Từ chối tham gia CLB",message, "/my-clubs/"+ clubInvitation.getClub().getSlug());
+            notificationService.sendToAccount(clubInvitation.getClub().getOwner().getEmail(), "Từ chối tham gia CLB",message, "/my-clubs/"+ clubInvitation.getClub().getSlug());
         }
         return toClubInvitation(clubInvitation);
     }

@@ -1,6 +1,9 @@
 package com.tlcn.sportsnet_backend.dto.tournament;
 
+import com.tlcn.sportsnet_backend.dto.account.AccountFriend;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
+import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationResponse;
+import com.tlcn.sportsnet_backend.entity.TournamentTeam;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import lombok.*;
@@ -38,6 +41,9 @@ public class TournamentCategoryDetailResponse {
     boolean isDouble;
     TournamentParticipantEnum participantStatus;
     boolean paid;
+    List<TournamentPartnerInvitationResponse> requests;
+    TournamentPartnerInvitationResponse response;
+    AccountFriend partner;
 }
 
 

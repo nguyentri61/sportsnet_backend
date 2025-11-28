@@ -24,7 +24,8 @@ public interface TournamentRepository extends JpaRepository<Tournament, String> 
     Page<Tournament> findAll(Pageable pageable);
 
     Optional<Tournament> findBySlug(String slug);
-
+    @Query("SELECT t FROM Tournament t JOIN t.categories c WHERE c.id = :categoryId")
+    Optional<Tournament> findByCategoryId(@Param("categoryId") String categoryId);
     @EntityGraph(attributePaths = {})
     @Query("SELECT e FROM Tournament e WHERE e.status NOT IN :statuses")
     List<Tournament> findAllByStatusNot(@Param("statuses") List<TournamentStatus> excludedStatuses);

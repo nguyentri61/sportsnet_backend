@@ -99,7 +99,7 @@ public class ClubEventParticipantService {
             userScheduleService.createScheduleByClubEvent(clubEvent, clubEventParticipant);
         }
 
-        notificationService.sendToAccount(club.getOwner(),"Hoạt động: "+clubEvent.getTitle() ,message,"/events/"+clubEvent.getSlug());
+        notificationService.sendToAccount(club.getOwner().getEmail(),"Hoạt động: "+clubEvent.getTitle() ,message,"/events/"+clubEvent.getSlug());
         return toParticipantResponse(clubEventParticipant);
 
     }
@@ -197,7 +197,7 @@ public class ClubEventParticipantService {
                     + " đã hủy tham gia hoạt động " + clubEvent.getTitle()
                     + " (Lý do: " + reason + ")";
             notificationService.sendToAccount(
-                    clubEvent.getClub().getOwner(),
+                    clubEvent.getClub().getOwner().getEmail(),
                     "Hoạt động: " + clubEvent.getTitle(),
                     message,
                     "/events/" + clubEvent.getSlug()
@@ -225,7 +225,7 @@ public class ClubEventParticipantService {
                 + " đã gửi yêu cầu hủy tham gia hoạt động " + clubEvent.getTitle()
                 + " (hủy muộn, chờ phê duyệt). Lý do: " + reason;
         notificationService.sendToAccount(
-                clubEvent.getClub().getOwner(),
+                clubEvent.getClub().getOwner().getEmail(),
                 "Yêu cầu phê duyệt hủy tham gia",
                 message,
                 "/events/" + clubEvent.getSlug()
@@ -240,7 +240,7 @@ public class ClubEventParticipantService {
         ClubEventParticipant clubMember = clubEventParticipantRepository.findById(id).orElseThrow(() -> new InvalidDataException("Member not found"));
         clubMember.setStatus(ClubEventParticipantStatusEnum.APPROVED);
         clubEventParticipantRepository.save(clubMember);
-        notificationService.sendToAccount(clubMember.getParticipant(),"Hoạt động: "+clubEvent.getTitle() ,"Bạn đã được phê duyệt tham gia hoạt động "+ clubEvent.getTitle(),"/events/"+clubEvent.getSlug());
+        notificationService.sendToAccount(clubMember.getParticipant().getEmail(),"Hoạt động: "+clubEvent.getTitle() ,"Bạn đã được phê duyệt tham gia hoạt động "+ clubEvent.getTitle(),"/events/"+clubEvent.getSlug());
         return "Đã chấp nhận người tham gia";
     }
 
@@ -254,7 +254,7 @@ public class ClubEventParticipantService {
         if(!reason.isEmpty()){
             message = reason;
         }
-        notificationService.sendToAccount(clubMember.getParticipant(),"Hoạt động: "+clubEvent.getTitle() ,message,"/events/"+clubEvent.getSlug());
+        notificationService.sendToAccount(clubMember.getParticipant().getEmail(),"Hoạt động: "+clubEvent.getTitle() ,message,"/events/"+clubEvent.getSlug());
         return "Đã từ chối người tham gia";
     }
 
@@ -302,7 +302,7 @@ public class ClubEventParticipantService {
             reputationHistoryRepository.save(reputationHistory);
 
         }
-        notificationService.sendToAccount(clubMember.getParticipant(),"Hoạt động: "+clubEvent.getTitle() ,content,"/events/"+clubEvent.getSlug());
+        notificationService.sendToAccount(clubMember.getParticipant().getEmail(),"Hoạt động: "+clubEvent.getTitle() ,content,"/events/"+clubEvent.getSlug());
         return "Đã xác nhân người tham gia";
     }
 

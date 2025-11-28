@@ -65,7 +65,8 @@ public class NotificationService {
         }
     }
 
-    public void sendToAccount(Account account, String title, String content, String link) {
+    public void sendToAccount(String email, String title, String content, String link) {
+        Account account = accountRepository.findByEmail(email).orElseThrow(() ->  new InvalidDataException("Không tìm thấy email"));
         Instant now = Instant.now();
         Notification notification = Notification.builder()
                 .title(title)

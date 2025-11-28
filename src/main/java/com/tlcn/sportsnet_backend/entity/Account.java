@@ -105,14 +105,17 @@ public class Account {
     List<ReputationHistory> reputationHistories = new ArrayList<>();
 
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    @JsonIgnore
     List<TournamentParticipant> tournamentParticipants = new ArrayList<>();
 
     // Các đội mà người này là player1
     @OneToMany(mappedBy = "player1", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<TournamentTeam> teamsAsPlayer1 = new ArrayList<>();
 
     // Các đội mà người này là player2
     @OneToMany(mappedBy = "player2", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<TournamentTeam> teamsAsPlayer2 = new ArrayList<>();
 
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
