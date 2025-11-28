@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tlcn.sportsnet_backend.enums.InvitationStatusEnum;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import jakarta.persistence.*;

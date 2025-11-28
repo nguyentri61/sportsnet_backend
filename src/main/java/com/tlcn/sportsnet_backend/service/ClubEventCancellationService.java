@@ -62,7 +62,7 @@ public class ClubEventCancellationService {
 
             // 🔔 Gửi thông báo cho người yêu cầu
             notificationService.sendToAccount(
-                    requester,
+                    requester.getEmail(),
                     "Yêu cầu hủy tham gia đã được phê duyệt",
                     "Yêu cầu hủy của bạn cho hoạt động \"" + event.getTitle() + "\" đã được phê duyệt. Uy tín của bạn không bị ảnh hưởng.",
                     "/events/" + event.getSlug()
@@ -88,7 +88,7 @@ public class ClubEventCancellationService {
 
             // 🔔 Gửi thông báo cho người yêu cầu
             notificationService.sendToAccount(
-                    requester,
+                    requester.getEmail(),
                     "Yêu cầu hủy tham gia bị từ chối",
                     "Yêu cầu hủy của bạn cho hoạt động \"" + event.getTitle() + "\" đã bị từ chối. Bạn bị trừ 10 điểm uy tín.",
                     "/events/" + event.getSlug()

@@ -26,6 +26,7 @@ public class TournamentCategoryService {
     private final TournamentPartnerInvitationRepository tournamentPartnerInvitationRepository;
     private final FriendshipRepository friendshipRepository;
     private final PlayerRatingRepository playerRatingRepository;
+    private final TournamentTeamRepository tournamentTeamRepository;
 
     public TournamentCategoryDetailResponse getDetailCategoryById(String categoryId) {
 
@@ -64,7 +65,26 @@ public class TournamentCategoryService {
                 requests.add(toInvitationResponse(partnerInvitation, false));
             }
         }
-
+        boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
+        AccountFriend accountFriend = null;
+        Account accountPartner;
+        TournamentTeam tournamentTeam = tournamentTeamRepository.findByCategoryAndAccount(tournamentCategory.getId(), account).orElse(null);
+        if(tournamentTeam != null) {
+        if(tournamentTeam.getPlayer1().getEmail() == account.getEmail() ) {
+            accountPartner = tournamentTeam.getPlayer2();
+        }
+        else{
+            accountPartner = tournamentTeam.getPlayer1();
+        }
+        accountFriend = AccountFriend.builder()
+                .id(accountPartner.getId())
+                .avatarUrl(fileStorageService.getFileUrl(accountPartner.getUserInfo().getAvatarUrl(), "/avatar"))
+                .fullName(accountPartner.getUserInfo().getFullName())
+                .skillLevel(playerRatingRepository.findByAccount(accountPartner)
+                        .map(PlayerRating::getSkillLevel)
+                        .orElse("Chưa có"))
+                .slug(accountPartner.getUserInfo().getSlug())
+                .build();}
         return TournamentCategoryDetailResponse.builder()
                 .id(tournamentCategory.getId())
                 .tournamentName(tournamentCategory.getTournament().getName())
@@ -84,11 +104,12 @@ public class TournamentCategoryService {
                 .thirdPrize(tournamentCategory.getThirdPrize())
                 .format(tournamentCategory.getFormat().name())
                 .registrationDeadline(tournamentCategory.getRegistrationDeadline())
-                .isDouble(tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE)
+                .isDouble(isDouble)
                 .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : null)
                 .admin(isAdmin)
                 .response(response)
                 .requests(requests)
+                .partner(accountFriend)
                 .build();
     }
 

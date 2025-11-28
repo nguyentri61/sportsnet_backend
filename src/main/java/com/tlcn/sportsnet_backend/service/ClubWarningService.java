@@ -47,7 +47,7 @@ public class ClubWarningService {
                 .reason(request.getReason())
                 .build();
          clubWarningRepository.save(clubWarning);
-         notificationService.sendToAccount(account,"Cảnh báo từ "+club.getName(), request.getReason(), "/my-clubs/"+club.getSlug());
+         notificationService.sendToAccount(account.getEmail(),"Cảnh báo từ "+club.getName(), request.getReason(), "/my-clubs/"+club.getSlug());
         return "Warning thành công";
 
     }

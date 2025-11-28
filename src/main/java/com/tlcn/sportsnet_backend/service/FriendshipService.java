@@ -101,7 +101,7 @@ public class FriendshipService {
                     .build();
             friendship = friendshipRepository.save(friendship);
         }
-        notificationService.sendToAccount(receiver,"Lời mời kết bạn!" ,requester.getUserInfo().getFullName() + " đã lời mời kết bạn đến bạn ","/profile/" + requester.getUserInfo().getSlug());
+        notificationService.sendToAccount(receiver.getEmail(),"Lời mời kết bạn!" ,requester.getUserInfo().getFullName() + " đã lời mời kết bạn đến bạn ","/profile/" + requester.getUserInfo().getSlug());
         return toResponse(friendship);
     }
 
@@ -170,7 +170,7 @@ public class FriendshipService {
         }
 
 
-        notificationService.sendToAccount(requester,"Chấp nhận lời mời kết bạn!" ,receiver.getUserInfo().getFullName() + " đã chấp nhận lời mời kết bạn của bạn ","/profile/" + receiver.getUserInfo().getSlug());
+        notificationService.sendToAccount(requester.getEmail(),"Chấp nhận lời mời kết bạn!" ,receiver.getUserInfo().getFullName() + " đã chấp nhận lời mời kết bạn của bạn ","/profile/" + receiver.getUserInfo().getSlug());
 
         return toResponse(friendship);
     }
@@ -195,7 +195,7 @@ public class FriendshipService {
         friendship.setStatus(FriendStatusEnum.REJECTED);
         friendship = friendshipRepository.save(friendship);
 
-        notificationService.sendToAccount(requester,"Từ chối lời mời kết bạn!" ,receiver.getUserInfo().getFullName() + " đã từ chối lời mời kết bạn của bạn ","/profile/" + receiver.getUserInfo().getSlug());
+        notificationService.sendToAccount(requester.getEmail(),"Từ chối lời mời kết bạn!" ,receiver.getUserInfo().getFullName() + " đã từ chối lời mời kết bạn của bạn ","/profile/" + receiver.getUserInfo().getSlug());
         return toResponse(friendship);
     }
 

@@ -238,7 +238,7 @@ public class ClubEventService {
         // Gửi thông báo cho tất cả người tham gia
         event.getParticipants().forEach(participant -> {
             notificationService.sendToAccount(
-                    participant.getParticipant(),
+                    participant.getParticipant().getEmail(),
                     "Hoạt động bị hủy",
                     "Hoạt động \"" + event.getTitle() + "\" đã bị hủy bởi ban quản lý CLB.",
                     "/events/" + event.getSlug()
@@ -247,7 +247,7 @@ public class ClubEventService {
 
         // Gửi thông báo hệ thống
         notificationService.sendToAccount(
-                event.getClub().getOwner(),
+                event.getClub().getOwner().getEmail(),
                 "Đã hủy hoạt động thành công",
                 "Bạn đã hủy hoạt động \"" + event.getTitle() + "\".",
                 "/events/" + event.getSlug()

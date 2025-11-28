@@ -64,7 +64,7 @@ public class ClubMemberService {
                 .build();
 
          clubMemberRepository.save(clubMember);
-        notificationService.sendToAccount(club.getOwner(), "Yêu cầu gia nhập CLB","Câu lạc bộ: "+club.getName()+ " có yêu cầu gia nhập","/my-clubs/"+club.getSlug()+"?tab=members");
+        notificationService.sendToAccount(club.getOwner().getEmail(), "Yêu cầu gia nhập CLB","Câu lạc bộ: "+club.getName()+ " có yêu cầu gia nhập","/my-clubs/"+club.getSlug()+"?tab=members");
          return "Tham gia thành công";
     }
 
@@ -99,7 +99,7 @@ public class ClubMemberService {
                     .build();
             conversationParticipantRepository.save(conversationParticipant);
             clubMemberRepository.save(member);
-            notificationService.sendToAccount(member.getAccount(), "Phê duyệt tham gia CLB: "+ club.getName(),"Bạn đã được phê duyệt tham gia vào CLB "+club.getName()+". Have fun!","/my-clubs/"+club.getSlug());
+            notificationService.sendToAccount(member.getAccount().getEmail(), "Phê duyệt tham gia CLB: "+ club.getName(),"Bạn đã được phê duyệt tham gia vào CLB "+club.getName()+". Have fun!","/my-clubs/"+club.getSlug());
         } else {
             // Reject thì xóa record luôn
             clubMemberRepository.delete(member);
@@ -107,7 +107,7 @@ public class ClubMemberService {
             if(!reason.isEmpty()){
                 message = reason;
             }
-            notificationService.sendToAccount(member.getAccount(), "Từ chối tham gia CLB: "+ club.getName(),"Lý do: "+message,"/clubs/"+club.getSlug());
+            notificationService.sendToAccount(member.getAccount().getEmail(), "Từ chối tham gia CLB: "+ club.getName(),"Lý do: "+message,"/clubs/"+club.getSlug());
         }
     }
 
