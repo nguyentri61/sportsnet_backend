@@ -3,6 +3,7 @@ package com.tlcn.sportsnet_backend.service;
 import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentParticipantResponse;
 import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationRequest;
 import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationUpdate;
+import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentTeamResponse;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.InvitationStatusEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
@@ -137,6 +138,33 @@ public class TournamentParticipantService {
         );
     }
 
+    public PagedResponse<TournamentTeamResponse> getAllTeamParticipants(String categoryId, List<TournamentParticipantEnum> status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<TournamentTeam> participantPage;
+
+        if (status == null || status.isEmpty()) {
+            participantPage = tournamentTeamRepository.findByCategoryId(categoryId, pageable);
+        } else {
+            participantPage = tournamentTeamRepository.findByCategoryIdAndStatusIn(categoryId, status, pageable);
+        }
+
+        List<TournamentTeamResponse> content = participantPage
+                .getContent()
+                .stream()
+                .map(this::toTeamResponse)
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                participantPage.getNumber(),
+                participantPage.getSize(),
+                participantPage.getTotalElements(),
+                participantPage.getTotalPages(),
+                participantPage.isLast()
+        );
+    }
+
     private TournamentParticipantResponse toResponse(TournamentParticipant p ) {
         return TournamentParticipantResponse.builder()
                 .id(p.getId())
@@ -218,5 +246,23 @@ public class TournamentParticipantService {
 
     public void deleteInvitation(String id){
         tournamentPartnerInvitationRepository.deleteById(id);
+    }
+    public TournamentTeamResponse toTeamResponse(TournamentTeam tournamentTeam) {
+        return TournamentTeamResponse.builder()
+                .id(tournamentTeam.getId())
+                .teamName(tournamentTeam.getTeamName())
+                .status(tournamentTeam.getStatus())
+                .player1Email(tournamentTeam.getPlayer1().getEmail())
+                .player2Email(tournamentTeam.getPlayer2().getEmail())
+                .player1FullName(tournamentTeam.getPlayer1().getUserInfo().getFullName())
+                .player2FullName(tournamentTeam.getPlayer2().getUserInfo().getFullName())
+                .player1Gender(tournamentTeam.getPlayer1().getUserInfo().getGender())
+                .player2Gender(tournamentTeam.getPlayer2().getUserInfo().getGender())
+                .player1Slug(tournamentTeam.getPlayer1().getUserInfo().getSlug())
+                .player2Slug(tournamentTeam.getPlayer2().getUserInfo().getSlug())
+                .player1AvatarUrl(fileStorageService.getFileUrl(tournamentTeam.getPlayer1().getUserInfo().getAvatarUrl(), "/avatar"))
+                .player2AvatarUrl(fileStorageService.getFileUrl(tournamentTeam.getPlayer2().getUserInfo().getAvatarUrl(), "/avatar"))
+                .createdAt(tournamentTeam.getCreatedAt())
+                .build();
     }
 }

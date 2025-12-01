@@ -12,13 +12,19 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TournamentParticipantResponse {
+public class TournamentTeamResponse {
     String id;
-    String fullName;
-    String slug;
-    String avatarUrl;
-    String email;
-    String gender;
+    String teamName;
+    String player1FullName;
+    String player1Slug;
+    String player1AvatarUrl;
+    String player1Email;
+    String player1Gender;
+    String player2FullName;
+    String player2Slug;
+    String player2AvatarUrl;
+    String player2Email;
+    String player2Gender;
     TournamentParticipantEnum status;
     Instant createdAt;
 }

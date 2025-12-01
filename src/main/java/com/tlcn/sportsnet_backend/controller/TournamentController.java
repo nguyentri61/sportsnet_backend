@@ -32,6 +32,10 @@ public class TournamentController {
         return ResponseEntity.ok(participantService.joinSingle(categoryId));
     }
 
+    @PostMapping("/{categoryId}/register/double")
+    public ResponseEntity<?> joinDoubleTournament(@PathVariable String categoryId){
+        return ResponseEntity.ok(participantService.joinDouble(categoryId));
+    }
     @GetMapping("/categories/{categoryId}")
     public ResponseEntity<?> getDetailCategoryById(@PathVariable String categoryId) {
         return ResponseEntity.ok(tournamentCategoryService.getDetailCategoryById(categoryId));

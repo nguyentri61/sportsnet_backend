@@ -26,6 +26,16 @@ public class TournamentParticipantController {
         return ResponseEntity.ok(tournamentParticipantService.getAllParticipants(categoryId, status, page, size));
     }
 
+    @GetMapping("/{categoryId}/double")
+    public ResponseEntity<?> getAllTeamParticipants(
+            @PathVariable String categoryId,
+            @RequestParam(required = false) List<TournamentParticipantEnum> status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(tournamentParticipantService.getAllTeamParticipants(categoryId, status, page, size));
+    }
+
     @PutMapping("/{participantId}/approve")
     public ResponseEntity<?> approveParticipant(@PathVariable String participantId) {
         tournamentParticipantService.updateParticipantStatus(participantId, TournamentParticipantEnum.APPROVED);

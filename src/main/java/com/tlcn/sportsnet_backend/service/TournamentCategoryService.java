@@ -28,6 +28,7 @@ public class TournamentCategoryService {
     private final FriendshipRepository friendshipRepository;
     private final PlayerRatingRepository playerRatingRepository;
     private final TournamentTeamRepository tournamentTeamRepository;
+    private final TournamentPaymentRepository tournamentPaymentRepository;
 
     public TournamentCategoryDetailResponse getDetailCategoryById(String categoryId) {
 
@@ -60,6 +61,14 @@ public class TournamentCategoryService {
         List<TournamentPartnerInvitationResponse> requests = new ArrayList<>();
         for(TournamentPartnerInvitation partnerInvitation : tournamentPartnerInvitations) {
 
+
+
+            if(partnerInvitation.getInviter().getEmail().equals(account.getEmail())) {
+                response = toInvitationResponse(partnerInvitation, true);
+            }else {
+                requests.add(toInvitationResponse(partnerInvitation, false));
+            }
+        }
         boolean paid = false;
 
         if (tournamentParticipant != null) {
@@ -67,13 +76,6 @@ public class TournamentCategoryService {
                     tournamentParticipant,
                     PaymentStatusEnum.SUCCESS
             );
-        }
-
-            if(partnerInvitation.getInviter().getEmail().equals(account.getEmail())) {
-                response = toInvitationResponse(partnerInvitation, true);
-            }else {
-                requests.add(toInvitationResponse(partnerInvitation, false));
-            }
         }
         boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
         AccountFriend accountFriend = null;
@@ -92,7 +94,7 @@ public class TournamentCategoryService {
                 .fullName(accountPartner.getUserInfo().getFullName())
                 .skillLevel(playerRatingRepository.findByAccount(accountPartner)
                         .map(PlayerRating::getSkillLevel)
-                        .orElse("Chua có"))
+                        .orElse("Chua cï¿½"))
                 .slug(accountPartner.getUserInfo().getSlug())
                 .build();}
         return TournamentCategoryDetailResponse.builder()
@@ -138,7 +140,7 @@ public class TournamentCategoryService {
                     .fullName(invitee.getUserInfo().getFullName())
                     .skillLevel(playerRatingRepository.findByAccount(invitee)
                             .map(PlayerRating::getSkillLevel)
-                            .orElse("Chua có"))
+                            .orElse("Chua cï¿½"))
                     .slug(invitee.getUserInfo().getSlug())
                     .mutualFriends(friendshipRepository.countMutualFriends(partnerInvitation.getInviter().getId(), invitee.getId()))
                     .build());
@@ -151,7 +153,7 @@ public class TournamentCategoryService {
                     .fullName(inviter.getUserInfo().getFullName())
                     .skillLevel(playerRatingRepository.findByAccount(inviter)
                             .map(PlayerRating::getSkillLevel)
-                            .orElse("Chua có"))
+                            .orElse("Chua cï¿½"))
                     .slug(inviter.getUserInfo().getSlug())
                     .mutualFriends(friendshipRepository.countMutualFriends(partnerInvitation.getInvitee().getId(), inviter.getId()))
                     .build());
