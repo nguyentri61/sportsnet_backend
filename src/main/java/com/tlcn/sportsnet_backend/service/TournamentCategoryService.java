@@ -60,15 +60,15 @@ public class TournamentCategoryService {
         TournamentPartnerInvitationResponse response = null;
         List<TournamentPartnerInvitationResponse> requests = new ArrayList<>();
         for(TournamentPartnerInvitation partnerInvitation : tournamentPartnerInvitations) {
-
-
-
             if(partnerInvitation.getInviter().getEmail().equals(account.getEmail())) {
                 response = toInvitationResponse(partnerInvitation, true);
             }else {
                 requests.add(toInvitationResponse(partnerInvitation, false));
             }
         }
+
+
+
 
         boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
         AccountFriend accountFriend = null;

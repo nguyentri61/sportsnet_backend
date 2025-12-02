@@ -25,4 +25,6 @@ public interface TournamentParticipantRepository extends JpaRepository<Tournamen
             List<TournamentParticipantEnum> status,
             Pageable pageable
     );
+
+    List<TournamentParticipant> findByCategory(TournamentCategory category);
 }
