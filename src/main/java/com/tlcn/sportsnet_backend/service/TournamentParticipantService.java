@@ -192,6 +192,20 @@ public class TournamentParticipantService {
         tournamentParticipantRepository.save(participant);
     }
 
+    @Transactional
+    public void updateTeamStatus(String participantId, TournamentParticipantEnum newStatus) {
+        TournamentTeam tournamentTeam = tournamentTeamRepository.findById(participantId)
+                .orElseThrow(() -> new RuntimeException("Participant not found"));
+
+        if (tournamentTeam.getStatus() == TournamentParticipantEnum.APPROVED ||
+                tournamentTeam.getStatus() == TournamentParticipantEnum.REJECTED) {
+            throw new RuntimeException("This participant has already been processed.");
+        }
+
+        tournamentTeam.setStatus(newStatus);
+        tournamentTeamRepository.save(tournamentTeam);
+    }
+
     public void invitePartner(TournamentPartnerInvitationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName())

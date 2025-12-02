@@ -42,6 +42,18 @@ public class TournamentParticipantController {
         return ResponseEntity.ok("Participant approved successfully.");
     }
 
+    @PutMapping("/double/{teamId}/approve")
+    public ResponseEntity<?> approveTeam(@PathVariable String teamId) {
+        tournamentParticipantService.updateTeamStatus(teamId, TournamentParticipantEnum.APPROVED);
+        return ResponseEntity.ok("Participant approved successfully.");
+    }
+
+    @PutMapping("/double/{teamId}/reject")
+    public ResponseEntity<?> rejectTeam(@PathVariable String teamId) {
+        tournamentParticipantService.updateTeamStatus(teamId, TournamentParticipantEnum.REJECTED);
+        return ResponseEntity.ok("Participant rejected successfully.");
+    }
+
     @PutMapping("/{participantId}/reject")
     public ResponseEntity<?> rejectParticipant(@PathVariable String participantId) {
         tournamentParticipantService.updateParticipantStatus(participantId, TournamentParticipantEnum.REJECTED);

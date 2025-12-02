@@ -69,14 +69,7 @@ public class TournamentCategoryService {
                 requests.add(toInvitationResponse(partnerInvitation, false));
             }
         }
-        boolean paid = false;
 
-        if (tournamentParticipant != null) {
-            paid = tournamentPaymentRepository.existsByParticipantAndStatus(
-                    tournamentParticipant,
-                    PaymentStatusEnum.SUCCESS
-            );
-        }
         boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
         AccountFriend accountFriend = null;
         Account accountPartner;
@@ -97,6 +90,20 @@ public class TournamentCategoryService {
                         .orElse("Chua c�"))
                 .slug(accountPartner.getUserInfo().getSlug())
                 .build();}
+        boolean paid = false;
+
+        if (tournamentParticipant != null) {
+            paid = tournamentPaymentRepository.existsByParticipantAndStatus(
+                    tournamentParticipant,
+                    PaymentStatusEnum.SUCCESS
+            );
+        }
+        else {
+            paid = tournamentPaymentRepository.existsByTeamAndStatus(
+                    tournamentTeam,
+                    PaymentStatusEnum.SUCCESS
+            );
+        }
         return TournamentCategoryDetailResponse.builder()
                 .id(tournamentCategory.getId())
                 .tournamentName(tournamentCategory.getTournament().getName())
@@ -108,7 +115,7 @@ public class TournamentCategoryService {
                 .maxLevel(tournamentCategory.getMaxLevel())
                 .maxParticipants(tournamentCategory.getMaxParticipants())
                 .currentParticipantCount(currentCount)
-                .registrationFee(tournamentCategory.getRegistrationFee())
+                .registrationFee( isDouble ? tournamentCategory.getRegistrationFee() * 2 : tournamentCategory.getRegistrationFee())
                 .description(tournamentCategory.getDescription())
                 .rules(tournamentCategory.getRules())
                 .firstPrize(tournamentCategory.getFirstPrize())
@@ -117,7 +124,7 @@ public class TournamentCategoryService {
                 .format(tournamentCategory.getFormat().name())
                 .registrationDeadline(tournamentCategory.getRegistrationDeadline())
                 .isDouble(isDouble)
-                .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : null)
+                .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : tournamentTeam!= null ? tournamentTeam.getStatus() : null)
                 .admin(isAdmin)
                 .response(response)
                 .requests(requests)

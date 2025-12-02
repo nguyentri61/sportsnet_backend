@@ -3,16 +3,11 @@ package com.tlcn.sportsnet_backend.service;
 import com.tlcn.sportsnet_backend.config.VNPayConfig;
 import com.tlcn.sportsnet_backend.dto.payment.VNPayCreateResponse;
 import com.tlcn.sportsnet_backend.dto.payment.VNPayReturnResponse;
-import com.tlcn.sportsnet_backend.entity.Account;
-import com.tlcn.sportsnet_backend.entity.TournamentCategory;
-import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
-import com.tlcn.sportsnet_backend.entity.TournamentPayment;
+import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.PaymentStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
-import com.tlcn.sportsnet_backend.repository.AccountRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentPaymentRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import com.tlcn.sportsnet_backend.util.VNPayUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -29,6 +24,7 @@ public class TournamentPaymentService {
     private final VNPayConfig config;
     private final TournamentPaymentRepository paymentRepo;
     private final TournamentParticipantRepository participantRepo;
+    private final TournamentTeamRepository teamRepo;
     private final AccountRepository accountRepo;
     private final TournamentCategoryRepository categoryRepo;
 
@@ -38,20 +34,26 @@ public class TournamentPaymentService {
         Account account = accountRepo.findByEmail(auth.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));
 
         TournamentCategory category = categoryRepo.findById(categoryId).orElseThrow(() -> new InvalidDataException("Category not found"));
+        boolean isDouble = category.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && category.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
 
-        TournamentParticipant participant = participantRepo.findByAccountAndCategory(account, category);
 
 
         String txnRef = String.valueOf(System.currentTimeMillis());
 
         // Lưu vào DB trước
         TournamentPayment payment = TournamentPayment.builder()
-                .participant(participant)
                 .txnRef(txnRef)
                 .amount(amount)
                 .status(PaymentStatusEnum.PENDING)
                 .build();
-
+        if(isDouble){
+            TournamentTeam tournamentTeam = teamRepo.findByCategoryAndAccount(categoryId , account).orElse(null);
+            payment.setTeam(tournamentTeam);
+        }
+        else{
+            TournamentParticipant participant = participantRepo.findByAccountAndCategory(account, category);
+            payment.setParticipant(participant);
+        }
         paymentRepo.save(payment);
 
         long vnpAmount = Math.round(amount * 100);
@@ -106,8 +108,8 @@ public class TournamentPaymentService {
 
         return VNPayReturnResponse.builder()
                 .status(payment.getStatus().toString())
-                .tournamentId(payment.getParticipant().getCategory().getTournament().getId())
-                .categoryId(payment.getParticipant().getCategory().getId())
+                .tournamentId(payment.getParticipant() != null ? payment.getParticipant().getCategory().getTournament().getId() : payment.getTeam().getCategory().getTournament().getId())
+                .categoryId(payment.getParticipant() != null ? payment.getParticipant().getCategory().getId() : payment.getTeam().getCategory().getId())
                 .build();
     }
 }
