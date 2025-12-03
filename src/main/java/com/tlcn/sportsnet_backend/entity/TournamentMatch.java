@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -43,8 +44,11 @@ public class TournamentMatch {
     TournamentParticipant winner;
 
     // Điểm số
-    Integer scoreP1;
-    Integer scoreP2;
+    @ElementCollection
+    List<Integer> setScoreP1;
+
+    @ElementCollection
+    List<Integer> setScoreP2;
 
     @Enumerated(EnumType.STRING)
     MatchStatus status;

@@ -3,6 +3,8 @@ package com.tlcn.sportsnet_backend.dto.bracket;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Builder
 @Data
 @NoArgsConstructor
@@ -16,8 +18,8 @@ public class TournamentMatchResponse {
     String player2Id;
     String player1Name;
     String player2Name;
-    Integer scoreP1;
-    Integer scoreP2;
+    List<Integer> setScoreP1;
+    List<Integer> setScoreP2;
     String winnerId;
     String winnerName;
     String status;

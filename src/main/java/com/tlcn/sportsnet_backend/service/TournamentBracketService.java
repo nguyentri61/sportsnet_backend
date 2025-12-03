@@ -1,10 +1,7 @@
 package com.tlcn.sportsnet_backend.service;
 
 
-import com.tlcn.sportsnet_backend.dto.bracket.BracketRoundResponse;
-import com.tlcn.sportsnet_backend.dto.bracket.BracketTreeResponse;
-import com.tlcn.sportsnet_backend.dto.bracket.TournamentMatchResponse;
-import com.tlcn.sportsnet_backend.dto.bracket.UpdateMatchResultRequest;
+import com.tlcn.sportsnet_backend.dto.bracket.*;
 import com.tlcn.sportsnet_backend.entity.TournamentCategory;
 import com.tlcn.sportsnet_backend.entity.TournamentMatch;
 import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
@@ -94,30 +91,46 @@ public class TournamentBracketService {
     }
 
 
-    public TournamentMatch updateMatchResult(String matchId, UpdateMatchResultRequest req) {
+    public TournamentMatchResponse updateMatchResult(String matchId, UpdateMatchResultRequest req) {
 
         TournamentMatch match = matchRepo.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("Match not found"));
 
-        match.setScoreP1(req.getScoreP1());
-        match.setScoreP2(req.getScoreP2());
-
-        TournamentParticipant winner = null;
-
-        if (req.getWinnerId() != null) {
-            winner = participantRepo.findById(req.getWinnerId())
-                    .orElseThrow(() -> new RuntimeException("Winner not found"));
+        if (req.getSets() == null || req.getSets().isEmpty()) {
+            throw new InvalidDataException("Set scores are required");
         }
 
+        int winP1 = 0;
+        int winP2 = 0;
+
+        List<Integer> setP1 = new ArrayList<>();
+        List<Integer> setP2 = new ArrayList<>();
+
+        for (SetScore s : req.getSets()) {
+            setP1.add(s.getP1());
+            setP2.add(s.getP2());
+
+            if (s.getP1() > s.getP2()) winP1++;
+            else winP2++;
+        }
+
+        // winner = ai thắng 2 set trước
+        TournamentParticipant winner =
+                winP1 > winP2 ? match.getPlayer1() : match.getPlayer2();
+
+        match.setSetScoreP1(setP1);
+        match.setSetScoreP2(setP2);
         match.setWinner(winner);
         match.setStatus(MatchStatus.FINISHED);
+
         matchRepo.save(match);
 
-        // ⬇ advance winner into next round
+        // đẩy vào vòng sau
         advanceWinner(match);
 
-        return match;
+        return convertToResponse(match);
     }
+
 
     private void advanceWinner(TournamentMatch match) {
 
@@ -206,8 +219,8 @@ public class TournamentBracketService {
                 .player2Name(m.getPlayer2() != null ?
                         m.getPlayer2().getAccount().getUserInfo().getFullName() : null)
 
-                .scoreP1(m.getScoreP1())
-                .scoreP2(m.getScoreP2())
+                .setScoreP1(m.getSetScoreP1())
+                .setScoreP2(m.getSetScoreP2())
 
                 .winnerId(m.getWinner() != null ? m.getWinner().getId() : null)
                 .winnerName(m.getWinner() != null ?
