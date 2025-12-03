@@ -41,6 +41,7 @@ public class TournamentCategoryDetailResponse {
     boolean isDouble;
     TournamentParticipantEnum participantStatus;
     boolean paid;
+    boolean scheduled;
     List<TournamentPartnerInvitationResponse> requests;
     TournamentPartnerInvitationResponse response;
     AccountFriend partner;

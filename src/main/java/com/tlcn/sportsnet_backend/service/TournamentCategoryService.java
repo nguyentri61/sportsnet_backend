@@ -29,6 +29,7 @@ public class TournamentCategoryService {
     private final PlayerRatingRepository playerRatingRepository;
     private final TournamentTeamRepository tournamentTeamRepository;
     private final TournamentPaymentRepository tournamentPaymentRepository;
+    private final TournamentMatchRepository tournamentMatchRepository;
 
     public TournamentCategoryDetailResponse getDetailCategoryById(String categoryId) {
 
@@ -104,6 +105,18 @@ public class TournamentCategoryService {
                     PaymentStatusEnum.SUCCESS
             );
         }
+
+        boolean isScheduled = true;
+
+        List<TournamentMatch> matches = tournamentMatchRepository.findAll()
+                .stream()
+                .filter(m -> m.getCategory().getId().equals(tournamentCategory.getId()))
+                .toList();
+
+        if(matches.isEmpty() ) {
+            isScheduled = false;
+        }
+
         return TournamentCategoryDetailResponse.builder()
                 .id(tournamentCategory.getId())
                 .tournamentName(tournamentCategory.getTournament().getName())
@@ -130,6 +143,7 @@ public class TournamentCategoryService {
                 .requests(requests)
                 .partner(accountFriend)
                 .paid(paid)
+                .scheduled(isScheduled)
                 .build();
     }
 
