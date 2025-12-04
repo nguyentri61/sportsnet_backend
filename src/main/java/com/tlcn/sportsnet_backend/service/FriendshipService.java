@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,8 @@ public class FriendshipService {
     private final NotificationService notificationService;
     private final ConversationRepository conversationRepository;
     private final ConversationParticipantRepository conversationParticipantRepository;
+    private final TournamentParticipantService tournamentParticipantService;
+    private final TournamentTeamRepository tournamentTeamRepository;
 
     public FriendResponse getRelationship(String accountId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -223,7 +226,33 @@ public class FriendshipService {
                         .build())
                 .toList();
     }
+    public List<AccountFriend> getAllPartner(String accountId, String categoryId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
 
+        List<Friendship> friendships = friendshipRepository.findAllFriends(account);
+
+        // Chuyển về list Account bạn bè
+        List<Account> listFriendAccount = friendships.stream()
+                .map(f -> f.getRequester().equals(account) ? f.getReceiver() : f.getRequester())
+                .toList();
+        List<Account> filteredList = listFriendAccount.stream()
+                .filter(friend -> !tournamentTeamRepository.existsByAccountAndCategory(categoryId, friend))
+                .collect(Collectors.toList());
+
+        return filteredList.stream()
+                .map(x -> AccountFriend.builder()
+                        .id(x.getId())
+                        .avatarUrl(fileStorageService.getFileUrl(x.getUserInfo().getAvatarUrl(), "/avatar"))
+                        .fullName(x.getUserInfo().getFullName())
+                        .skillLevel(playerRatingRepository.findByAccount(x)
+                                .map(PlayerRating::getSkillLevel)
+                                .orElse("Chưa có"))
+                        .slug(x.getUserInfo().getSlug())
+                        .mutualFriends(friendshipRepository.countMutualFriends(accountId, x.getId()))
+                        .build())
+                .toList();
+    }
     public List<AccountFriend> getAllRequesters() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow(() -> new InvalidDataException("Account not found"));

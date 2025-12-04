@@ -4,6 +4,7 @@ import com.tlcn.sportsnet_backend.dto.account.AccountFriend;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.*;
 import com.tlcn.sportsnet_backend.entity.*;
+import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -129,9 +131,18 @@ public class TournamentService {
         List<TournamentCategory> tournamentCategories = tournament.getCategories();
         List<TournamentCategoryResponse> tournamentCategoryResponses = new ArrayList<>();
         for (TournamentCategory tournamentCategory : tournamentCategories) {
-            int currentCount = (int) tournamentCategory.getParticipants().stream()
-                    .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
-                    .count();
+            boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
+            int currentCount =0;
+            if(isDouble) {
+                currentCount = (int) tournamentCategory.getTeams().stream()
+                        .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
+                        .count();
+            }
+            else {
+                currentCount = (int) tournamentCategory.getParticipants().stream()
+                        .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
+                        .count();
+            }
             TournamentCategoryResponse tournamentCategoryResponse = TournamentCategoryResponse.builder()
                     .category(tournamentCategory.getCategory())
                     .id(tournamentCategory.getId())
@@ -165,9 +176,18 @@ public class TournamentService {
         List<TournamentCategory> tournamentCategories = tournament.getCategories();
         List<TournamentCategoryDetailResponse> tournamentCategoryResponses = new ArrayList<>();
         for (TournamentCategory tournamentCategory : tournamentCategories) {
-            int currentCount = (int) tournamentCategory.getParticipants().stream()
-                    .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
-                    .count();
+            boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
+            int currentCount =0;
+            if(isDouble) {
+                currentCount = (int) tournamentCategory.getTeams().stream()
+                        .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
+                        .count();
+            }
+            else {
+                currentCount = (int) tournamentCategory.getParticipants().stream()
+                        .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
+                        .count();
+            }
 
             TournamentParticipant tournamentParticipant = null;
 
@@ -255,10 +275,10 @@ public class TournamentService {
     }
 
 
-    public Object getAllPartner() {
+    public Object getAllPartner(String categoryId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
-        List<AccountFriend> accountFriends = friendshipService.getAllFriends(account.getId());
+        List<AccountFriend> accountFriends = friendshipService.getAllPartner(account.getId(),categoryId );
         return accountFriends;
     }
 }

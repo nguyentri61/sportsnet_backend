@@ -29,7 +29,14 @@ public interface TournamentTeamRepository extends JpaRepository<TournamentTeam, 
     boolean existsByAccountAndCategory(@Param("categoryId") String categoryId,
                                        @Param("account") Account account,
                                        @Param("status") TournamentParticipantEnum status);
-
+    @Query("""
+    SELECT COUNT(i)>0 FROM TournamentTeam i
+    WHERE i.category.id = :categoryId
+      AND (i.player1 = :account OR i.player2 = :account)
+""")
+    boolean existsByAccountAndCategory(@Param("categoryId") String categoryId,
+                                       @Param("account") Account account
+                                       );
     Page<TournamentTeam> findByCategoryId(String categoryId, Pageable pageable);
 
     Page<TournamentTeam> findByCategoryIdAndStatusIn(
