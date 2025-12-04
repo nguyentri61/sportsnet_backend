@@ -34,9 +34,22 @@ public interface ClubRepository extends JpaRepository<Club, String>, JpaSpecific
             @Param("account") Account account,
             Pageable pageable);
 
-    @Query("SELECT c FROM Club c " +
-            "WHERE (c.owner = :account OR EXISTS (SELECT cm FROM ClubMember cm WHERE cm.club = c AND cm.account = :account)) " +
-            "AND c.status = :status")
+    @Query("""
+    SELECT c FROM Club c
+    WHERE (
+        c.owner = :account
+        OR EXISTS (
+            SELECT cm FROM ClubMember cm
+            WHERE cm.club = c AND cm.account = :account
+        )
+    )
+    AND c.status = :status
+    ORDER BY
+        CASE 
+            WHEN c.owner = :account THEN 0 
+            ELSE 1 
+        END
+""")
     Page<Club> findAvailableClubsBelongUserAndStatus(
             @Param("account") Account account,
             @Param("status") ClubStatusEnum status,
