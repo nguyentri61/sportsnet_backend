@@ -11,6 +11,7 @@ import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentMatchRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class TournamentBracketService {
     private final TournamentParticipantRepository participantRepo;
     private final TournamentMatchRepository matchRepo;
     private final TournamentCategoryRepository categoryRepo;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public List<TournamentMatchResponse> generateBracket(String categoryId) {
 
@@ -128,7 +130,14 @@ public class TournamentBracketService {
         // đẩy vào vòng sau
         advanceWinner(match);
 
-        return convertToResponse(match);
+        TournamentMatchResponse res = convertToResponse(match);
+
+        messagingTemplate.convertAndSend(
+                "/topic/match-updates/" + match.getCategory().getId(),
+                res
+        );
+
+        return res;
     }
 
 
