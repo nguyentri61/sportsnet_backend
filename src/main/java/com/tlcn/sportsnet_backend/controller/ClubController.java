@@ -122,11 +122,15 @@ public class ClubController {
         return ResponseEntity.ok().body("Ban success");
     }
 
-    @GetMapping("/my_clubs/detail_member/{id}")
-    public ResponseEntity<?> getMyClubMember(@PathVariable String id) {
-        return ResponseEntity.ok(clubMemberService.getDetailMember(id));
+    @GetMapping("/my_clubs/{clubId}/detail_member/{id}")
+    public ResponseEntity<?> getMyClubMember(@PathVariable String clubId,@PathVariable String id) {
+        return ResponseEntity.ok(clubMemberService.getDetailMember(clubId, id));
     }
 
+    @DeleteMapping("/my_clubs/{clubId}/out")
+    public ResponseEntity<?> outClub(@PathVariable String clubId){
+        return ResponseEntity.ok(clubMemberService.outClub(clubId));
+    }
 //    @PostMapping("/update")
 //    public String update() {
 //        clubService.calculateAllClubReputationOnStartup();

@@ -44,9 +44,7 @@ public class TournamentCategoryService {
 
     private TournamentCategoryDetailResponse toResponse(TournamentCategory tournamentCategory, Account account) {
 
-        int currentCount = (int) tournamentCategory.getParticipants().stream()
-                .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
-                .count();
+
 
         boolean isAdmin = false;
         TournamentParticipant tournamentParticipant = null;
@@ -68,10 +66,18 @@ public class TournamentCategoryService {
             }
         }
 
-
-
-
         boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
+        int currentCount;
+        if(isDouble) {
+            currentCount = (int) tournamentCategory.getTeams().stream()
+                    .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
+                    .count();
+        }
+        else {
+            currentCount = (int) tournamentCategory.getParticipants().stream()
+                    .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
+                    .count();
+        }
         AccountFriend accountFriend = null;
         Account accountPartner;
         TournamentTeam tournamentTeam = tournamentTeamRepository.findByCategoryAndAccount(tournamentCategory.getId(), account).orElse(null);

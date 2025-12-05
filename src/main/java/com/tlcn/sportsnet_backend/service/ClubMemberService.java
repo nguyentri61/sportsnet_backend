@@ -82,8 +82,9 @@ public class ClubMemberService {
             throw new InvalidDataException("Not club owner");
         }
 
-        ClubMember member = clubMemberRepository.findById(memberId)
-                .orElseThrow(() -> new InvalidDataException("Member not found"));
+        Account account = accountRepository.findById(memberId).orElseThrow(() -> new InvalidDataException("Member not found"));
+
+        ClubMember member = clubMemberRepository.findClubMemberByAccountAndClub(account, club);
 
         if (!member.getClub().getId().equals(club.getId())) {
             throw new InvalidDataException("Member does not belong to this club");
@@ -124,9 +125,9 @@ public class ClubMemberService {
             throw new InvalidDataException("Not club owner");
         }
 
-        ClubMember member = clubMemberRepository.findById(memberId)
-                .orElseThrow(() -> new InvalidDataException("Member not found"));
+        Account account = accountRepository.findById(memberId).orElseThrow(() -> new InvalidDataException("Member not found"));
 
+        ClubMember member = clubMemberRepository.findClubMemberByAccountAndClub(account, club);
         if (!member.getClub().getId().equals(club.getId())) {
             throw new InvalidDataException("Member does not belong to this club");
         }
@@ -176,11 +177,11 @@ public class ClubMemberService {
         );
     }
 
-    public DetailMemberResponse getDetailMember(String id) {
-        ClubMember clubMember = clubMemberRepository.findById(id).orElseThrow(() -> new InvalidDataException("ClubMember not found"));
+    public DetailMemberResponse getDetailMember(String clubId, String id) {
+        ClubMember clubMember = clubMemberRepository.findClubMemberByAccount_IdAndClub_Id(id, clubId).orElseThrow(() -> new InvalidDataException("ClubMember not found"));
         PlayerRating playerRating = playerRatingRepository.findByAccount(clubMember.getAccount()).orElse(null);    
         return DetailMemberResponse.builder()
-                .id(clubMember.getId())
+                .id(clubMember.getAccount().getId())
                 .email(clubMember.getAccount().getEmail())
                 .phone(clubMember.getAccount().getUserInfo().getPhone())
                 .fullName(clubMember.getAccount().getUserInfo().getFullName())
@@ -269,4 +270,12 @@ public class ClubMemberService {
     }
 
 
+    public Object outClub(String clubId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+        ClubMember clubMember = clubMemberRepository.findClubMemberByAccount_IdAndClub_Id(account.getId(), clubId).orElseThrow(() -> new InvalidDataException("Club member not found"));
+        clubMemberRepository.delete(clubMember);
+        return "Đã out CLB thành công";
+    }
 }
