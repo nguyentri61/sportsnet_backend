@@ -17,8 +17,10 @@ public class PlayerRating {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    @OneToOne
-    @JoinColumn(name = "account_id", nullable = false, unique = true)
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "account_id")
     private Account account;
 
     private int experience;

@@ -30,10 +30,10 @@ public class UserInfo {
     String avatarUrl;
     String phone;
     boolean isProfileProtected = true;
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
-    @JoinColumn(name = "account_id", nullable = false)
-    Account account;
+    @JoinColumn(name = "account_id")
+    private Account account;
 
     @PrePersist
     public void handleBeforeCreate(){

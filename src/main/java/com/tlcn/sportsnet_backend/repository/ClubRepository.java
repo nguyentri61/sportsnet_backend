@@ -7,6 +7,8 @@ import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -23,7 +25,13 @@ import java.util.Optional;
 public interface ClubRepository extends JpaRepository<Club, String>, JpaSpecificationExecutor<Club> {
     Page<Club> findAllByVisibilityAndStatus(ClubVisibilityEnum visibility, ClubStatusEnum status, Pageable pageable);
     Optional<Club> findBySlug(String slug);
+    @Override
+    @EntityGraph(attributePaths = {
 
+            "conversation",
+            "tags"
+    })
+    Page<Club> findAll(Specification<Club> spec, Pageable pageable);
     @Query("SELECT c FROM Club c " +
             "WHERE c.visibility = :visibility " +
             "AND c.status = :status " +

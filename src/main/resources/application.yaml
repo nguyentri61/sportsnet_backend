@@ -28,16 +28,20 @@ spring:
             enable: true
     default-encoding: UTF-8
 
+#  datasource:
+#    url: "jdbc:mysql://localhost:3306/sports_net"
+#    username: root
+#    password: root
+#    driver-class-name: com.mysql.cj.jdbc.Driver
   datasource:
-    url: "jdbc:mysql://localhost:3306/sports_net"
+    url: jdbc:mysql://gondola.proxy.rlwy.net:36035/sports_net?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
-    password: root
+    password: BQySgejKORRbtCGqfPMLEKjsefpwKApx
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 50
       connection-timeout: 30000
       idle-timeout: 60000
-
   jpa:
     hibernate:
       ddl-auto: update

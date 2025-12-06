@@ -36,6 +36,9 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, String> 
     @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.status = :status")
     List<ClubMember> findByClubIdAndStatus(@Param("clubId") String clubId,
                                            @Param("status") ClubMemberStatusEnum status);
+    @Query("SELECT COUNT(cm) FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.status = :status")
+    long countByClubIdAndStatus(@Param("clubId") String clubId,
+                                @Param("status") ClubMemberStatusEnum status);
 
     ClubMember findClubMemberByAccountAndClub(Account account, Club club);
 

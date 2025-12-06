@@ -87,8 +87,7 @@ public class AdminService {
 
 
     private ClubAdminResponse toClubAdminResponse(Club club) {
-        List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
-
+        long count = clubMemberRepository.countByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
         return ClubAdminResponse.builder()
                 .id(club.getId())
                 .slug(club.getSlug())
@@ -98,7 +97,7 @@ public class AdminService {
                 .status(club.getStatus())
                 .ownerName(club.getOwner().getUserInfo().getFullName())
                 .createdAt(club.getCreatedAt())
-                .memberCount(members.size())
+                .memberCount((int) count)
                 .reputation(club.getReputation())
                 .build();
     }

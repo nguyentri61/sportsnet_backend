@@ -6,6 +6,8 @@ import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -67,9 +69,14 @@ public class Account {
                 : "";
     }
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    UserInfo userInfo;
 
+    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private UserInfo userInfo;
+
+    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private PlayerRating playerRating;
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "account_roles",
             joinColumns = @JoinColumn(name = "account_id"),
@@ -93,8 +100,6 @@ public class Account {
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Message> sentMessages = new HashSet<>();
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private PlayerRating playerRating;
 
     private int totalParticipatedEvents =0;
     @Column(nullable = false)
@@ -118,6 +123,7 @@ public class Account {
     @JsonIgnore
     private List<TournamentTeam> teamsAsPlayer2 = new ArrayList<>();
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "otp_id")
     private OTP otp;
 }

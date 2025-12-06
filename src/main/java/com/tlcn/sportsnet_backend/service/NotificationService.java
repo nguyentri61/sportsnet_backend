@@ -43,7 +43,7 @@ public class NotificationService {
                 .recipients(new ArrayList<>())
                 .build();
 
-        System.out.println(clubMembers.size());
+
         // Tạo danh sách người nhận
         clubMembers.stream()
                 .map(ClubMember::getAccount)
