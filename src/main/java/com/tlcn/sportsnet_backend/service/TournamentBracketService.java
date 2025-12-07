@@ -2,14 +2,15 @@ package com.tlcn.sportsnet_backend.service;
 
 
 import com.tlcn.sportsnet_backend.dto.bracket.*;
+import com.tlcn.sportsnet_backend.entity.BracketParticipant;
 import com.tlcn.sportsnet_backend.entity.TournamentCategory;
 import com.tlcn.sportsnet_backend.entity.TournamentMatch;
-import com.tlcn.sportsnet_backend.entity.TournamentParticipant;
 import com.tlcn.sportsnet_backend.enums.MatchStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentMatchRepository;
 import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
+import com.tlcn.sportsnet_backend.repository.TournamentTeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,12 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TournamentBracketService {
     private final TournamentParticipantRepository participantRepo;
+    private final TournamentTeamRepository teamRepo;
     private final TournamentMatchRepository matchRepo;
     private final TournamentCategoryRepository categoryRepo;
     private final SimpMessagingTemplate messagingTemplate;
@@ -32,49 +33,68 @@ public class TournamentBracketService {
         TournamentCategory category = categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        List<TournamentParticipant> participants =
-                participantRepo.findByCategory(category);
+        List<? extends BracketParticipant> participants;
+
+        // loại participant
+        String type = category.getCategory().getType();
+
+        if (type.equals("SINGLE")) {
+            participants = participantRepo.findByCategory(category);
+        } else if (type.equals("DOUBLE")) {
+            participants = teamRepo.findByCategory(category);
+        } else {
+            throw new RuntimeException("Invalid category type");
+        }
 
         if (participants.isEmpty()) {
-            throw new RuntimeException("Category does not have participants");
+            throw new RuntimeException("Category has no participants");
         }
+
+        return generateBracketGeneric(category, participants);
+    }
+
+
+    private <T extends BracketParticipant> List<TournamentMatchResponse> generateBracketGeneric(
+            TournamentCategory category,
+            List<T> participants
+    ) {
 
         int n = participants.size();
         int bracketSize = nextPowerOfTwo(n);
 
-        List<TournamentParticipant> list = new ArrayList<>(participants);
+        List<T> list = new ArrayList<>(participants);
 
-        // add BYE
         while (list.size() < bracketSize) list.add(null);
 
         int totalRounds = (int) (Math.log(bracketSize) / Math.log(2));
 
         List<TournamentMatch> allMatches = new ArrayList<>();
-        List<TournamentParticipant> current = list;
+        List<T> current = list;
 
         for (int round = 1; round <= totalRounds; round++) {
 
-            List<TournamentParticipant> nextRound = new ArrayList<>();
+            List<T> nextRound = new ArrayList<>();
             int index = 1;
 
             for (int i = 0; i < current.size(); i += 2) {
 
-                TournamentParticipant p1 = current.get(i);
-                TournamentParticipant p2 = current.get(i + 1);
+                T p1 = current.get(i);
+                T p2 = current.get(i + 1);
 
                 TournamentMatch match = TournamentMatch.builder()
                         .category(category)
                         .round(round)
                         .matchIndex(index++)
-                        .player1(p1)
-                        .player2(p2)
+                        .participant1Id(p1 != null ? p1.getId() : null)
+                        .participant2Id(p2 != null ? p2.getId() : null)
+                        .participant1Name(p1 != null ? p1.getDisplayName() : null)
+                        .participant2Name(p2 != null ? p2.getDisplayName() : null)
                         .status(MatchStatus.NOT_STARTED)
                         .build();
 
                 matchRepo.save(match);
                 allMatches.add(match);
 
-                // slot cho vòng sau
                 nextRound.add(null);
             }
 
@@ -83,7 +103,7 @@ public class TournamentBracketService {
 
         return allMatches.stream()
                 .map(this::convertToResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private int nextPowerOfTwo(int n) {
@@ -102,8 +122,7 @@ public class TournamentBracketService {
             throw new InvalidDataException("Set scores are required");
         }
 
-        int winP1 = 0;
-        int winP2 = 0;
+        int winP1 = 0, winP2 = 0;
 
         List<Integer> setP1 = new ArrayList<>();
         List<Integer> setP2 = new ArrayList<>();
@@ -111,23 +130,23 @@ public class TournamentBracketService {
         for (SetScore s : req.getSets()) {
             setP1.add(s.getP1());
             setP2.add(s.getP2());
-
             if (s.getP1() > s.getP2()) winP1++;
             else winP2++;
         }
 
-        // winner = ai thắng 2 set trước
-        TournamentParticipant winner =
-                winP1 > winP2 ? match.getPlayer1() : match.getPlayer2();
+        boolean p1Winner = winP1 > winP2;
+
+        String winnerId = p1Winner ? match.getParticipant1Id() : match.getParticipant2Id();
+        String winnerName = p1Winner ? match.getParticipant1Name() : match.getParticipant2Name();
 
         match.setSetScoreP1(setP1);
         match.setSetScoreP2(setP2);
-        match.setWinner(winner);
+        match.setWinnerId(winnerId);
+        match.setWinnerName(winnerName);
         match.setStatus(MatchStatus.FINISHED);
 
         matchRepo.save(match);
 
-        // đẩy vào vòng sau
         advanceWinner(match);
 
         TournamentMatchResponse res = convertToResponse(match);
@@ -161,23 +180,24 @@ public class TournamentBracketService {
         if (target == null) return;
 
         if (match.getMatchIndex() % 2 == 1) {
-            target.setPlayer1(match.getWinner());
+            target.setParticipant1Id(match.getWinnerId());
+            target.setParticipant1Name(match.getWinnerName());
         } else {
-            target.setPlayer2(match.getWinner());
+            target.setParticipant2Id(match.getWinnerId());
+            target.setParticipant2Name(match.getWinnerName());
         }
 
         matchRepo.save(target);
     }
+
 
     public BracketTreeResponse getBracketTree(String categoryId) {
 
         TournamentCategory category = categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new InvalidDataException("Category not found"));
 
-        List<TournamentMatch> matches = matchRepo.findAll()
-                .stream()
-                .filter(m -> m.getCategory().getId().equals(categoryId))
-                .toList();
+        List<TournamentMatch> matches =
+                matchRepo.findByCategory(category);
 
         if (matches.isEmpty()) {
             throw new InvalidDataException("Bracket has not been generated for this category");
@@ -220,20 +240,17 @@ public class TournamentBracketService {
                 .round(m.getRound())
                 .matchIndex(m.getMatchIndex())
 
-                .player1Id(m.getPlayer1() != null ? m.getPlayer1().getId() : null)
-                .player2Id(m.getPlayer2() != null ? m.getPlayer2().getId() : null)
+                .player1Id(m.getParticipant1Id())
+                .player2Id(m.getParticipant2Id())
 
-                .player1Name(m.getPlayer1() != null ?
-                        m.getPlayer1().getAccount().getUserInfo().getFullName() : null)
-                .player2Name(m.getPlayer2() != null ?
-                        m.getPlayer2().getAccount().getUserInfo().getFullName() : null)
+                .player1Name(m.getParticipant1Name())
+                .player2Name(m.getParticipant2Name())
 
                 .setScoreP1(m.getSetScoreP1())
                 .setScoreP2(m.getSetScoreP2())
 
-                .winnerId(m.getWinner() != null ? m.getWinner().getId() : null)
-                .winnerName(m.getWinner() != null ?
-                        m.getWinner().getAccount().getUserInfo().getFullName() : null)
+                .winnerId(m.getWinnerId())
+                .winnerName(m.getWinnerName())
 
                 .status(m.getStatus().name())
                 .build();

@@ -44,4 +44,6 @@ public interface TournamentTeamRepository extends JpaRepository<TournamentTeam, 
             List<TournamentParticipantEnum> status,
             Pageable pageable
     );
+
+    List<TournamentTeam> findByCategory(TournamentCategory category);
 }

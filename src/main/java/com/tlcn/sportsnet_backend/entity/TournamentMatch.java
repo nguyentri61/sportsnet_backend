@@ -31,17 +31,14 @@ public class TournamentMatch {
     @Column(nullable = false)
     private Integer matchIndex;
 
-    @ManyToOne
-    @JoinColumn(name = "player1_id")
-    TournamentParticipant player1;
+    String participant1Id;
+    String participant2Id;
 
-    @ManyToOne
-    @JoinColumn(name = "player2_id")
-    TournamentParticipant player2;
+    String participant1Name;
+    String participant2Name;
 
-    @ManyToOne
-    @JoinColumn(name = "winner_id")
-    TournamentParticipant winner;
+    String winnerId;
+    String winnerName;
 
     // Điểm số
     @ElementCollection

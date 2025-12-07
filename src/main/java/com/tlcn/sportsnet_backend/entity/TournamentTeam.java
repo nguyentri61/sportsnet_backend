@@ -14,7 +14,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TournamentTeam {
+public class TournamentTeam implements BracketParticipant {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
@@ -64,5 +64,15 @@ public class TournamentTeam {
         String[] parts2 = player2.getUserInfo().getFullName().trim().split("\\s+");
         String lastName2 = parts2[parts2.length - 1];
         teamName = lastName1 + " " + lastName2;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return teamName;
     }
 }

@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface TournamentMatchRepository extends JpaRepository<TournamentMatch, String> {
     List<TournamentMatch> findByCategoryAndRound(TournamentCategory category, Integer round);
+
+    List<TournamentMatch> findByCategory(TournamentCategory category);
 }

@@ -15,7 +15,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TournamentParticipant {
+public class TournamentParticipant implements BracketParticipant {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
@@ -52,5 +52,15 @@ public class TournamentParticipant {
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
 
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return account.getUserInfo().getFullName();
     }
 }
