@@ -19,7 +19,6 @@ public class PlayerRating {
     String id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
     @JoinColumn(name = "account_id")
     private Account account;
 

@@ -18,6 +18,10 @@ import java.util.Optional;
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament, String> {
     @NonNull
+    @EntityGraph(attributePaths = {
+            "categories",
+            "facility"
+    })
     Page<Tournament> findAllByStatusNot(Pageable pageable, TournamentStatus status);
 
     @NonNull

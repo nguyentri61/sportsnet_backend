@@ -17,11 +17,20 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "club_events")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {
+        "participants",
+        "categories",
+        "clubEventRatings"
+})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -73,7 +82,7 @@ public class ClubEvent {
     // Các hạng mục (Đơn nam, Đơn nữ, Đôi nam, ...)
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    List<BadmintonCategoryEnum> categories;
+    Set<BadmintonCategoryEnum> categories;
 
     @Enumerated(EnumType.STRING)
     EventStatusEnum status;
@@ -88,10 +97,11 @@ public class ClubEvent {
     Club club;
 
     @OneToMany(mappedBy = "clubEvent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ClubEventParticipant> participants = new ArrayList<>();
+    private Set<ClubEventParticipant> participants = new HashSet<>();
 
     @OneToMany(mappedBy = "clubEvent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ClubEventRating> clubEventRatings = new ArrayList<>();
+    private Set<ClubEventRating> clubEventRatings = new HashSet<>();
+
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     Instant createdAt;

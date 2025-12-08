@@ -22,10 +22,13 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString(exclude = {"playerRating", "userInfo"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "accounts")
 public class Account {
     @Id
     @GeneratedValue(strategy= GenerationType.UUID)
+    @EqualsAndHashCode.Include
     String id;
 
     @Column(unique=true)
@@ -70,11 +73,12 @@ public class Account {
     }
 
 
-    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "account")
     @JsonIgnore
-    private UserInfo userInfo;
+    UserInfo userInfo;
 
-    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_rating_id")
     @JsonIgnore
     private PlayerRating playerRating;
     @ManyToMany(fetch = FetchType.LAZY)

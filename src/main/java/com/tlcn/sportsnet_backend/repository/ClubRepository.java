@@ -27,8 +27,6 @@ public interface ClubRepository extends JpaRepository<Club, String>, JpaSpecific
     Optional<Club> findBySlug(String slug);
     @Override
     @EntityGraph(attributePaths = {
-
-            "conversation",
             "tags"
     })
     Page<Club> findAll(Specification<Club> spec, Pageable pageable);
@@ -41,7 +39,11 @@ public interface ClubRepository extends JpaRepository<Club, String>, JpaSpecific
             @Param("status") ClubStatusEnum status,
             @Param("account") Account account,
             Pageable pageable);
-
+    @EntityGraph(attributePaths = {
+            "tags",
+            "owner",
+            "owner.userInfo.fullName"
+    })
     @Query("""
     SELECT c FROM Club c
     WHERE (

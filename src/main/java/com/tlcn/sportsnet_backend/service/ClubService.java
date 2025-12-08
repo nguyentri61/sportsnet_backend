@@ -32,6 +32,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -202,13 +203,22 @@ public class ClubService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new InvalidDataException("Account not found"));
-
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Club> clubs = clubRepository.findAvailableClubsBelongUserAndStatus( account, ClubStatusEnum.ACTIVE, pageable);
+        List<String> clubIds = clubs.getContent().stream().map(Club::getId).toList();
 
+        List<Object[]> counts = clubMemberRepository.countMembersByClubIds(
+                clubIds, ClubMemberStatusEnum.APPROVED
+        );
+
+        Map<String, Long> memberCountMap = counts.stream()
+                .collect(Collectors.toMap(
+                        obj -> (String) obj[0],
+                        obj -> (Long) obj[1]
+                ));
         List<MyClubResponse> content = new ArrayList<>();
         for (Club club : clubs) {
-            content.add(toMyClubResponse(club, account, true));
+            content.add(toMyClubResponseList(club, account, memberCountMap));
         }
 // Sắp xếp: owner lên đầu
         content.sort((c1, c2) -> Boolean.compare(!c1.isOwner(), !c2.isOwner()));
@@ -245,9 +255,6 @@ public class ClubService {
     }
 
     private ClubResponse toClubResponse(Club club, Account account, boolean getList) {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
-
         boolean joined = false;
         boolean owner = false;
         String invitationId = null;
@@ -270,7 +277,6 @@ public class ClubService {
 //        List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
         long count = 0;
         if(!getList) {
-            System.out.println("0000");
             clubMemberRepository.countByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
         }
         return ClubResponse.builder()
@@ -299,14 +305,12 @@ public class ClubService {
 
     private MyClubResponse toMyClubResponse(Club club, Account account, boolean getList) {
 
-        ClubMember clubMember = clubMemberRepository.findByClubAndAccount(club, account);
+        ClubMember member = clubMemberRepository.findByClubAndAccount(club, account);
         Instant joinAt = club.getCreatedAt();
-        if(clubMember != null) {
-            joinAt =clubMember.getJoinedAt();
+        if (member != null) {
+            joinAt = member.getJoinedAt();
         }
-//        List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
         long count = clubMemberRepository.countByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
-        ClubMember member = clubMemberRepository.findClubMemberByAccountAndClub(account, club);
         List<ClubWarningResponse> clubWarningResponses = new ArrayList<>();
         if(!getList) {
             List<ClubWarning> clubWarnings = clubWarningRepository.findAllByClubMemberOrderByCreatedAtDesc(member);
@@ -344,7 +348,38 @@ public class ClubService {
                 .clubWarnings(clubWarningResponses)
                 .build();
     }
+    private MyClubResponse toMyClubResponseList(Club club, Account account,Map<String, Long> memberCountMap) {
 
+        ClubMember member = clubMemberRepository.findByClubAndAccount(club, account);
+        Instant joinAt = club.getCreatedAt();
+        if (member != null) {
+            joinAt = member.getJoinedAt();
+        }
+        long count = memberCountMap.getOrDefault(club.getId(), 0L);
+        List<ClubWarningResponse> clubWarningResponses = new ArrayList<>();
+        return MyClubResponse.builder()
+                .id(club.getId())
+                .slug(club.getSlug())
+                .name(club.getName())
+                .description(club.getDescription())
+                .logoUrl(fileStorageService.getFileUrl(club.getLogoUrl(), "/club/logo"))
+                .location(club.getLocation())
+                .facility(club.getFacility() != null ? toFacilityResponse(club.getFacility()) : null)
+                .maxMembers(club.getMaxMembers())
+                .visibility(club.getVisibility())
+                .tags(club.getTags())
+                .status(club.getStatus())
+                .memberStatus(member.getStatus())
+                .ownerName(club.getOwner().getUserInfo().getFullName())
+                .createdAt(club.getCreatedAt())
+                .dateJoined(joinAt)
+                .memberCount((int) count)
+                .minLevel(club.getMinLevel())
+                .maxLevel(club.getMaxLevel())
+                .isOwner(club.getOwner().getId().equals(account.getId()))
+                .clubWarnings(clubWarningResponses)
+                .build();
+    }
     private FacilityResponse toFacilityResponse(Facility facility) {
         return FacilityResponse.builder()
                 .id(facility.getId())

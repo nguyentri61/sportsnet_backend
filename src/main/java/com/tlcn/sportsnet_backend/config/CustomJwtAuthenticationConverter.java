@@ -17,40 +17,43 @@ import java.util.List;
 @Component
 public class CustomJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
-    private final AccountRepository accountRepository;
 
     @Autowired
     public CustomJwtAuthenticationConverter(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
+
     }
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
+
         String email = jwt.getSubject();
         if (email == null) {
             throw new DisabledException("Token không hợp lệ (thiếu subject)");
         }
 
+        // ✅ Lấy quyền từ JWT
         List<String> authorities = jwt.getClaimAsStringList("authorities");
         if (authorities == null) authorities = Collections.emptyList();
 
-        Account user = accountRepository.findByEmail(email)
-                .orElseThrow(() -> new DisabledException("Tài khoản không tồn tại"));
+        // ✅ Lấy trạng thái account TỪ JWT (KHÔNG QUERY DB NỮA)
+        Boolean enabled = jwt.getClaim("enabled");
+        Boolean verified = jwt.getClaim("verified");
 
-        if (!user.isEnabled()) {
+        if (Boolean.FALSE.equals(enabled)) {
             throw new DisabledException("Tài khoản đã bị khóa");
         }
-        System.out.println("Check qua tài khoản");
-        if(!user.isVerified()){
+
+        if (Boolean.FALSE.equals(verified)) {
             throw new DisabledException("Tài khoản chưa được xác thực");
         }
-        // Nếu bạn có thêm field `banned`
-        // if (user.isBanned()) throw new DisabledException("Tài khoản đã bị cấm");
 
         return new JwtAuthenticationToken(
                 jwt,
-                authorities.stream().map(SimpleGrantedAuthority::new).toList(),
+                authorities.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .toList(),
                 email
         );
     }
+
 }

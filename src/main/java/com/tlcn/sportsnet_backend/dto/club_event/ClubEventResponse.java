@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Data
@@ -36,6 +37,6 @@ public class ClubEventResponse {
     int maxOutsideMembers;
     int joinedOpenMembers;
     BigDecimal fee;
-    List<BadmintonCategoryEnum> categories;
+    Set<BadmintonCategoryEnum> categories;
     EventStatusEnum status;
 }

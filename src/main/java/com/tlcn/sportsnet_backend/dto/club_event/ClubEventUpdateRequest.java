@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Data
@@ -26,7 +27,7 @@ public class ClubEventUpdateRequest {
     String requirements;
     LocalDateTime startTime;
     LocalDateTime endTime;
-    List<BadmintonCategoryEnum> categories;
+    Set<BadmintonCategoryEnum> categories;
     EventStatusEnum status;
     BigDecimal fee;
     LocalDateTime deadline;

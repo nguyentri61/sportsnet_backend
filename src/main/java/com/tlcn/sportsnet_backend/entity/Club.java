@@ -92,8 +92,9 @@ public class Club {
 
     Double reputation;
 
-    @OneToOne(mappedBy = "club", fetch = FetchType.LAZY) // ✅ tránh load conversation tự động
-    @JsonIgnore // ✅ nếu API không cần gửi conversation
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conversation_id")
+    @JsonIgnore
     Conversation conversation;
 
     @PrePersist

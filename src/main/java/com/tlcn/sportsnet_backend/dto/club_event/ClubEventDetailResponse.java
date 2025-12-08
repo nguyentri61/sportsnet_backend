@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Data
@@ -34,7 +35,7 @@ public class ClubEventDetailResponse {
     int joinedMember;
     double minLevel;
     double maxLevel;
-    List<BadmintonCategoryEnum> categories;
+    Set<BadmintonCategoryEnum> categories;
     EventStatusEnum status;
     String clubId;
     String clubSlug;

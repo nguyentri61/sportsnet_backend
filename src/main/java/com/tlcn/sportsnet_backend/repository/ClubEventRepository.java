@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
 import com.tlcn.sportsnet_backend.enums.EventStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -21,7 +22,14 @@ import java.util.Optional;
 @Repository
 public interface ClubEventRepository extends JpaRepository<ClubEvent, String>, JpaSpecificationExecutor<ClubEvent> {
     Page<ClubEvent> findByClub_Slug(String slug, Pageable pageable);
-
+    @Override
+    @EntityGraph(attributePaths = {
+            "participants",
+            "club",
+            "facility",
+            "categories"
+    })
+    Page<ClubEvent> findAll(Specification<ClubEvent> spec, Pageable pageable);
     Optional<ClubEvent> findBySlug(String slug);
 
     Page<ClubEvent> findAllByOpenForOutsideAndStatusAndDeadlineAfter(Pageable pageable, Boolean openForOutside, EventStatusEnum status, LocalDateTime deadline);
