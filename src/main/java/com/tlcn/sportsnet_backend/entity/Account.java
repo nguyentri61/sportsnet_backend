@@ -6,6 +6,8 @@ import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -20,10 +22,13 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString(exclude = {"playerRating", "userInfo"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "accounts")
 public class Account {
     @Id
     @GeneratedValue(strategy= GenerationType.UUID)
+    @EqualsAndHashCode.Include
     String id;
 
     @Column(unique=true)
@@ -67,9 +72,15 @@ public class Account {
                 : "";
     }
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @OneToOne(mappedBy = "account")
+    @JsonIgnore
     UserInfo userInfo;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_rating_id")
+    @JsonIgnore
+    private PlayerRating playerRating;
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "account_roles",
             joinColumns = @JoinColumn(name = "account_id"),
@@ -93,8 +104,6 @@ public class Account {
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Message> sentMessages = new HashSet<>();
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private PlayerRating playerRating;
 
     private int totalParticipatedEvents =0;
     @Column(nullable = false)
@@ -118,6 +127,7 @@ public class Account {
     @JsonIgnore
     private List<TournamentTeam> teamsAsPlayer2 = new ArrayList<>();
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "otp_id")
     private OTP otp;
 }

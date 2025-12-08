@@ -102,8 +102,6 @@ public class TournamentService {
     }
     public PagedResponse<TournamentResponse> getAllTournament(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
         Page<Tournament> tournamentPage = tournamentRepository.findAllByStatusNot(pageable, TournamentStatus.CANCELLED);
         List<TournamentResponse> content = new ArrayList<>();
         for (Tournament tournament : tournamentPage) {
@@ -131,22 +129,9 @@ public class TournamentService {
         List<TournamentCategory> tournamentCategories = tournament.getCategories();
         List<TournamentCategoryResponse> tournamentCategoryResponses = new ArrayList<>();
         for (TournamentCategory tournamentCategory : tournamentCategories) {
-            boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
-            int currentCount =0;
-            if(isDouble) {
-                currentCount = (int) tournamentCategory.getTeams().stream()
-                        .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
-                        .count();
-            }
-            else {
-                currentCount = (int) tournamentCategory.getParticipants().stream()
-                        .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
-                        .count();
-            }
             TournamentCategoryResponse tournamentCategoryResponse = TournamentCategoryResponse.builder()
                     .category(tournamentCategory.getCategory())
                     .id(tournamentCategory.getId())
-                    .currentParticipantCount(currentCount)
                     .maxParticipants(tournamentCategory.getMaxParticipants())
                     .build();
             tournamentCategoryResponses.add(tournamentCategoryResponse);
@@ -260,7 +245,7 @@ public class TournamentService {
             tournamentRepository.save(tournament);
         }
     }
-    @Scheduled(cron = "0 * * * * *")
+//    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void autoUpdateTournamentStatus() {
         System.out.println("Chạy hàm giải đấu");

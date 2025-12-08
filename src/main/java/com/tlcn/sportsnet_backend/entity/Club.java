@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tlcn.sportsnet_backend.enums.ClubStatusEnum;
 import com.tlcn.sportsnet_backend.enums.ClubVisibilityEnum;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
@@ -67,11 +68,11 @@ public class Club {
     @Column(name = "tag")
     Set<String> tags = new HashSet<>(); //mô tả nhanh về CLB, ví dụ: “cầu lông nghiệp dư”, “thi đấu giải”.
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     Account owner;
 
-    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "club", fetch = FetchType.LAZY)
     Set<ClubMember> members = new HashSet<>();
 
     @OneToMany(mappedBy = "club")
@@ -91,7 +92,9 @@ public class Club {
 
     Double reputation;
 
-    @OneToOne(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conversation_id")
+    @JsonIgnore
     Conversation conversation;
 
     @PrePersist

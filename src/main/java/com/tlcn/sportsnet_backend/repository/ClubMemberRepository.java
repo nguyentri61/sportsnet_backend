@@ -36,7 +36,20 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, String> 
     @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.status = :status")
     List<ClubMember> findByClubIdAndStatus(@Param("clubId") String clubId,
                                            @Param("status") ClubMemberStatusEnum status);
-
+    @Query("SELECT COUNT(cm) FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.status = :status")
+    long countByClubIdAndStatus(@Param("clubId") String clubId,
+                                @Param("status") ClubMemberStatusEnum status);
+    @Query("""
+SELECT cm.club.id, COUNT(cm)
+FROM ClubMember cm
+WHERE cm.club.id IN :clubIds
+AND cm.status = :status
+GROUP BY cm.club.id
+""")
+    List<Object[]> countMembersByClubIds(
+            @Param("clubIds") List<String> clubIds,
+            @Param("status") ClubMemberStatusEnum status
+    );
     ClubMember findClubMemberByAccountAndClub(Account account, Club club);
 
     Optional<ClubMember> findClubMemberByAccount_IdAndClub_Id(String accountId, String clubId);

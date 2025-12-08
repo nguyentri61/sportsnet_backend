@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Data
@@ -24,7 +25,7 @@ public class ClubEventCreateRequest {
     LocalDateTime startTime;
     LocalDateTime endTime;
     int totalMember;
-    List<BadmintonCategoryEnum> type;
+    Set<BadmintonCategoryEnum> type;
     double minLevel;
     double maxLevel;
     BigDecimal fee;

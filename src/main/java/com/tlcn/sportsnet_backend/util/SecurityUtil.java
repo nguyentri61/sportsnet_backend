@@ -3,7 +3,9 @@ package com.tlcn.sportsnet_backend.util;
 import com.nimbusds.jose.util.Base64;
 import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Role;
+import com.tlcn.sportsnet_backend.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -38,7 +40,8 @@ public class SecurityUtil {
     private long expire_verify;
 
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
-
+    @Autowired
+    public AccountRepository accountRepository;
     private SecretKey getSecretKey() {
         byte[] keyBytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(keyBytes, 0, keyBytes.length, SecurityUtil.JWT_ALGORITHM.getName());
@@ -65,29 +68,36 @@ public class SecurityUtil {
         Instant now = Instant.now();
         Instant expiry = now.plus(expire_access, ChronoUnit.SECONDS);
 
-        Object principal = authentication.getPrincipal();
-        String id = null;
-        String username = authentication.getName();
+        String email = authentication.getName(); // chính là username
+
+        // ✅ LẤY ACCOUNT TỪ DATABASE
+        Account user = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+
         List<String> authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        if (principal instanceof AccountDetails details) {
-            id = details.getId();
-            username = details.getUsername();
-        }
-
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .subject(username)
-                .claim("id", id)
+                .subject(user.getEmail())
+                .claim("id", user.getId())
                 .claim("authorities", authorities)
+
+                // ✅ NHÚNG TRẠNG THÁI TÀI KHOẢN
+                .claim("enabled", user.isEnabled())
+                .claim("verified", user.isVerified())
+
                 .issuedAt(now)
                 .expiresAt(expiry)
                 .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS512).build();
-        return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+
+        return jwtEncoder.encode(
+                JwtEncoderParameters.from(header, claims)
+        ).getTokenValue();
     }
+
 
     /**
      * Tạo access token trực tiếp từ Account (khi cần).
@@ -98,20 +108,30 @@ public class SecurityUtil {
 
         List<String> authorities = account.getRoles()
                 .stream()
-                .map(Role::getName)  // ví dụ: ROLE_ADMIN, ROLE_USER
+                .map(Role::getName)
                 .toList();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(account.getEmail())
                 .claim("id", account.getId())
                 .claim("authorities", authorities)
+
+                // ✅ NHÚNG TRẠNG THÁI TÀI KHOẢN
+                .claim("enabled", account.isEnabled())
+                .claim("verified", account.isVerified())
+                .claim("reputationScore", account.getReputationScore())
+
                 .issuedAt(now)
                 .expiresAt(validity)
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
-        return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+
+        return this.jwtEncoder.encode(
+                JwtEncoderParameters.from(jwsHeader, claims)
+        ).getTokenValue();
     }
+
 
     /**
      * Lấy username hiện tại từ security context.
