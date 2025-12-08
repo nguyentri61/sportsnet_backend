@@ -26,6 +26,8 @@ public class AccountController {
     private final FileStorageService fileStorageService;
     private final ReputationHistoryService reputationHistoryService;
     private final UserScheduleService userScheduleService;
+    private final PlayerTournamentHistoryService historyService;
+
     @GetMapping
     public ResponseEntity<?> getAccount() {
         return ResponseEntity.ok(accountService.getAccount());
@@ -90,5 +92,10 @@ public class AccountController {
     public ResponseEntity<?> getSchedule(@RequestParam(defaultValue = "0") int page,
                                          @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(userScheduleService.getSchedule(page, size));
+    }
+
+    @GetMapping("/tournament-history/{id}")
+    public ResponseEntity<?> getHistoryTournamentByPlayer(@PathVariable String id) {
+        return ResponseEntity.ok(historyService.getHistoryByPlayer(id));
     }
 }
