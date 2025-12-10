@@ -82,7 +82,7 @@ public class ClubEvent {
     // Các hạng mục (Đơn nam, Đơn nữ, Đôi nam, ...)
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    Set<BadmintonCategoryEnum> categories;
+    Set<BadmintonCategoryEnum> categories = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     EventStatusEnum status;
