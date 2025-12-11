@@ -15,7 +15,6 @@ public class TournamentInfoResponse {
     String name;
     String location;
     String logoUrl;
-    String bannerUrl;
     String slug;
     LocalDateTime startDate;
     LocalDateTime endDate;

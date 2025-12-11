@@ -69,7 +69,11 @@ public class TournamentCategory {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    List<TournamentResult> results = new ArrayList<>();;
+    List<TournamentResult> results = new ArrayList<>();
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    List<TournamentMatch> matches = new ArrayList<>();
 
     String slug;
 

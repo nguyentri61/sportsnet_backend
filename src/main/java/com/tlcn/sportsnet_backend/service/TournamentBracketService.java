@@ -27,6 +27,7 @@ public class TournamentBracketService {
     private final TournamentMatchRepository matchRepo;
     private final TournamentCategoryRepository categoryRepo;
     private final SimpMessagingTemplate messagingTemplate;
+    private final PlayerTournamentHistoryService historyService;
 
     public List<TournamentMatchResponse> generateBracket(String categoryId) {
 

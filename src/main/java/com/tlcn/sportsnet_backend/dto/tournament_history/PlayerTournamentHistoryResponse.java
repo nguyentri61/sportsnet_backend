@@ -1,6 +1,5 @@
 package com.tlcn.sportsnet_backend.dto.tournament_history;
 
-import com.tlcn.sportsnet_backend.entity.RoundHistory;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -25,7 +24,7 @@ public class PlayerTournamentHistoryResponse {
     Integer finalRanking;
     String prize;
 
-    List<RoundHistory> rounds;
+    List<RoundHistoryResponse> rounds;
 
     Instant createdAt;
 }
