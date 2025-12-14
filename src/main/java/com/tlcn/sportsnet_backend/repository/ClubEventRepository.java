@@ -15,7 +15,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +33,12 @@ public interface ClubEventRepository extends JpaRepository<ClubEvent, String>, J
 
     Page<ClubEvent> findAllByOpenForOutsideAndStatusAndDeadlineAfter(Pageable pageable, Boolean openForOutside, EventStatusEnum status, LocalDateTime deadline);
     List<ClubEvent> findAllByOpenForOutsideAndStatusAndDeadlineAfterOrderByCreatedAtDesc(Boolean openForOutside, EventStatusEnum status, LocalDateTime deadline);
-
+    @EntityGraph(attributePaths = {
+            "participants",
+            "club",
+            "facility",
+            "categories"
+    })
     Page<ClubEvent> findByClub_Members_Account_IdAndClub_Members_StatusAndStatusAndDeadlineAfter(
             String accountId,
             ClubMemberStatusEnum memberStatus,
@@ -42,7 +46,19 @@ public interface ClubEventRepository extends JpaRepository<ClubEvent, String>, J
             LocalDateTime now,
             Pageable pageable
     );
-
+    @EntityGraph(attributePaths = {
+            "participants",
+            "club",
+            "facility",
+            "categories",
+            "club.owner"
+    })
+    @Query("""
+        SELECT e FROM ClubEvent e
+        JOIN e.participants p
+        WHERE p.participant.id = :participantId
+    """)
+    Page<ClubEvent> findByParticipantId(@Param("participantId") String participantId, Pageable pageable);
 
 
     @EntityGraph(attributePaths = {})

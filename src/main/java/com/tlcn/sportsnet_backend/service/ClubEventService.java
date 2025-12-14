@@ -165,25 +165,25 @@ public class ClubEventService {
     }
 
     public PagedResponse<ClubEventResponse> getAllMyJoinedClubEvents(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("joinedAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new InvalidDataException("Account not found"));
 
-        Page<ClubEventParticipant> participants = clubEventParticipantRepository.findByParticipant_Id(account.getId(), pageable);
+        Page<ClubEvent> clubEvents = clubEventRepository.findByParticipantId(account.getId(), pageable);
 
-        List<ClubEventResponse> content = participants.getContent().stream()
-                .map(participant -> toClubEventResponse(participant.getClubEvent(), account))
+        List<ClubEventResponse> content = clubEvents.getContent().stream()
+                .map(clubEvent -> toClubEventResponse(clubEvent, account))
                 .toList();
 
         return new PagedResponse<>(
                 content,
-                participants.getNumber(),
-                participants.getSize(),
-                participants.getTotalElements(),
-                participants.getTotalPages(),
-                participants.isLast()
+                clubEvents.getNumber(),
+                clubEvents.getSize(),
+                clubEvents.getTotalElements(),
+                clubEvents.getTotalPages(),
+                clubEvents.isLast()
         );
     }
 

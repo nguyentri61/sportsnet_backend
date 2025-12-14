@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.entity.ClubEventParticipant;
 import com.tlcn.sportsnet_backend.enums.ClubEventParticipantStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +23,10 @@ public interface ClubEventParticipantRepository extends JpaRepository<ClubEventP
     Optional<ClubEventParticipant> findByClubEventAndParticipant(ClubEvent clubEvent, Account account);
     Optional<ClubEventParticipant> findByClubEvent_IdAndParticipant(String id, Account account);
     List<ClubEventParticipant> findAllByClubEventOrderByJoinedAtDesc(ClubEvent clubEvent);
+
+    @EntityGraph(attributePaths = {
+            "club"
+    })
     Page<ClubEventParticipant> findByParticipant_Id(String accountId, Pageable pageable);
 
     @Query("SELECT COUNT(p) " +
