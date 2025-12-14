@@ -73,7 +73,7 @@ public class Account {
     }
 
 
-    @OneToOne(mappedBy = "account")
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     UserInfo userInfo;
 
