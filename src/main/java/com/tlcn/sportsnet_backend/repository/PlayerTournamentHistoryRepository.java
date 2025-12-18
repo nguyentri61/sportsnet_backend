@@ -10,4 +10,6 @@ public interface PlayerTournamentHistoryRepository extends JpaRepository<PlayerT
     List<PlayerTournamentHistory> findByPlayerIdOrderByCreatedAtDesc(String playerId);
 
     List<PlayerTournamentHistory> findByCategoryId(String categoryId);
+
+    boolean existsByMatchId(String matchId);
 }

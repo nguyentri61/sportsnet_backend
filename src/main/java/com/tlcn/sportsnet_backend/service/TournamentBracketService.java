@@ -113,7 +113,6 @@ public class TournamentBracketService {
         return p;
     }
 
-
     public TournamentMatchResponse updateMatchResult(String matchId, UpdateMatchResultRequest req) {
 
         TournamentMatch match = matchRepo.findById(matchId)
@@ -123,41 +122,90 @@ public class TournamentBracketService {
             throw new InvalidDataException("Set scores are required");
         }
 
-        int winP1 = 0, winP2 = 0;
+        int winP1 = 0;
+        int winP2 = 0;
 
         List<Integer> setP1 = new ArrayList<>();
         List<Integer> setP2 = new ArrayList<>();
 
         for (SetScore s : req.getSets()) {
-            setP1.add(s.getP1());
-            setP2.add(s.getP2());
-            if (s.getP1() > s.getP2()) winP1++;
-            else winP2++;
+            int p1 = s.getP1();
+            int p2 = s.getP2();
+
+            setP1.add(p1);
+            setP2.add(p2);
+
+            int winner = getSetWinner(p1, p2);
+
+            if (winner == 1) {
+                winP1++;
+            } else if (winner == 2) {
+                winP2++;
+            }
+
+            // best of 3 → ai thắng 2 set thì dừng
+            if (winP1 == 2 || winP2 == 2) {
+                break;
+            }
         }
 
-        boolean p1Winner = winP1 > winP2;
-
-        String winnerId = p1Winner ? match.getParticipant1Id() : match.getParticipant2Id();
-        String winnerName = p1Winner ? match.getParticipant1Name() : match.getParticipant2Name();
-
+        // cập nhật điểm (luôn cập nhật)
         match.setSetScoreP1(setP1);
         match.setSetScoreP2(setP2);
-        match.setWinnerId(winnerId);
-        match.setWinnerName(winnerName);
-        match.setStatus(MatchStatus.FINISHED);
 
-        matchRepo.save(match);
+        boolean hasWinner = winP1 == 2 || winP2 == 2;
 
-        advanceWinner(match);
+        if (hasWinner) {
+            boolean p1Winner = winP1 > winP2;
+
+            String winnerId = p1Winner
+                    ? match.getParticipant1Id()
+                    : match.getParticipant2Id();
+
+            String winnerName = p1Winner
+                    ? match.getParticipant1Name()
+                    : match.getParticipant2Name();
+
+            match.setWinnerId(winnerId);
+            match.setWinnerName(winnerName);
+            match.setStatus(MatchStatus.FINISHED);
+
+            matchRepo.save(match);
+
+            advanceWinner(match);
+
+            // TỰ ĐỘNG GHI HISTORY
+            historyService.finishMatchAndSaveHistory(match.getId());
+
+        } else {
+            match.setStatus(MatchStatus.IN_PROGRESS);
+            matchRepo.save(match);
+        }
 
         TournamentMatchResponse res = convertToResponse(match);
 
+        // luôn bắn socket để FE cập nhật realtime
         messagingTemplate.convertAndSend(
                 "/topic/match-updates/" + match.getCategory().getId(),
                 res
         );
 
         return res;
+    }
+
+    private int getSetWinner(int p1, int p2) {
+        // chưa kết thúc set
+        if (p1 < 21 && p2 < 21) return 0;
+
+        // trường hợp chạm 30
+        if (p1 == 30 && p2 == 29) return 1;
+        if (p2 == 30 && p1 == 29) return 2;
+
+        // >=21 và hơn 2 điểm
+        if (p1 >= 21 && p1 - p2 >= 2) return 1;
+        if (p2 >= 21 && p2 - p1 >= 2) return 2;
+
+        return 0; // set chưa hợp lệ / chưa kết thúc
     }
 
 

@@ -7,6 +7,7 @@ import com.tlcn.sportsnet_backend.dto.tournament_history.TournamentInfoResponse;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.MatchStatus;
 import com.tlcn.sportsnet_backend.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,23 +24,27 @@ public class PlayerTournamentHistoryService {
     private final AccountRepository accountRepo;
     private final FileStorageService fileStorageService;
 
+    @Transactional
     public List<PlayerTournamentHistoryResponse> finishMatchAndSaveHistory(String matchId) {
 
         TournamentMatch match = matchRepo.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("Match not found"));
 
-//        if (match.getStatus() != MatchStatus.FINISHED)
-//            throw new RuntimeException("Match must be finished before saving history");
+        if (match.getStatus() != MatchStatus.FINISHED) {
+            throw new RuntimeException("Match is not finished yet");
+        }
+
+        // tránh ghi trùng history
+        if (historyRepo.existsByMatchId(match.getId())) {
+            return List.of(); // hoặc throw nếu muốn strict
+        }
 
         TournamentCategory category = match.getCategory();
         boolean isDouble = category.getCategory().getType().equals("DOUBLE");
 
-        // ---- Lấy p1 / p2 tương ứng ----
-        if (!isDouble) {
-            return saveHistoryForSingle(match);
-        } else {
-            return saveHistoryForDouble(match);
-        }
+        return isDouble
+                ? saveHistoryForDouble(match)
+                : saveHistoryForSingle(match);
     }
 
     // ---------------------- SINGLE ----------------------
@@ -89,6 +94,7 @@ public class PlayerTournamentHistoryService {
                 .player(player)
                 .category(match.getCategory())
                 .isDouble(false)
+                .matchId(match.getId())
                 .rounds(new ArrayList<>())
                 .build();
 
@@ -150,6 +156,7 @@ public class PlayerTournamentHistoryService {
                 .category(match.getCategory())
                 .teamId(team.getId())
                 .isDouble(true)
+                .matchId(match.getId())
                 .rounds(new ArrayList<>())
                 .build();
 

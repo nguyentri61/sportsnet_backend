@@ -27,6 +27,8 @@ public class PlayerTournamentHistory {
     @JoinColumn(name = "category_id")
     private TournamentCategory category;
 
+    private String matchId;
+
     // Nếu là đấu đôi → lưu teamId
     private String teamId;
 
