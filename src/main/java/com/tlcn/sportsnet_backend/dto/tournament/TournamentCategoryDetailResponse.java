@@ -31,7 +31,7 @@ public class TournamentCategoryDetailResponse {
     int currentParticipantCount;
     Double registrationFee;
     String description;
-    List<String> rules;
+    String rules;
     String firstPrize;
     String secondPrize;
     String thirdPrize;

@@ -25,7 +25,7 @@ public class TournamentCategoryRequest {
 
     String description;
 
-    List<String> rules; // danh sách rule FE gửi dạng array
+    String rules; // danh sách rule FE gửi dạng array
 
     String firstPrize;
     String secondPrize;

@@ -69,7 +69,6 @@ public class TournamentService {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .status(TournamentStatus.UPCOMING)
-                .fee(request.getFee())
                 .rules(request.getRules())
                 .build();
         tournament = tournamentRepository.save(tournament);
@@ -89,7 +88,6 @@ public class TournamentService {
                     .firstPrize(c.getFirstPrize())
                     .secondPrize(c.getSecondPrize())
                     .thirdPrize(c.getThirdPrize())
-                    .format(c.getFormat())
                     .registrationDeadline(c.getRegistrationDeadline())
                     .build();
 
@@ -153,7 +151,6 @@ public class TournamentService {
                 .id(tournament.getId())
                 .name(tournament.getName())
                 .description(tournament.getDescription())
-                .fee(tournament.getFee())
                 .build();
     }
 
@@ -208,7 +205,6 @@ public class TournamentService {
                 .id(tournament.getId())
                 .name(tournament.getName())
                 .description(tournament.getDescription())
-                .fee(tournament.getFee())
                 .build();
 
     }

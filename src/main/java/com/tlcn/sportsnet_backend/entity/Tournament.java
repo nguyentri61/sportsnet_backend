@@ -47,7 +47,6 @@ public class Tournament {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     Instant createdAt;
-    BigDecimal fee;
     Instant updatedAt;
 
     String createdBy;

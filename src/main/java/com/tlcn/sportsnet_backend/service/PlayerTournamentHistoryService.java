@@ -201,7 +201,6 @@ public class PlayerTournamentHistoryService {
                                 .categoryId(c.getId())
                                 .categoryName(c.getCategory().getLabel())
                                 .type(c.getCategory().getType())
-                                .format(c.getFormat())
                                 .minLevel(c.getMinLevel())
                                 .maxLevel(c.getMaxLevel())
                                 .build()

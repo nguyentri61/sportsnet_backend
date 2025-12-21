@@ -13,7 +13,6 @@ public class CategoryInfoResponse {
     String categoryId;
     String categoryName;   // Đơn nam, Đôi nam...
     String type;           // SINGLE / DOUBLE
-    TournamentFormat format;
     Double minLevel;
     Double maxLevel;
 }

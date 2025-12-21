@@ -36,22 +36,14 @@ public class TournamentCategory {
     @Column(columnDefinition = "TEXT")
     String description; // Mô tả hạng mục
 
-    @ElementCollection
-    @CollectionTable(
-            name = "tournament_category_rules",
-            joinColumns = @JoinColumn(name = "category_id")
-    )
     @Column(name = "rule", columnDefinition = "TEXT")
-    List<String> rules; // Thể lệ thi đấu
+    String rules; // Thể lệ thi đấu
 
     String firstPrize;
 
     String secondPrize;
 
     String thirdPrize;
-
-    @Enumerated(EnumType.STRING)
-    TournamentFormat format; // Loại trực tiếp, vòng tròn, v.v.
 
     LocalDateTime registrationDeadline;
 

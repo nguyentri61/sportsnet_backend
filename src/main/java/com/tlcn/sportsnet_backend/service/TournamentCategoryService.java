@@ -140,7 +140,6 @@ public class TournamentCategoryService {
                 .firstPrize(tournamentCategory.getFirstPrize())
                 .secondPrize(tournamentCategory.getSecondPrize())
                 .thirdPrize(tournamentCategory.getThirdPrize())
-                .format(tournamentCategory.getFormat().name())
                 .registrationDeadline(tournamentCategory.getRegistrationDeadline())
                 .isDouble(isDouble)
                 .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : tournamentTeam!= null ? tournamentTeam.getStatus() : null)
