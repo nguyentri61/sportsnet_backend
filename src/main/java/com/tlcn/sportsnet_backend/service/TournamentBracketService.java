@@ -7,10 +7,7 @@ import com.tlcn.sportsnet_backend.entity.TournamentCategory;
 import com.tlcn.sportsnet_backend.entity.TournamentMatch;
 import com.tlcn.sportsnet_backend.enums.MatchStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
-import com.tlcn.sportsnet_backend.repository.TournamentCategoryRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentMatchRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentParticipantRepository;
-import com.tlcn.sportsnet_backend.repository.TournamentTeamRepository;
+import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -28,6 +25,7 @@ public class TournamentBracketService {
     private final TournamentCategoryRepository categoryRepo;
     private final SimpMessagingTemplate messagingTemplate;
     private final PlayerTournamentHistoryService historyService;
+    private final TournamentResultService resultService;
 
     public List<TournamentMatchResponse> generateBracket(String categoryId) {
 
@@ -176,6 +174,12 @@ public class TournamentBracketService {
 
             // TỰ ĐỘNG GHI HISTORY
             historyService.finishMatchAndSaveHistory(match.getId());
+
+            // TỰ ĐỘNG GENERATE KẾT QUẢ NẾU LÀ FINAL
+            Integer maxRound = matchRepo.findMaxRoundByCategory(match.getCategory());
+            if (match.getRound().equals(maxRound)) {
+                resultService.generateResultForCategory(match.getCategory());
+            }
 
         } else {
             match.setStatus(MatchStatus.IN_PROGRESS);
