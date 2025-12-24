@@ -33,5 +33,4 @@ public class TournamentCategoryRequest {
 
     TournamentFormat format;
 
-    LocalDateTime registrationDeadline;
 }

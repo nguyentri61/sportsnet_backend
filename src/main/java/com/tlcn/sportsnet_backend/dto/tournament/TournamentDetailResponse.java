@@ -37,4 +37,5 @@ public class TournamentDetailResponse {
     private BigDecimal fee;
     private String createdBy;
     private List<TournamentCategoryDetailResponse> categories;
+    private List<TournamentPlayerResponse> players;
 }
