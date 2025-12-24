@@ -88,7 +88,7 @@ public class TournamentService {
                     .firstPrize(c.getFirstPrize())
                     .secondPrize(c.getSecondPrize())
                     .thirdPrize(c.getThirdPrize())
-                    .registrationDeadline(c.getRegistrationDeadline())
+                    .registrationDeadline(request.getRegistrationEndDate())
                     .build();
 
             tournamentCategories.add(category);
@@ -157,20 +157,48 @@ public class TournamentService {
     public TournamentDetailResponse tournamentDetailResponse(Tournament tournament, Account account){
         List<TournamentCategory> tournamentCategories = tournament.getCategories();
         List<TournamentCategoryDetailResponse> tournamentCategoryResponses = new ArrayList<>();
+        List<TournamentPlayerResponse> tournamentPlayerResponses = new ArrayList<>();
         for (TournamentCategory tournamentCategory : tournamentCategories) {
             boolean isDouble = tournamentCategory.getCategory() != BadmintonCategoryEnum.MEN_SINGLE && tournamentCategory.getCategory()!= BadmintonCategoryEnum.WOMEN_SINGLE;
             int currentCount =0;
+            TournamentPlayerResponse tournamentPlayerResponse = new TournamentPlayerResponse();
+            tournamentPlayerResponse.setId(tournamentCategory.getId());
+            tournamentPlayerResponse.setCategory(tournamentCategory.getCategory());
             if(isDouble) {
-                currentCount = (int) tournamentCategory.getTeams().stream()
-                        .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
-                        .count();
+                List<TournamentTeam> tournamentTeams =tournamentCategory.getTeams();
+                List<TeamResponse> teamResponses = new ArrayList<>();
+                for(TournamentTeam tournamentTeam : tournamentTeams) {
+                    if(tournamentTeam.getStatus() == TournamentParticipantEnum.APPROVED) {
+                        currentCount++;
+                        TeamResponse teamResponse = new TeamResponse();
+                        teamResponse.setId(tournamentTeam.getId());
+                        teamResponse.setTeamName(tournamentTeam.getTeamName());
+                        teamResponse.setSlug1(tournamentTeam.getPlayer1().getUserInfo().getSlug());
+                        teamResponse.setSlug2(tournamentTeam.getPlayer2().getUserInfo().getSlug());
+                        teamResponse.setAvatarUrl1(fileStorageService.getFileUrl(tournamentTeam.getPlayer1().getUserInfo().getAvatarUrl(), "/avatar"));
+                        teamResponse.setAvatarUrl2(fileStorageService.getFileUrl(tournamentTeam.getPlayer2().getUserInfo().getAvatarUrl(), "/avatar"));
+                        teamResponses.add(teamResponse);
+                    }
+                }
+                tournamentPlayerResponse.setTeams(teamResponses);
             }
             else {
-                currentCount = (int) tournamentCategory.getParticipants().stream()
-                        .filter(p -> p.getStatus() == TournamentParticipantEnum.APPROVED)
-                        .count();
+                List<TournamentParticipant> tournamentParticipants =tournamentCategory.getParticipants();
+                List<PlayerResponse> playerResponses = new ArrayList<>();
+                for(TournamentParticipant tournamentParticipant : tournamentParticipants) {
+                    if(tournamentParticipant.getStatus() == TournamentParticipantEnum.APPROVED) {
+                        currentCount++;
+                        PlayerResponse playerResponse = new PlayerResponse();
+                        playerResponse.setId(tournamentParticipant.getId());
+                        playerResponse.setName(tournamentParticipant.getDisplayName());
+                        playerResponse.setSlug(tournamentParticipant.getAccount().getUserInfo().getSlug());
+                        playerResponse.setAvatarUrl(fileStorageService.getFileUrl(tournamentParticipant.getAccount().getUserInfo().getAvatarUrl(), "/avatar"));
+                        playerResponses.add(playerResponse);
+                    }
+                }
+                tournamentPlayerResponse.setPlayers(playerResponses);
             }
-
+            tournamentPlayerResponses.add(tournamentPlayerResponse);
             TournamentParticipant tournamentParticipant = null;
 
             if (account != null) {
@@ -204,6 +232,7 @@ public class TournamentService {
                 .endDate(tournament.getEndDate())
                 .id(tournament.getId())
                 .name(tournament.getName())
+                .players(tournamentPlayerResponses)
                 .description(tournament.getDescription())
                 .build();
 
