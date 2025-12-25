@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.repository;
 
 import com.tlcn.sportsnet_backend.entity.PlayerTournamentHistory;
+import com.tlcn.sportsnet_backend.entity.TournamentCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -12,4 +13,15 @@ public interface PlayerTournamentHistoryRepository extends JpaRepository<PlayerT
     List<PlayerTournamentHistory> findByCategoryId(String categoryId);
 
     boolean existsByMatchId(String matchId);
+
+    List<PlayerTournamentHistory> findByCategoryAndPlayerId(
+            TournamentCategory category,
+            String playerId
+    );
+
+    List<PlayerTournamentHistory> findByCategoryAndTeamId(
+            TournamentCategory category,
+            String teamId
+    );
+
 }

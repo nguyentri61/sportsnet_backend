@@ -23,6 +23,49 @@ public class PlayerTournamentHistoryService {
     private final TournamentTeamRepository teamRepo;
     private final AccountRepository accountRepo;
     private final FileStorageService fileStorageService;
+    private final TournamentResultRepository resultRepo;
+
+    @Transactional
+    public void updateHistoryFromCategoryResult(TournamentCategory category) {
+
+        List<TournamentResult> results =
+                resultRepo.findByCategory(category);
+
+        boolean isDouble = category.getCategory().getType().equals("DOUBLE");
+
+        for (TournamentResult r : results) {
+
+            int ranking = r.getRanking();
+            String prize = r.getPrize();
+
+            if (!isDouble) {
+                String participantId = r.getParticipant().getId();
+
+                List<PlayerTournamentHistory> histories =
+                        historyRepo.findByCategoryAndPlayerId(
+                                category,
+                                r.getParticipant().getAccount().getId()
+                        );
+
+                histories.forEach(h -> {
+                    h.setFinalRanking(ranking);
+                    h.setPrize(prize);
+                });
+
+            } else {
+                String teamId = r.getTeam().getId();
+
+                List<PlayerTournamentHistory> histories =
+                        historyRepo.findByCategoryAndTeamId(category, teamId);
+
+                histories.forEach(h -> {
+                    h.setFinalRanking(ranking);
+                    h.setPrize(prize);
+                });
+            }
+        }
+    }
+
 
     @Transactional
     public List<PlayerTournamentHistoryResponse> finishMatchAndSaveHistory(String matchId) {

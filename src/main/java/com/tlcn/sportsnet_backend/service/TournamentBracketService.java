@@ -179,6 +179,10 @@ public class TournamentBracketService {
             Integer maxRound = matchRepo.findMaxRoundByCategory(match.getCategory());
             if (match.getRound().equals(maxRound)) {
                 resultService.generateResultForCategory(match.getCategory());
+
+                historyService.updateHistoryFromCategoryResult(
+                        match.getCategory()
+                );
             }
 
         } else {

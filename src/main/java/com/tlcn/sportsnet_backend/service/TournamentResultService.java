@@ -102,6 +102,63 @@ public class TournamentResultService {
         }
     }
 
+    public CategoryResultResponse getCategoryResult(String categoryId) {
+
+        TournamentCategory category = categoryRepo.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        List<TournamentResult> results =
+                resultRepo.findByCategory(category);
+
+        if (results.isEmpty()) {
+            return CategoryResultResponse.builder()
+                    .categoryId(category.getId())
+                    .categoryName(category.getCategory().getLabel())
+                    .results(List.of())
+                    .build();
+        }
+
+        List<CategoryResultItemResponse> items = results.stream()
+                .sorted(Comparator.comparing(TournamentResult::getRanking))
+                .map(r -> CategoryResultItemResponse.builder()
+                        .ranking(r.getRanking())
+                        .prize(r.getPrize())
+
+                        // SINGLE
+                        .participantId(
+                                r.getParticipant() != null
+                                        ? r.getParticipant().getId()
+                                        : null
+                        )
+                        .participantName(
+                                r.getParticipant() != null
+                                        ? r.getParticipant().getDisplayName()
+                                        : null
+                        )
+
+                        // DOUBLE
+                        .teamId(
+                                r.getTeam() != null
+                                        ? r.getTeam().getId()
+                                        : null
+                        )
+                        .teamName(
+                                r.getTeam() != null
+                                        ? r.getTeam().getDisplayName()
+                                        : null
+                        )
+                        .build()
+                )
+                .toList();
+
+        return CategoryResultResponse.builder()
+                .categoryId(category.getId())
+                .categoryName(category.getCategory().getLabel())
+                .results(items)
+                .build();
+    }
+
+
     public void generateResultForCategory(TournamentCategory category) {
 
         // Round Final

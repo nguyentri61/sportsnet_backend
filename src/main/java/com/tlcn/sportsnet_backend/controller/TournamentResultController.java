@@ -20,6 +20,16 @@ public class TournamentResultController {
         );
     }
 
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<?> getCategoryResult(
+            @PathVariable String categoryId
+    ) {
+        return ResponseEntity.ok(
+                resultService.getCategoryResult(categoryId)
+        );
+    }
+
+
     @PostMapping("/{tournamentId}/results/generate")
     public ResponseEntity<?> generateResults(@PathVariable String tournamentId) {
         resultService.generateResultsByTournament(tournamentId);
