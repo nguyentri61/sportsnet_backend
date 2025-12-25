@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.service;
 
 
+import ch.qos.logback.classic.Logger;
 import com.tlcn.sportsnet_backend.dto.bracket.*;
 import com.tlcn.sportsnet_backend.entity.BracketParticipant;
 import com.tlcn.sportsnet_backend.entity.TournamentCategory;
@@ -9,6 +10,7 @@ import com.tlcn.sportsnet_backend.enums.MatchStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,9 @@ public class TournamentBracketService {
     private final SimpMessagingTemplate messagingTemplate;
     private final PlayerTournamentHistoryService historyService;
     private final TournamentResultService resultService;
+
+    private static final Logger log =
+            (Logger) LoggerFactory.getLogger(TournamentBracketService.class);
 
     public List<TournamentMatchResponse> generateBracket(String categoryId) {
 
@@ -172,8 +177,11 @@ public class TournamentBracketService {
 
             advanceWinner(match);
 
-            // TỰ ĐỘNG GHI HISTORY
-            historyService.finishMatchAndSaveHistory(match.getId());
+            try {
+                historyService.finishMatch(match.getId());
+            } catch (Exception e) {
+                log.error("Error saving match history for matchId={}", match.getId(), e);
+            }
 
             // TỰ ĐỘNG GENERATE KẾT QUẢ NẾU LÀ FINAL
             Integer maxRound = matchRepo.findMaxRoundByCategory(match.getCategory());

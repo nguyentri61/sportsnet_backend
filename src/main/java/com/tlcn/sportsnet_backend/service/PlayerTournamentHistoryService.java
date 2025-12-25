@@ -7,6 +7,7 @@ import com.tlcn.sportsnet_backend.dto.tournament_history.TournamentInfoResponse;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.MatchStatus;
 import com.tlcn.sportsnet_backend.repository.*;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,194 +22,187 @@ public class PlayerTournamentHistoryService {
     private final TournamentMatchRepository matchRepo;
     private final TournamentParticipantRepository participantRepo;
     private final TournamentTeamRepository teamRepo;
-    private final AccountRepository accountRepo;
     private final FileStorageService fileStorageService;
     private final TournamentResultRepository resultRepo;
+    private final RoundHistoryRepository roundRepo;
+    private final TournamentCategoryRepository categoryRepo;
 
     @Transactional
     public void updateHistoryFromCategoryResult(TournamentCategory category) {
 
-        List<TournamentResult> results =
-                resultRepo.findByCategory(category);
-
+        List<TournamentResult> results = resultRepo.findByCategory(category);
         boolean isDouble = category.getCategory().getType().equals("DOUBLE");
 
         for (TournamentResult r : results) {
 
-            int ranking = r.getRanking();
-            String prize = r.getPrize();
-
             if (!isDouble) {
-                String participantId = r.getParticipant().getId();
+                PlayerTournamentHistory h =
+                        historyRepo.findByPlayerIdAndCategoryId(
+                                r.getParticipant().getAccount().getId(),
+                                category.getId()
+                        ).orElseThrow();
 
-                List<PlayerTournamentHistory> histories =
-                        historyRepo.findByCategoryAndPlayerId(
-                                category,
-                                r.getParticipant().getAccount().getId()
-                        );
-
-                histories.forEach(h -> {
-                    h.setFinalRanking(ranking);
-                    h.setPrize(prize);
-                });
+                h.setFinalRanking(r.getRanking());
+                h.setPrize(r.getPrize());
 
             } else {
-                String teamId = r.getTeam().getId();
+                TournamentTeam team = r.getTeam();
 
-                List<PlayerTournamentHistory> histories =
-                        historyRepo.findByCategoryAndTeamId(category, teamId);
+                // Player 1
+                updateDoublePlayerHistory(
+                        team.getPlayer1().getId(),
+                        category.getId(),
+                        r.getRanking(),
+                        r.getPrize()
+                );
 
-                histories.forEach(h -> {
-                    h.setFinalRanking(ranking);
-                    h.setPrize(prize);
-                });
+                // Player 2
+                updateDoublePlayerHistory(
+                        team.getPlayer2().getId(),
+                        category.getId(),
+                        r.getRanking(),
+                        r.getPrize()
+                );
             }
         }
     }
 
+    private void updateDoublePlayerHistory(
+            String playerId,
+            String categoryId,
+            Integer ranking,
+            String prize
+    ) {
+        PlayerTournamentHistory history =
+                historyRepo.findByPlayerIdAndCategoryId(playerId, categoryId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "History not found for double player: " + playerId
+                                )
+                        );
+
+        history.setFinalRanking(ranking);
+        history.setPrize(prize);
+    }
+
 
     @Transactional
-    public List<PlayerTournamentHistoryResponse> finishMatchAndSaveHistory(String matchId) {
-
-        TournamentMatch match = matchRepo.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+    public void finishMatch(String matchId) {
+        TournamentMatch match = matchRepo.findById(matchId).orElseThrow();
 
         if (match.getStatus() != MatchStatus.FINISHED) {
-            throw new RuntimeException("Match is not finished yet");
+            throw new RuntimeException("Match not finished");
         }
 
-        // tránh ghi trùng history
-        if (historyRepo.existsByMatchId(match.getId())) {
-            return List.of(); // hoặc throw nếu muốn strict
+        String categoryId = match.getCategory().getId();
+        boolean isDouble = match.getCategory().getCategory().getType().equals("DOUBLE");
+
+        if (!isDouble) {
+            // SINGLE
+            TournamentParticipant tp1 = participantRepo.findById(match.getParticipant1Id()).orElseThrow();
+            TournamentParticipant tp2 = participantRepo.findById(match.getParticipant2Id()).orElseThrow();
+
+            saveRoundHistorySingle(match, tp1.getAccount().getId(), tp2.getAccount().getId(), tp2.getAccount().getUserInfo().getFullName(), categoryId);
+            saveRoundHistorySingle(match, tp2.getAccount().getId(), tp1.getAccount().getId(), tp1.getAccount().getUserInfo().getFullName(), categoryId);
+
+        } else {
+            // DOUBLE
+            TournamentTeam team1 = teamRepo.findById(match.getParticipant1Id()).orElseThrow();
+            TournamentTeam team2 = teamRepo.findById(match.getParticipant2Id()).orElseThrow();
+
+            String opponentName1 = team2.getPlayer1().getUserInfo().getFullName() + " / " + team2.getPlayer2().getUserInfo().getFullName();
+            String opponentName2 = team1.getPlayer1().getUserInfo().getFullName() + " / " + team1.getPlayer2().getUserInfo().getFullName();
+
+            saveRoundHistoryDouble(match, team1.getPlayer1().getId(), team1.getId(), team2.getId(), opponentName1, categoryId);
+            saveRoundHistoryDouble(match, team1.getPlayer2().getId(), team1.getId(), team2.getId(), opponentName1, categoryId);
+            saveRoundHistoryDouble(match, team2.getPlayer1().getId(), team2.getId(), team1.getId(), opponentName2, categoryId);
+            saveRoundHistoryDouble(match, team2.getPlayer2().getId(), team2.getId(), team1.getId(), opponentName2, categoryId);
+        }
+    }
+
+    private void saveRoundHistorySingle(
+            TournamentMatch match,
+            String playerId,
+            String opponentId,
+            String opponentName,
+            String categoryId
+    ) {
+        // ✅ Tìm hoặc tạo history
+        PlayerTournamentHistory history = historyRepo
+                .findByPlayerIdAndCategoryId(playerId, categoryId)
+                .orElseGet(() -> historyRepo.save(
+                        PlayerTournamentHistory.builder()
+                                .playerId(playerId)
+                                .categoryId(categoryId)
+                                .isDouble(false)
+                                .build()
+                ));
+
+        // ✅ Kiểm tra trùng
+        if (roundRepo.existsByPlayerHistoryIdAndRound(history.getId(), match.getRound())) {
+            return;
         }
 
-        TournamentCategory category = match.getCategory();
-        boolean isDouble = category.getCategory().getType().equals("DOUBLE");
+        // ✅ Xác định thắng thua
+        boolean isP1 = playerId.equals(match.getParticipant1Id());
+        boolean won = match.getWinnerId() != null &&
+                match.getWinnerId().equals(isP1 ? match.getParticipant1Id() : match.getParticipant2Id());
 
-        return isDouble
-                ? saveHistoryForDouble(match)
-                : saveHistoryForSingle(match);
-    }
-
-    // ---------------------- SINGLE ----------------------
-
-    private List<PlayerTournamentHistoryResponse> saveHistoryForSingle(TournamentMatch match) {
-
-        String p1Id = match.getParticipant1Id(); // participantId
-        String p2Id = match.getParticipant2Id();
-
-        TournamentParticipant tp1 = participantRepo.findById(p1Id)
-                .orElseThrow(() -> new RuntimeException("Participant 1 not found"));
-        TournamentParticipant tp2 = participantRepo.findById(p2Id)
-                .orElseThrow(() -> new RuntimeException("Participant 2 not found"));
-
-        Account acc1 = tp1.getAccount();
-        Account acc2 = tp2.getAccount();
-
-        PlayerTournamentHistory h1 = buildSingleHistory(match, acc1, acc2);
-        PlayerTournamentHistory h2 = buildSingleHistory(match, acc2, acc1);
-
-        List<PlayerTournamentHistory> saved = historyRepo.saveAll(List.of(h1, h2));
-
-        return saved.stream().map(this::mapToResponse).toList();
-    }
-
-
-    private PlayerTournamentHistory buildSingleHistory(
-            TournamentMatch match,
-            Account player,
-            Account opponent
-    ) {
-
-        boolean won = match.getWinnerId().equals(match.getParticipant1Id())
-                ? player.getId().equals(opponent.getId()) == false
-                : player.getId().equals(match.getParticipant2Id());
-
-        RoundHistory r = RoundHistory.builder()
+        // ✅ Lưu round - CHỈ ID, KHÔNG OBJECT
+        RoundHistory round = RoundHistory.builder()
+                .playerHistoryId(history.getId()) // ✅ CHỈ ID
                 .round(match.getRound())
-                .opponentId(opponent.getId())
-                .opponentName(opponent.getUserInfo().getFullName())
+                .opponentId(opponentId)
+                .opponentName(opponentName)
                 .won(won)
-                .scoreP1(new ArrayList<>(match.getSetScoreP1()))
-                .scoreP2(new ArrayList<>(match.getSetScoreP2()))
+                .scoreP1(match.getSetScoreP1() != null ? new ArrayList<>(match.getSetScoreP1()) : new ArrayList<>())
+                .scoreP2(match.getSetScoreP2() != null ? new ArrayList<>(match.getSetScoreP2()) : new ArrayList<>())
                 .build();
 
-        PlayerTournamentHistory h = PlayerTournamentHistory.builder()
-                .player(player)
-                .category(match.getCategory())
-                .isDouble(false)
-                .matchId(match.getId())
-                .rounds(new ArrayList<>())
-                .build();
-
-        r.setPlayerHistory(h);
-        h.getRounds().add(r);
-
-        return h;
+        roundRepo.save(round);
     }
 
-
-    // ---------------------- DOUBLE ----------------------
-
-    private List<PlayerTournamentHistoryResponse> saveHistoryForDouble(TournamentMatch match) {
-
-        String t1Id = match.getParticipant1Id();
-        String t2Id = match.getParticipant2Id();
-
-        TournamentTeam team1 = teamRepo.findById(t1Id)
-                .orElseThrow(() -> new RuntimeException("Team 1 not found"));
-        TournamentTeam team2 = teamRepo.findById(t2Id)
-                .orElseThrow(() -> new RuntimeException("Team 2 not found"));
-
-        List<PlayerTournamentHistory> list = new ArrayList<>();
-
-        // team1: player1 + player2
-        list.add(buildDoubleHistory(match, team1.getPlayer1(), team2.getPlayer1(), team1));
-        list.add(buildDoubleHistory(match, team1.getPlayer2(), team2.getPlayer2(), team1));
-
-        // team2
-        list.add(buildDoubleHistory(match, team2.getPlayer1(), team1.getPlayer1(), team2));
-        list.add(buildDoubleHistory(match, team2.getPlayer2(), team1.getPlayer2(), team2));
-
-        List<PlayerTournamentHistory> saved = historyRepo.saveAll(list);
-
-        return saved.stream().map(this::mapToResponse).toList();
-    }
-
-
-    private PlayerTournamentHistory buildDoubleHistory(
+    private void saveRoundHistoryDouble(
             TournamentMatch match,
-            Account player,
-            Account opponent,
-            TournamentTeam team
+            String playerId,
+            String teamId,
+            String opponentTeamId,
+            String opponentName,
+            String categoryId
     ) {
+        // ✅ Tìm hoặc tạo history
+        PlayerTournamentHistory history = historyRepo
+                .findByPlayerIdAndCategoryId(playerId, categoryId)
+                .orElseGet(() -> historyRepo.save(
+                        PlayerTournamentHistory.builder()
+                                .playerId(playerId)
+                                .categoryId(categoryId)
+                                .teamId(teamId)
+                                .isDouble(true)
+                                .build()
+                ));
 
-        boolean won = match.getWinnerId().equals(team.getId());
+        // ✅ Kiểm tra trùng
+        if (roundRepo.existsByPlayerHistoryIdAndRound(history.getId(), match.getRound())) {
+            return;
+        }
 
-        RoundHistory r = RoundHistory.builder()
+        // ✅ Xác định thắng
+        boolean won = match.getWinnerId() != null && match.getWinnerId().equals(teamId);
+
+        // ✅ Lưu round - CHỈ ID
+        RoundHistory round = RoundHistory.builder()
+                .playerHistoryId(history.getId()) // ✅ CHỈ ID
                 .round(match.getRound())
-                .opponentId(opponent.getId())
-                .opponentName(opponent.getUserInfo().getFullName())
+                .opponentId(opponentTeamId)
+                .opponentName(opponentName)
                 .won(won)
-                .scoreP1(new ArrayList<>(match.getSetScoreP1()))
-                .scoreP2(new ArrayList<>(match.getSetScoreP2()))
+                .scoreP1(match.getSetScoreP1() != null ? new ArrayList<>(match.getSetScoreP1()) : new ArrayList<>())
+                .scoreP2(match.getSetScoreP2() != null ? new ArrayList<>(match.getSetScoreP2()) : new ArrayList<>())
                 .build();
 
-        PlayerTournamentHistory h = PlayerTournamentHistory.builder()
-                .player(player)
-                .category(match.getCategory())
-                .teamId(team.getId())
-                .isDouble(true)
-                .matchId(match.getId())
-                .rounds(new ArrayList<>())
-                .build();
-
-        r.setPlayerHistory(h);
-        h.getRounds().add(r);
-
-        return h;
+        roundRepo.save(round);
     }
-
 
     public List<PlayerTournamentHistoryResponse> getHistoryByPlayer(String playerId) {
         List<PlayerTournamentHistory> list = historyRepo.findByPlayerIdOrderByCreatedAtDesc(playerId);
@@ -218,8 +212,15 @@ public class PlayerTournamentHistoryService {
 
     private PlayerTournamentHistoryResponse mapToResponse(PlayerTournamentHistory h) {
 
-        TournamentCategory c = h.getCategory();
+        TournamentCategory c = categoryRepo.findById(h.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
         Tournament t = c.getTournament();
+
+        List<RoundHistoryResponse> roundResponses =
+                roundRepo.findByPlayerHistoryIdOrderByRoundAsc(h.getId())
+                        .stream()
+                        .map(this::mapRound)
+                        .toList();
 
         return PlayerTournamentHistoryResponse.builder()
                 .historyId(h.getId())
@@ -253,9 +254,7 @@ public class PlayerTournamentHistoryService {
                 .teamId(h.getTeamId())
                 .finalRanking(h.getFinalRanking())
                 .prize(h.getPrize())
-                .rounds(h.getRounds().stream()
-                        .map(this::mapRound)
-                        .toList())
+                .rounds(roundResponses)
                 .build();
     }
 

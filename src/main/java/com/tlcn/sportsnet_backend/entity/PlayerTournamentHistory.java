@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,16 +19,12 @@ public class PlayerTournamentHistory {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "player_id")
-    private Account player;
+    @Column(name = "player_id")
+    private String playerId;
 
     // Hạng mục của giải
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private TournamentCategory category;
-
-    private String matchId;
+    @Column(name = "category_id")
+    private String categoryId;
 
     // Nếu là đấu đôi → lưu teamId
     private String teamId;
@@ -42,12 +39,14 @@ public class PlayerTournamentHistory {
     private Double oldLevel;
     private Double newLevel;
 
-    @OneToMany(
-            mappedBy = "playerHistory",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<RoundHistory> rounds = new ArrayList<>();
+//    @OneToMany(
+//            mappedBy = "playerHistory",
+//            cascade = CascadeType.ALL,
+//            orphanRemoval = true,
+//            fetch = FetchType.LAZY
+//    )
+//    @OrderBy("round ASC")
+//    private List<RoundHistory> rounds = new ArrayList<>();
 
     private Instant createdAt;
 
