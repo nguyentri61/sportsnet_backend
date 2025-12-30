@@ -31,7 +31,7 @@ public class ClubController {
     @GetMapping("/all_public")
     public ResponseEntity<?> getAllPublicClubs(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "4") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String ward,
@@ -44,7 +44,7 @@ public class ClubController {
     @GetMapping("/my_clubs/all")
     public ResponseEntity<?> getAllMyClubs(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "4") int size) {
         return ResponseEntity.ok(clubService.getAllMyClub(page, size));
     }
 

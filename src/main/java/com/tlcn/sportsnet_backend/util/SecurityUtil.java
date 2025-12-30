@@ -82,7 +82,7 @@ public class SecurityUtil {
                 .subject(user.getEmail())
                 .claim("id", user.getId())
                 .claim("authorities", authorities)
-
+                .claim("fullName", user.getUserInfo().getFullName())
                 // ✅ NHÚNG TRẠNG THÁI TÀI KHOẢN
                 .claim("enabled", user.isEnabled())
                 .claim("verified", user.isVerified())
