@@ -3,10 +3,9 @@ package com.tlcn.sportsnet_backend.service;
 
 import ch.qos.logback.classic.Logger;
 import com.tlcn.sportsnet_backend.dto.bracket.*;
-import com.tlcn.sportsnet_backend.entity.BracketParticipant;
-import com.tlcn.sportsnet_backend.entity.TournamentCategory;
-import com.tlcn.sportsnet_backend.entity.TournamentMatch;
+import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.MatchStatus;
+import com.tlcn.sportsnet_backend.enums.PaymentStatusEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +27,7 @@ public class TournamentBracketService {
     private final SimpMessagingTemplate messagingTemplate;
     private final PlayerTournamentHistoryService historyService;
     private final TournamentResultService resultService;
+    private final TournamentPaymentRepository paymentRepo;
 
     private static final Logger log =
             (Logger) LoggerFactory.getLogger(TournamentBracketService.class);
@@ -43,15 +43,44 @@ public class TournamentBracketService {
         String type = category.getCategory().getType();
 
         if (type.equals("SINGLE")) {
-            participants = participantRepo.findByCategory(category);
+
+            List<TournamentParticipant> list =
+                    participantRepo.findByCategory(category);
+
+            if (list.isEmpty()) {
+                throw new RuntimeException("Category has no participants");
+            }
+
+            boolean hasUnpaid = list.stream()
+                    .anyMatch(p -> !paymentRepo.existsByParticipantAndStatus(
+                            p, PaymentStatusEnum.SUCCESS));
+
+            if (hasUnpaid) {
+                throw new RuntimeException("Not all participants have completed payment");
+            }
+
+            participants = list;
+
         } else if (type.equals("DOUBLE")) {
-            participants = teamRepo.findByCategory(category);
+
+            List<TournamentTeam> list =
+                    teamRepo.findByCategory(category);
+
+            if (list.isEmpty()) {
+                throw new RuntimeException("Category has no teams");
+            }
+            boolean hasUnpaid = list.stream()
+                    .anyMatch(t -> !paymentRepo.existsByTeamAndStatus(
+                            t, PaymentStatusEnum.SUCCESS));
+
+            if (hasUnpaid) {
+                throw new RuntimeException("Not all teams have completed payment");
+            }
+
+            participants = list;
+
         } else {
             throw new RuntimeException("Invalid category type");
-        }
-
-        if (participants.isEmpty()) {
-            throw new RuntimeException("Category has no participants");
         }
 
         return generateBracketGeneric(category, participants);
