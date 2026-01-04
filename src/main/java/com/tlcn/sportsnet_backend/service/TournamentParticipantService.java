@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerI
 import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentTeamResponse;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.InvitationStatusEnum;
+import com.tlcn.sportsnet_backend.enums.PaymentStatusEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
@@ -34,6 +35,8 @@ public class TournamentParticipantService {
     private final TournamentTeamRepository tournamentTeamRepository;
     private final NotificationService notificationService;
     private final TournamentRepository tournamentRepository;
+    private final TournamentPaymentRepository tournamentPaymentRepository;
+
     public String joinSingle(String categoryId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName())
@@ -166,6 +169,13 @@ public class TournamentParticipantService {
     }
 
     private TournamentParticipantResponse toResponse(TournamentParticipant p ) {
+
+        boolean paid = tournamentPaymentRepository
+                .existsByParticipantAndStatus(
+                        p,
+                        PaymentStatusEnum.SUCCESS
+                );
+
         return TournamentParticipantResponse.builder()
                 .id(p.getId())
                 .fullName(p.getAccount().getUserInfo().getFullName())
@@ -174,6 +184,7 @@ public class TournamentParticipantService {
                 .email(p.getAccount().getEmail())
                 .gender(p.getAccount().getUserInfo().getGender())
                 .status(p.getStatus())
+                .paid(paid)
                 .createdAt(p.getCreatedAt())
                 .build();
     }
@@ -261,7 +272,15 @@ public class TournamentParticipantService {
     public void deleteInvitation(String id){
         tournamentPartnerInvitationRepository.deleteById(id);
     }
+
     public TournamentTeamResponse toTeamResponse(TournamentTeam tournamentTeam) {
+
+        boolean paid = tournamentPaymentRepository
+                .existsByTeamAndStatus(
+                        tournamentTeam,
+                        PaymentStatusEnum.SUCCESS
+                );
+
         return TournamentTeamResponse.builder()
                 .id(tournamentTeam.getId())
                 .teamName(tournamentTeam.getTeamName())
@@ -277,6 +296,7 @@ public class TournamentParticipantService {
                 .player1AvatarUrl(fileStorageService.getFileUrl(tournamentTeam.getPlayer1().getUserInfo().getAvatarUrl(), "/avatar"))
                 .player2AvatarUrl(fileStorageService.getFileUrl(tournamentTeam.getPlayer2().getUserInfo().getAvatarUrl(), "/avatar"))
                 .createdAt(tournamentTeam.getCreatedAt())
+                .paid(paid)
                 .build();
     }
 }

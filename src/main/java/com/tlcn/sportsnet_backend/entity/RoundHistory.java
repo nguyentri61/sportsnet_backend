@@ -1,10 +1,8 @@
 package com.tlcn.sportsnet_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -14,10 +12,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = "playerHistory")
 public class RoundHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
+    @Column(name = "player_history_id")
+    private String playerHistoryId;
 
     private Integer round;
 
@@ -31,8 +33,4 @@ public class RoundHistory {
 
     @ElementCollection
     private List<Integer> scoreP2;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_history_id")
-    private PlayerTournamentHistory playerHistory;
 }

@@ -27,4 +27,5 @@ public class TournamentTeamResponse {
     String player2Gender;
     TournamentParticipantEnum status;
     Instant createdAt;
+    boolean paid;
 }
