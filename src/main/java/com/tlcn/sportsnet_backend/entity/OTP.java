@@ -23,7 +23,8 @@ public class OTP {
     String code;
 
     Instant expirationTime;
-    @OneToOne(mappedBy = "otp")
+    @OneToOne
+    @JoinColumn(name = "account_id", nullable = false, unique = true)
     private Account account;
     /**
      * Tự động sinh mã OTP (chỉ gồm số) và đặt thời gian hết hạn 30 phút khi tạo mới

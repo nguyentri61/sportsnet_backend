@@ -127,7 +127,8 @@ public class Account {
     @JsonIgnore
     private List<TournamentTeam> teamsAsPlayer2 = new ArrayList<>();
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "otp_id")
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private OTP otp;
+
 }

@@ -152,11 +152,13 @@ public class AuthController {
                         .enabled(true)
                         .verified(true)
                         .roles(Set.of(role))
+                        .reputationScore(100)
                         .password(UUID.randomUUID().toString()) // tránh null
                         .build();
 
                 UserInfo userInfo = UserInfo.builder()
                         .fullName(name != null ? name : email)
+
                         .account(account)
                         .build();
 

@@ -110,7 +110,8 @@ public class SecurityUtil {
                 .stream()
                 .map(Role::getName)
                 .toList();
-
+        Account user = accountRepository.findByEmail(account.getEmail())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(account.getEmail())
                 .claim("id", account.getId())
@@ -120,7 +121,7 @@ public class SecurityUtil {
                 .claim("enabled", account.isEnabled())
                 .claim("verified", account.isVerified())
                 .claim("reputationScore", account.getReputationScore())
-
+                .claim("fullName", user.getUserInfo().getFullName())
                 .issuedAt(now)
                 .expiresAt(validity)
                 .build();

@@ -44,7 +44,7 @@ public class AdminService {
     private final TournamentRepository tournamentRepository;
     public PagedResponse<ClubAdminResponse> getAllClubs(int page, int size) {
         checkAccount();
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("reputation"),Sort.Order.desc("createdAt") ));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt") ));
         Page<Club> clubs = clubRepository.findAll(pageable);
 
         List<ClubAdminResponse> content = clubs.stream()

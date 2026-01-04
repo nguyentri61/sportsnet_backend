@@ -62,6 +62,7 @@ public class AccountService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Set.of(role))
+                .reputationScore(100)
                 .build();
 
         UserInfo userInfo = UserInfo.builder()
@@ -75,6 +76,7 @@ public class AccountService {
 
         newAccount.setUserInfo(userInfo);
         newAccount = accountRepository.save(newAccount);
+        System.out.println("Đăng kí tài khoản: " + newAccount.getEmail());
 
         return newAccount;
 

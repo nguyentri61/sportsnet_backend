@@ -276,9 +276,9 @@ public class ClubService {
 
 //        List<ClubMember> members = clubMemberRepository.findByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
         long count = 0;
-        if(!getList) {
-            clubMemberRepository.countByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
-        }
+//        if(!getList) {
+            count = clubMemberRepository.countByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
+//        }
         return ClubResponse.builder()
                 .id(club.getId())
                 .slug(club.getSlug())

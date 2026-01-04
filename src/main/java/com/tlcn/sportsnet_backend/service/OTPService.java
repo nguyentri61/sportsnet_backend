@@ -21,7 +21,7 @@ public class OTPService {
     private final OTPRepository otpRepository;
     private final MailService mailService;
     private final AccountRepository accountRepository;
-    @Transactional
+
     public OTP createOTP(Account account) {
         OTP otp = otpRepository.findByAccount_email(account.getEmail())
                 .orElseGet(OTP::new);
