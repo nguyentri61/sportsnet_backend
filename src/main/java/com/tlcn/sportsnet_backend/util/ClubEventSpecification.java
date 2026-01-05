@@ -26,13 +26,31 @@ public class ClubEventSpecification {
     }
 
     public static Specification<ClubEvent> matchesProvince(String province) {
-        return matchesWard(province);
+        if (province == null || province.isBlank()) return null;
+
+        return (root, query, cb) -> {
+            Join<ClubEvent, Facility> facilityJoin =
+                    root.join("facility", JoinType.LEFT);
+
+            return cb.equal(
+                    facilityJoin.get("city"),
+                    province
+            );
+        };
     }
 
     public static Specification<ClubEvent> matchesWard(String ward) {
         if (ward == null || ward.isBlank()) return null;
-        return (root, query, cb) ->
-                cb.like(cb.lower(root.get("location")), "%" + ward.toLowerCase() + "%");
+
+        return (root, query, cb) -> {
+            Join<ClubEvent, Facility> facilityJoin =
+                    root.join("facility", JoinType.LEFT);
+
+            return cb.like(
+                    facilityJoin.get("district"),
+                    "%" + ward + "%"
+            );
+        };
     }
 
     public static Specification<ClubEvent> matchesFee(Boolean isFree, BigDecimal minFee, BigDecimal maxFee) {
