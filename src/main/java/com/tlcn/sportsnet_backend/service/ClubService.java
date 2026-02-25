@@ -279,6 +279,7 @@ public class ClubService {
 //        if(!getList) {
             count = clubMemberRepository.countByClubIdAndStatus(club.getId(), ClubMemberStatusEnum.APPROVED);
 //        }
+        long totalEvent = clubEventRepository.countByClubIdAndStatus(club.getId(), EventStatusEnum.FINISHED);
         return ClubResponse.builder()
                 .id(club.getId())
                 .slug(club.getSlug())
@@ -300,6 +301,7 @@ public class ClubService {
                 .createdAt(club.getCreatedAt())
                 .invitationId(invitationId)
                 .invitationMessage(invitationMessage)
+                .totalEvent((int) totalEvent)
                 .build();
     }
 

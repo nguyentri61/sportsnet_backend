@@ -35,4 +35,5 @@ public class ClubResponse {
     Instant createdAt;
     String invitationId;
     String invitationMessage;
+    Integer totalEvent;
 }
