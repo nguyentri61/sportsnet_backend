@@ -38,4 +38,5 @@ public class MyClubResponse {
     String ownerName;
     Instant createdAt;
     List<ClubWarningResponse> clubWarnings;
+    Integer totalEvent;
 }

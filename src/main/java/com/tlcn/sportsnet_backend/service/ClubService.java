@@ -326,6 +326,7 @@ public class ClubService {
                         .build());
             }
         }
+        long totalEvent = clubEventRepository.countByClubIdAndStatus(club.getId(), EventStatusEnum.FINISHED);
         assert member != null;
         return MyClubResponse.builder()
                 .id(club.getId())
@@ -348,6 +349,7 @@ public class ClubService {
                 .maxLevel(club.getMaxLevel())
                 .isOwner(club.getOwner()==account)
                 .clubWarnings(clubWarningResponses)
+                .totalEvent((int) totalEvent)
                 .build();
     }
     private MyClubResponse toMyClubResponseList(Club club, Account account,Map<String, Long> memberCountMap) {
