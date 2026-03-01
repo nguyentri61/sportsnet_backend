@@ -6,6 +6,7 @@ import com.tlcn.sportsnet_backend.dto.tournament.*;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
+import com.tlcn.sportsnet_backend.enums.TournamentParticipationTypeEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
@@ -69,6 +70,7 @@ public class TournamentService {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .status(TournamentStatus.UPCOMING)
+                .participationType(request.getParticipationType() != null ? request.getParticipationType() : TournamentParticipationTypeEnum.INDIVIDUAL)
                 .rules(request.getRules())
                 .build();
         tournament = tournamentRepository.save(tournament);
@@ -83,6 +85,10 @@ public class TournamentService {
                     .maxLevel(c.getMaxLevel())
                     .maxParticipants(c.getMaxParticipants())
                     .registrationFee(c.getRegistrationFee())
+                    .clubRegistrationFee(c.getClubRegistrationFee())
+                    .minClubRosterSize(c.getMinClubRosterSize())
+                    .maxClubRosterSize(c.getMaxClubRosterSize())
+                    .teamMatchFormat(c.getTeamMatchFormat())
                     .description(c.getDescription())
                     .rules(c.getRules())
                     .firstPrize(c.getFirstPrize())
@@ -139,6 +145,7 @@ public class TournamentService {
                 .slug(tournament.getSlug())
                 .createdBy(tournament.getCreatedBy())
                 .status(tournament.getStatus())
+                .participationType(tournament.getParticipationType())
                 .categories(tournamentCategoryResponses)
                 .bannerUrl(fileStorageService.getFileUrl(tournament.getBannerUrl(), "/tournament"))
                 .logoUrl(fileStorageService.getFileUrl(tournament.getLogoUrl(), "/tournament"))
@@ -220,6 +227,7 @@ public class TournamentService {
                 .slug(tournament.getSlug())
                 .createdBy(tournament.getCreatedBy())
                 .status(tournament.getStatus())
+                .participationType(tournament.getParticipationType())
                 .rules(tournament.getRules())
                 .categories(tournamentCategoryResponses)
                 .bannerUrl(fileStorageService.getFileUrl(tournament.getBannerUrl(), "/tournament"))

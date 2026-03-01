@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.dto.tournament;
 
+import com.tlcn.sportsnet_backend.enums.TournamentParticipationTypeEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -25,6 +26,9 @@ public class TournamentCreateRequest {
     LocalDateTime endDate;
     LocalDateTime registrationStartDate;
     LocalDateTime registrationEndDate;
+    
+    // Loại hình tournament: cá nhân hoặc CLB
+    TournamentParticipationTypeEnum participationType;
 
     // Danh sách các hạng mục thi đấu (category) trong giải này
     List<TournamentCategoryRequest> categories;

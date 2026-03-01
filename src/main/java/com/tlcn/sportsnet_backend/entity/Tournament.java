@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tlcn.sportsnet_backend.enums.TournamentParticipationTypeEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
@@ -44,6 +45,10 @@ public class Tournament {
 
     @Enumerated(EnumType.STRING)
     TournamentStatus status = TournamentStatus.UPCOMING;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    TournamentParticipationTypeEnum participationType = TournamentParticipationTypeEnum.INDIVIDUAL;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     Instant createdAt;

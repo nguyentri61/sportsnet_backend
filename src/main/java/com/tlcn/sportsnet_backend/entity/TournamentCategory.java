@@ -33,6 +33,17 @@ public class TournamentCategory {
 
     Double registrationFee; // Lệ phí tham gia
 
+    // ===== CLB Tournament Fields (nullable for individual tournaments) =====
+    Double clubRegistrationFee; // Phí đăng ký cho CLB (nullable)
+    
+    Integer minClubRosterSize; // Số lượng thành viên tối thiểu trong roster CLB
+    
+    Integer maxClubRosterSize; // Số lượng thành viên tối đa trong roster CLB
+    
+    @Column(columnDefinition = "TEXT")
+    String teamMatchFormat; // JSON format: {"singles": 3, "menDoubles": 2, "mixedDoubles": 1}
+    // ===== End CLB Tournament Fields =====
+
     @Column(columnDefinition = "TEXT")
     String description; // Mô tả hạng mục
 
@@ -66,6 +77,10 @@ public class TournamentCategory {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     List<TournamentMatch> matches = new ArrayList<>();
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    List<ClubTournamentParticipant> clubParticipants = new ArrayList<>();
 
     String slug;
 

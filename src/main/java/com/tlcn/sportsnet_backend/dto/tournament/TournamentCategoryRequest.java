@@ -23,6 +23,13 @@ public class TournamentCategoryRequest {
     Integer maxParticipants;
     Double registrationFee;
 
+    // ===== CLB Tournament Fields (nullable for individual tournaments) =====
+    Double clubRegistrationFee; // Phí đăng ký cho CLB
+    Integer minClubRosterSize; // Số lượng thành viên tối thiểu trong roster CLB
+    Integer maxClubRosterSize; // Số lượng thành viên tối đa trong roster CLB
+    String teamMatchFormat; // JSON string: {"singles": 3, "menDoubles": 2, "mixedDoubles": 1}
+    // ===== End CLB Tournament Fields =====
+
     String description;
 
     String rules; // danh sách rule FE gửi dạng array

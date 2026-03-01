@@ -30,6 +30,14 @@ public class TournamentCategoryDetailResponse {
     Integer maxParticipants;
     int currentParticipantCount;
     Double registrationFee;
+    
+    // ===== CLB Tournament Fields =====
+    Double clubRegistrationFee;
+    Integer minClubRosterSize;
+    Integer maxClubRosterSize;
+    String teamMatchFormat; // JSON string
+    // ===== End CLB Tournament Fields =====
+    
     String description;
     String rules;
     String firstPrize;

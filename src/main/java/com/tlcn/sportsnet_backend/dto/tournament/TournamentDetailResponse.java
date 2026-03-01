@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.dto.tournament;
 
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
+import com.tlcn.sportsnet_backend.enums.TournamentParticipationTypeEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import lombok.*;
 
@@ -34,6 +35,7 @@ public class TournamentDetailResponse {
     private String rules;
     private Instant createdAt;
     private TournamentStatus status;
+    private TournamentParticipationTypeEnum participationType;
     private BigDecimal fee;
     private String createdBy;
     private List<TournamentCategoryDetailResponse> categories;
