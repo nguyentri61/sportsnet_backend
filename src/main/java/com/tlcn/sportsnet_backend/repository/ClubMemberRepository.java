@@ -4,9 +4,11 @@ import com.tlcn.sportsnet_backend.entity.Account;
 import com.tlcn.sportsnet_backend.entity.Club;
 import com.tlcn.sportsnet_backend.entity.ClubMember;
 import com.tlcn.sportsnet_backend.enums.ClubMemberStatusEnum;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -53,4 +55,17 @@ GROUP BY cm.club.id
     ClubMember findClubMemberByAccountAndClub(Account account, Club club);
 
     Optional<ClubMember> findClubMemberByAccount_IdAndClub_Id(String accountId, String clubId);
+
+    @Query("SELECT COUNT(cm) FROM ClubMember cm WHERE cm.account = :account AND cm.ratingVerified = true ")
+    long countByAccountAndRatingVerifiedTrue(Account account);
+
+    @Modifying
+    @Transactional
+    @Query("""
+    UPDATE ClubMember cm
+    SET cm.ratingVerified = false
+    WHERE cm.account = :account
+      AND cm.ratingVerified = true
+""")
+    int resetRatingVerifiedByAccount(Account account);
 }

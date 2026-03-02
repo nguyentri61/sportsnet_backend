@@ -28,4 +28,5 @@ public class MemberResponse {
     Instant joinedAt;
     String slug;
     Long joinedCount;
+    Boolean ratingVerified;
 }
