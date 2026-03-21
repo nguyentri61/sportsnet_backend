@@ -26,4 +26,5 @@ public class PlayerRatingResponse {
     private double overallScore;
     private String skillLevel;
     String slug;
+    private Integer verifyCount;
 }

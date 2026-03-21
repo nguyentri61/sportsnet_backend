@@ -116,7 +116,7 @@ public class ClubController {
         }
     }
 
-    @PostMapping("/{clubId}/members/{memberId}/ban")
+    @PostMapping("/{clubId}//{memberId}/ban")
     public ResponseEntity<?> banMember(@PathVariable String clubId, @PathVariable String memberId) {
         clubMemberService.banMember(clubId, memberId);
         return ResponseEntity.ok().body("Ban success");
@@ -125,6 +125,12 @@ public class ClubController {
     @GetMapping("/my_clubs/{clubId}/detail_member/{id}")
     public ResponseEntity<?> getMyClubMember(@PathVariable String clubId,@PathVariable String id) {
         return ResponseEntity.ok(clubMemberService.getDetailMember(clubId, id));
+    }
+
+    @PutMapping("/my_clubs/{clubId}/members/{memberId}/verify")
+    public ResponseEntity<?> verifyMember(@PathVariable String clubId,@PathVariable String memberId) {
+        clubMemberService.verifyMember(clubId, memberId);
+        return ResponseEntity.ok("Verify success");
     }
 
     @DeleteMapping("/my_clubs/{clubId}/out")

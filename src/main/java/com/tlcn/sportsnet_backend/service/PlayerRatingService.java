@@ -3,9 +3,11 @@ package com.tlcn.sportsnet_backend.service;
 import com.tlcn.sportsnet_backend.dto.player_rating.PlayerRatingCreateRequest;
 import com.tlcn.sportsnet_backend.dto.player_rating.PlayerRatingResponse;
 import com.tlcn.sportsnet_backend.entity.Account;
+import com.tlcn.sportsnet_backend.entity.ClubMember;
 import com.tlcn.sportsnet_backend.entity.PlayerRating;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.AccountRepository;
+import com.tlcn.sportsnet_backend.repository.ClubMemberRepository;
 import com.tlcn.sportsnet_backend.repository.PlayerRatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 public class PlayerRatingService {
     private final AccountRepository accountRepository;
     private final PlayerRatingRepository playerRatingRepository;
+    private final ClubMemberRepository clubMemberRepository;
     public PlayerRatingResponse createPlayerRating(PlayerRatingCreateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -24,6 +27,7 @@ public class PlayerRatingService {
                 .orElseThrow(() -> new InvalidDataException("Account not found"));
         PlayerRating playerRating = playerRatingRepository.findByAccount(account)
                 .orElse(new PlayerRating());
+        clubMemberRepository.resetRatingVerifiedByAccount(account);
         playerRating.setExperience(request.getExperience());
         playerRating.setDoubles(request.getDoubles());
         playerRating.setDefense(request.getDefense());
@@ -38,7 +42,7 @@ public class PlayerRatingService {
         playerRating.setServe(request.getServe());
         playerRating.setAccount(account);
         playerRating =playerRatingRepository.save(playerRating);
-        return toPlayerRatingResponse(playerRating);
+        return toPlayerRatingResponse(playerRating, account);
 
     }
 
@@ -53,10 +57,11 @@ public class PlayerRatingService {
         if (playerRating == null) {
             return null;
         }
-        return toPlayerRatingResponse(playerRating);
+        return toPlayerRatingResponse(playerRating, account);
     }
 
-    public PlayerRatingResponse toPlayerRatingResponse(PlayerRating playerRating) {
+    public PlayerRatingResponse toPlayerRatingResponse(PlayerRating playerRating, Account account) {
+
         return PlayerRatingResponse.builder()
                 .id(playerRating.getId())
                 .experience(playerRating.getExperience())
@@ -75,6 +80,7 @@ public class PlayerRatingService {
                 .overallScore(playerRating.getOverallScore())
                 .skillLevel(playerRating.getSkillLevel())
                 .slug(playerRating.getAccount().getUserInfo().getSlug())
+                .verifyCount(Math.toIntExact(clubMemberRepository.countByAccountAndRatingVerifiedTrue(account)))
                 .build();
     }
 
@@ -88,6 +94,7 @@ public class PlayerRatingService {
         if (playerRating == null) {
             return null;
         }
-        return toPlayerRatingResponse(playerRating);
+        return toPlayerRatingResponse(playerRating, account);
     }
+
 }
