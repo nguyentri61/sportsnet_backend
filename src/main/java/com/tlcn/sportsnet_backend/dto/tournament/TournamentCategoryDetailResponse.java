@@ -44,7 +44,8 @@ public class TournamentCategoryDetailResponse {
     String secondPrize;
     String thirdPrize;
     String format;
-    LocalDateTime registrationDeadline;
+    LocalDateTime registrationStartDate;
+    LocalDateTime registrationEndDate;
     boolean admin;
     boolean isDouble;
     TournamentParticipantEnum participantStatus;

@@ -72,36 +72,58 @@ public class TournamentService {
                 .status(TournamentStatus.UPCOMING)
                 .participationType(request.getParticipationType() != null ? request.getParticipationType() : TournamentParticipationTypeEnum.INDIVIDUAL)
                 .rules(request.getRules())
+                .fee(request.getFee())
                 .build();
+
+        // Handle CLUB tournament fields
+        if (request.getParticipationType() == TournamentParticipationTypeEnum.CLUB) {
+            // Validate required fields for CLUB tournament
+            if (request.getTeamMatchFormat() == null || request.getTeamMatchFormat().isBlank()) {
+                throw new InvalidDataException("Team match format is required for CLUB tournament");
+            }
+            if (request.getClubRegistrationFee() == null) {
+                throw new InvalidDataException("Club registration fee is required for CLUB tournament");
+            }
+            if (request.getMinClubRosterSize() == null || request.getMaxClubRosterSize() == null) {
+                throw new InvalidDataException("Min and max club roster size are required for CLUB tournament");
+            }
+            if (request.getMaxClubs() == null) {
+                throw new InvalidDataException("Max clubs is required for CLUB tournament");
+            }
+
+            tournament.setTeamMatchFormat(request.getTeamMatchFormat());
+            tournament.setClubRegistrationFee(request.getClubRegistrationFee());
+            tournament.setMinClubRosterSize(request.getMinClubRosterSize());
+            tournament.setMaxClubRosterSize(request.getMaxClubRosterSize());
+            tournament.setMaxClubs(request.getMaxClubs());
+        }
+
         tournament = tournamentRepository.save(tournament);
 
         List<TournamentCategory> tournamentCategories = new ArrayList<>();
 
-        for (TournamentCategoryRequest c : request.getCategories()) {
-            TournamentCategory category = TournamentCategory.builder()
-                    .category(c.getCategoryType())
-                    .tournament(tournament)
-                    .minLevel(c.getMinLevel())
-                    .maxLevel(c.getMaxLevel())
-                    .maxParticipants(c.getMaxParticipants())
-                    .registrationFee(c.getRegistrationFee())
-                    .clubRegistrationFee(c.getClubRegistrationFee())
-                    .minClubRosterSize(c.getMinClubRosterSize())
-                    .maxClubRosterSize(c.getMaxClubRosterSize())
-                    .teamMatchFormat(c.getTeamMatchFormat())
-                    .description(c.getDescription())
-                    .rules(c.getRules())
-                    .firstPrize(c.getFirstPrize())
-                    .secondPrize(c.getSecondPrize())
-                    .thirdPrize(c.getThirdPrize())
-                    .registrationDeadline(request.getRegistrationEndDate())
-                    .build();
+        if (request.getCategories() != null) {
+            for (TournamentCategoryRequest c : request.getCategories()) {
+                TournamentCategory category = TournamentCategory.builder()
+                        .category(c.getCategoryType())
+                        .tournament(tournament)
+                        .minLevel(c.getMinLevel())
+                        .maxLevel(c.getMaxLevel())
+                        .maxParticipants(c.getMaxParticipants())
+                        .registrationFee(c.getRegistrationFee())
+                        .description(c.getDescription())
+                        .rules(c.getRules())
+                        .firstPrize(c.getFirstPrize())
+                        .secondPrize(c.getSecondPrize())
+                        .thirdPrize(c.getThirdPrize())
+                        .build();
 
-            tournamentCategories.add(category);
+                tournamentCategories.add(category);
+            }
+            tournamentCategoryRepository.saveAll(tournamentCategories);
+            tournament.setCategories(tournamentCategories);
         }
 
-        tournamentCategoryRepository.saveAll(tournamentCategories);
-        tournament.setCategories(tournamentCategories);
         return toTournamentResponse(tournament);
     }
     public PagedResponse<TournamentResponse> getAllTournament(int page, int size) {
@@ -130,7 +152,7 @@ public class TournamentService {
     }
 
     public TournamentResponse toTournamentResponse(Tournament tournament) {
-        List<TournamentCategory> tournamentCategories = tournament.getCategories();
+        List<TournamentCategory> tournamentCategories = tournament.getCategories() != null ? tournament.getCategories() : new ArrayList<>();
         List<TournamentCategoryResponse> tournamentCategoryResponses = new ArrayList<>();
         for (TournamentCategory tournamentCategory : tournamentCategories) {
             TournamentCategoryResponse tournamentCategoryResponse = TournamentCategoryResponse.builder()
@@ -140,6 +162,7 @@ public class TournamentService {
                     .build();
             tournamentCategoryResponses.add(tournamentCategoryResponse);
         }
+
         return TournamentResponse.builder()
                 .createdAt(tournament.getCreatedAt())
                 .slug(tournament.getSlug())
@@ -158,11 +181,18 @@ public class TournamentService {
                 .id(tournament.getId())
                 .name(tournament.getName())
                 .description(tournament.getDescription())
+                .fee(tournament.getFee())
+                // CLUB tournament fields
+                .teamMatchFormat(tournament.getTeamMatchFormat())
+                .clubRegistrationFee(tournament.getClubRegistrationFee())
+                .minClubRosterSize(tournament.getMinClubRosterSize())
+                .maxClubRosterSize(tournament.getMaxClubRosterSize())
+                .maxClubs(tournament.getMaxClubs())
                 .build();
     }
 
     public TournamentDetailResponse tournamentDetailResponse(Tournament tournament, Account account){
-        List<TournamentCategory> tournamentCategories = tournament.getCategories();
+        List<TournamentCategory> tournamentCategories = tournament.getCategories() != null ? tournament.getCategories() : new ArrayList<>();
         List<TournamentCategoryDetailResponse> tournamentCategoryResponses = new ArrayList<>();
         List<TournamentPlayerResponse> tournamentPlayerResponses = new ArrayList<>();
         for (TournamentCategory tournamentCategory : tournamentCategories) {
@@ -222,6 +252,7 @@ public class TournamentService {
                     .build();
             tournamentCategoryResponses.add(tournamentCategoryResponse);
         }
+
         return TournamentDetailResponse.builder()
                 .createdAt(tournament.getCreatedAt())
                 .slug(tournament.getSlug())
@@ -242,6 +273,14 @@ public class TournamentService {
                 .name(tournament.getName())
                 .players(tournamentPlayerResponses)
                 .description(tournament.getDescription())
+                .fee(tournament.getFee())
+                // CLUB tournament fields
+                .teamMatchFormat(tournament.getTeamMatchFormat())
+                .clubRegistrationFee(tournament.getClubRegistrationFee())
+                .minClubRosterSize(tournament.getMinClubRosterSize())
+                .maxClubRosterSize(tournament.getMaxClubRosterSize())
+                .maxClubs(tournament.getMaxClubs())
+                .registrationEndDate(tournament.getRegistrationEndDate())
                 .build();
 
     }

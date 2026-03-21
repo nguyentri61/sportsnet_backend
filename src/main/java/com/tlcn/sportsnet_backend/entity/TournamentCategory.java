@@ -56,8 +56,6 @@ public class TournamentCategory {
 
     String thirdPrize;
 
-    LocalDateTime registrationDeadline;
-
     @ManyToOne
     @JoinColumn(name = "tournament_id")
     Tournament tournament;
@@ -77,10 +75,6 @@ public class TournamentCategory {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     List<TournamentMatch> matches = new ArrayList<>();
-
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    List<ClubTournamentParticipant> clubParticipants = new ArrayList<>();
 
     String slug;
 

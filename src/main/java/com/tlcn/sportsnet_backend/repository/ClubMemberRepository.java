@@ -18,7 +18,13 @@ import java.util.Optional;
 public interface ClubMemberRepository extends JpaRepository<ClubMember, String> {
     boolean existsByClubAndAccount(Club club, Account account);
     boolean existsByClubAndAccountAndStatus(Club club, Account account, ClubMemberStatusEnum status);
+
+    // Basic - khong fetch account
     ClubMember findByClubAndAccount(Club club, Account account);
+
+    // Fetch voi account va userInfo
+    @Query("SELECT cm FROM ClubMember cm LEFT JOIN FETCH cm.account a LEFT JOIN FETCH a.userInfo WHERE cm.club = :club AND cm.account = :account")
+    ClubMember findByClubAndAccountWithAccount(@Param("club") Club club, @Param("account") Account account);
     @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId")
     Page<ClubMember> findPagedByClubId(String clubId, Pageable pageable);
     @Query("""
@@ -53,4 +59,15 @@ GROUP BY cm.club.id
     ClubMember findClubMemberByAccountAndClub(Account account, Club club);
 
     Optional<ClubMember> findClubMemberByAccount_IdAndClub_Id(String accountId, String clubId);
+
+    @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.account.id = :accountId")
+    ClubMember findByClubIdAndAccountId(@Param("clubId") String clubId, @Param("accountId") String accountId);
+
+    // Fetch ClubMember with account va userInfo
+    @Query("SELECT cm FROM ClubMember cm LEFT JOIN FETCH cm.account a LEFT JOIN FETCH a.userInfo WHERE cm.id = :id")
+    Optional<ClubMember> findByIdWithAccount(@Param("id") String id);
+
+    // Fetch all ClubMembers of a club with account va userInfo
+    @Query("SELECT cm FROM ClubMember cm LEFT JOIN FETCH cm.account a LEFT JOIN FETCH a.userInfo WHERE cm.club.id = :clubId")
+    List<ClubMember> findByClubIdWithAccount(@Param("clubId") String clubId);
 }

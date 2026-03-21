@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+
 @Builder
 @Data
 @NoArgsConstructor
@@ -43,4 +44,12 @@ public class TournamentResponse {
     BigDecimal fee;
     String createdBy;
     List<TournamentCategoryResponse> categories;
+
+    // ==================== CLUB TOURNAMENT FIELDS ====================
+    // Only populated when participationType = CLUB
+    String teamMatchFormat;
+    BigDecimal clubRegistrationFee;
+    Integer minClubRosterSize;
+    Integer maxClubRosterSize;
+    Integer maxClubs;
 }

@@ -40,6 +40,7 @@ public class Tournament {
     LocalDateTime endDate;
     LocalDateTime registrationStartDate;
     LocalDateTime registrationEndDate;
+    BigDecimal fee;
     String logoUrl;
     String bannerUrl;
 
@@ -91,4 +92,35 @@ public class Tournament {
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     List<TournamentCategory> categories;
+
+    // ==================== CLUB TOURNAMENT FIELDS ====================
+    // Chỉ dùng khi participationType = CLUB
+
+    /**
+     * Format trận đấu team (JSON)
+     * Ví dụ: {"singles": 3, "menDoubles": 2, "womenDoubles": 1, "mixedDoubles": 1}
+     */
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    String teamMatchFormat;
+
+    /**
+     * Phí đăng ký cho CLB
+     */
+    BigDecimal clubRegistrationFee;
+
+    /**
+     * Số thành viên tối thiểu trong roster
+     */
+    Integer minClubRosterSize;
+
+    /**
+     * Số thành viên tối đa trong roster
+     */
+    Integer maxClubRosterSize;
+
+    /**
+     * Số CLB tối đa tham gia
+     */
+    Integer maxClubs;
 }

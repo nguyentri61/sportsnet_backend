@@ -34,4 +34,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, String> 
     @Query("SELECT e FROM Tournament e WHERE e.status NOT IN :statuses")
     List<Tournament> findAllByStatusNot(@Param("statuses") List<TournamentStatus> excludedStatuses);
 
+    // Fetch tournament by ID for Club Tournament
+    @Query("SELECT t FROM Tournament t WHERE t.id = :id")
+    Optional<Tournament> findByIdForClubTournament(@Param("id") String id);
 }
