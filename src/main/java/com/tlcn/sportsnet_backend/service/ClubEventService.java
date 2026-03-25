@@ -41,6 +41,7 @@ public class ClubEventService {
 
     @Transactional
     public ClubEventCreateResponse createClubEvent(ClubEventCreateRequest request) {
+
         Club club = clubRepository.findBySlug(request.getClubSlug())
                 .orElseThrow(() -> new InvalidDataException("Club not found"));
 
@@ -109,6 +110,9 @@ public class ClubEventService {
                                                                    String quickTimeFilter, Boolean isFree, BigDecimal minFee, BigDecimal maxFee,
                                                                    LocalDateTime startDate, LocalDateTime endDate,
                                                                    ClubEventFilterRequest filterRequest) {
+        if (filterRequest == null) {
+            filterRequest = new ClubEventFilterRequest();
+        }
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null); 

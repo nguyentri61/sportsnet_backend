@@ -58,9 +58,25 @@ app:
   file:
     upload-dir: uploads/
     base-url: http://localhost:8080/uploads
+  geocoding:
+    nominatim:
+      base-url: https://nominatim.openstreetmap.org
+      user-agent: "SportsNetBackend/1.0 (contact: your-real-email@example.com)"
+      email: your-real-email@example.com
+      referer: http://localhost:8080
+      accept-language: vi,en
+      country-codes: vn
 
 vnpay:
   tmnCode: "B3FIKCP5"
   hashSecret: "450YTGDKJ6V9AYEPJRS0VGQNDDEXKT4T"
   returnUrl: "http://localhost:3000/payment/vnpay-return"
   payUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha

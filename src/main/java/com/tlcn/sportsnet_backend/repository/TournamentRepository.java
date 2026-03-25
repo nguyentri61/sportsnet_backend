@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,29 @@ public interface TournamentRepository extends JpaRepository<Tournament, String> 
 
     @NonNull
     Page<Tournament> findAll(Pageable pageable);
+
+    @NonNull
+    @EntityGraph(attributePaths = {
+            "categories",
+            "facility"
+    })
+    @Query("""
+            SELECT t
+            FROM Tournament t
+            WHERE t.status <> :excludedStatus
+            AND (:content IS NULL OR TRIM(:content) = ''
+                 OR LOWER(t.name) LIKE LOWER(CONCAT('%', :content, '%'))
+                 OR LOWER(COALESCE(t.description, '')) LIKE LOWER(CONCAT('%', :content, '%')))
+            AND (:organizationDateFrom IS NULL OR t.startDate >= :organizationDateFrom)
+            AND (:organizationDateTo IS NULL OR t.startDate <= :organizationDateTo)
+            """)
+    Page<Tournament> searchTournaments(
+            Pageable pageable,
+            @Param("excludedStatus") TournamentStatus excludedStatus,
+            @Param("content") String content,
+            @Param("organizationDateFrom") LocalDateTime organizationDateFrom,
+            @Param("organizationDateTo") LocalDateTime organizationDateTo
+    );
 
     Optional<Tournament> findBySlug(String slug);
     @Query("SELECT t FROM Tournament t JOIN t.categories c WHERE c.id = :categoryId")

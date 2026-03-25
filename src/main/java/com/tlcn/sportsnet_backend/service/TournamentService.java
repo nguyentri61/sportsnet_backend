@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,15 +99,29 @@ public class TournamentService {
         tournament.setCategories(tournamentCategories);
         return toTournamentResponse(tournament);
     }
-    public PagedResponse<TournamentResponse> getAllTournament(int page, int size) {
+    public PagedResponse<TournamentResponse> getAllTournament(
+            int page,
+            int size,
+            String content,
+            LocalDate organizationDateFrom,
+            LocalDate organizationDateTo
+    ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
-        Page<Tournament> tournamentPage = tournamentRepository.findAllByStatusNot(pageable, TournamentStatus.CANCELLED);
-        List<TournamentResponse> content = new ArrayList<>();
+        LocalDateTime startDateFrom = organizationDateFrom != null ? organizationDateFrom.atStartOfDay() : null;
+        LocalDateTime startDateTo = organizationDateTo != null ? organizationDateTo.atTime(23, 59, 59) : null;
+        Page<Tournament> tournamentPage = tournamentRepository.searchTournaments(
+                pageable,
+                TournamentStatus.CANCELLED,
+                content,
+                startDateFrom,
+                startDateTo
+        );
+        List<TournamentResponse> responses = new ArrayList<>();
         for (Tournament tournament : tournamentPage) {
-            content.add(toTournamentResponse(tournament));
+            responses.add(toTournamentResponse(tournament));
         }
         return new PagedResponse<>(
-                content,
+                responses,
                 tournamentPage.getNumber(),
                 tournamentPage.getSize(),
                 tournamentPage.getTotalElements(),
