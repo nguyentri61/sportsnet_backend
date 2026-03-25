@@ -1,14 +1,11 @@
 package com.tlcn.sportsnet_backend.entity;
 
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
-import com.tlcn.sportsnet_backend.enums.TournamentFormat;
-import com.tlcn.sportsnet_backend.util.SecurityUtil;
 import com.tlcn.sportsnet_backend.util.SlugUtil;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,18 +28,7 @@ public class TournamentCategory {
     Double maxLevel;
     Integer maxParticipants;
 
-    Double registrationFee; // Lệ phí tham gia
-
-    // ===== CLB Tournament Fields (nullable for individual tournaments) =====
-    Double clubRegistrationFee; // Phí đăng ký cho CLB (nullable)
-    
-    Integer minClubRosterSize; // Số lượng thành viên tối thiểu trong roster CLB
-    
-    Integer maxClubRosterSize; // Số lượng thành viên tối đa trong roster CLB
-    
-    @Column(columnDefinition = "TEXT")
-    String teamMatchFormat; // JSON format: {"singles": 3, "menDoubles": 2, "mixedDoubles": 1}
-    // ===== End CLB Tournament Fields =====
+    BigDecimal registrationFee; // Lệ phí tham gia
 
     @Column(columnDefinition = "TEXT")
     String description; // Mô tả hạng mục
@@ -66,7 +52,7 @@ public class TournamentCategory {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    List<TournamentTeam> teams = new ArrayList<>();;
+    List<TournamentTeam> teams = new ArrayList<>();
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -80,12 +66,11 @@ public class TournamentCategory {
 
     @PrePersist
     public void handleBeforeCreate(){
-
         if (this.slug == null || this.slug.isBlank()) {
             String slug = SlugUtil.toSlug(this.category.getLabel());
             String randomSuffix = SlugUtil.randomString(8);
             this.slug = slug + "-" + randomSuffix;
         }
     }
-
 }
+

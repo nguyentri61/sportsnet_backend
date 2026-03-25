@@ -248,6 +248,9 @@ public class TournamentService {
                     .maxParticipants(tournamentCategory.getMaxParticipants())
                     .minLevel(tournamentCategory.getMinLevel())
                     .maxLevel(tournamentCategory.getMaxLevel())
+                    .registrationFee(tournamentCategory.getRegistrationFee())
+                    .registrationStartDate(tournament.getRegistrationStartDate())
+                    .registrationEndDate(tournament.getRegistrationEndDate())
                     .participantStatus(tournamentParticipant != null ? tournamentParticipant.getStatus() : null)
                     .build();
             tournamentCategoryResponses.add(tournamentCategoryResponse);

@@ -5,8 +5,7 @@ import com.tlcn.sportsnet_backend.enums.TournamentFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -21,14 +20,7 @@ public class TournamentCategoryRequest {
     double maxLevel;   // 0.0 - 5.0
 
     Integer maxParticipants;
-    Double registrationFee;
-
-    // ===== CLB Tournament Fields (nullable for individual tournaments) =====
-    Double clubRegistrationFee; // Phí đăng ký cho CLB
-    Integer minClubRosterSize; // Số lượng thành viên tối thiểu trong roster CLB
-    Integer maxClubRosterSize; // Số lượng thành viên tối đa trong roster CLB
-    String teamMatchFormat; // JSON string: {"singles": 3, "menDoubles": 2, "mixedDoubles": 1}
-    // ===== End CLB Tournament Fields =====
+    BigDecimal registrationFee;
 
     String description;
 
@@ -39,5 +31,4 @@ public class TournamentCategoryRequest {
     String thirdPrize;
 
     TournamentFormat format;
-
 }

@@ -3,12 +3,12 @@ package com.tlcn.sportsnet_backend.dto.tournament;
 import com.tlcn.sportsnet_backend.dto.account.AccountFriend;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament_participants.TournamentPartnerInvitationResponse;
-import com.tlcn.sportsnet_backend.entity.TournamentTeam;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,15 +29,8 @@ public class TournamentCategoryDetailResponse {
     Double maxLevel;
     Integer maxParticipants;
     int currentParticipantCount;
-    Double registrationFee;
-    
-    // ===== CLB Tournament Fields =====
-    Double clubRegistrationFee;
-    Integer minClubRosterSize;
-    Integer maxClubRosterSize;
-    String teamMatchFormat; // JSON string
-    // ===== End CLB Tournament Fields =====
-    
+    BigDecimal registrationFee;
+
     String description;
     String rules;
     String firstPrize;
