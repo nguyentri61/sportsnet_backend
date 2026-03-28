@@ -61,9 +61,8 @@ app:
   geocoding:
     nominatim:
       base-url: https://nominatim.openstreetmap.org
-      user-agent: "SportsNetBackend/1.0 (contact: your-real-email@example.com)"
-      email: your-real-email@example.com
-      referer: http://localhost:8080
+      user-agent: "SportsNetBackend/1.0 (contact: bdmntnnt@gmail.com)"
+      email: "bdmntnnt@gmail.com"
       accept-language: vi,en
       country-codes: vn
 

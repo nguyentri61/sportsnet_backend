@@ -94,18 +94,20 @@ public class AccountService {
         userInfo.setFullName(request.getFullName());
         userInfo.setGender(request.getGender());
         userInfo.setAddress(request.getAddress());
-        nominatimService.geocodeAddress(request.getAddress())
-                .ifPresentOrElse(
-                        coordinates -> {
-                            userInfo.setLatitude(coordinates.getLatitude());
-                            userInfo.setLongitude(coordinates.getLongitude());
-                        },
-                        () -> {
-                            log.warn("Không thể geocode địa chỉ: {}", request.getAddress());
-                            userInfo.setLatitude(null);
-                            userInfo.setLongitude(null);
-                        }
-                );
+//        nominatimService.geocodeAddress(request.getAddress())
+//                .ifPresentOrElse(
+//                        coordinates -> {
+//                            userInfo.setLatitude(coordinates.getLatitude());
+//                            userInfo.setLongitude(coordinates.getLongitude());
+//                        },
+//                        () -> {
+//                            log.warn("Không thể geocode địa chỉ: {}", request.getAddress());
+//                            userInfo.setLatitude(null);
+//                            userInfo.setLongitude(null);
+//                        }
+//                );
+        userInfo.setLatitude(request.getLatitude() != null ? Double.parseDouble(request.getLatitude()) : null);
+        userInfo.setLongitude(request.getLongitude() != null ? Double.parseDouble(request.getLongitude()) : null);
         userInfo.setPhone(request.getPhone());
         userInfo.setBio(request.getBio());
         userInfo.setBirthDate(request.getBirthDate());

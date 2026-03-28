@@ -15,6 +15,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +49,7 @@ public class NominatimService {
             return Optional.empty();
         }
 
-        String url = UriComponentsBuilder.fromUriString(baseUrl)
+        URI uri = UriComponentsBuilder.fromUriString(baseUrl)
                 .path("/search")
                 .queryParam("q", address)
                 .queryParam("format", "jsonv2")
@@ -57,9 +58,9 @@ public class NominatimService {
                 .queryParamIfPresent("countrycodes", optionalValue(countryCodes))
                 .encode(StandardCharsets.UTF_8)
                 .build()
-                .toUriString();
+                .toUri();
 
-        NominatimSearchResponse[] responses = executeGet(url, NominatimSearchResponse[].class);
+        NominatimSearchResponse[] responses = executeGet(uri, NominatimSearchResponse[].class);
 
         if (responses == null || responses.length == 0) {
             return Optional.empty();
@@ -79,7 +80,7 @@ public class NominatimService {
             return Optional.empty();
         }
 
-        String url = UriComponentsBuilder.fromUriString(baseUrl)
+        URI uri = UriComponentsBuilder.fromUriString(baseUrl)
                 .path("/reverse")
                 .queryParam("lat", latitude)
                 .queryParam("lon", longitude)
@@ -87,9 +88,9 @@ public class NominatimService {
                 .queryParamIfPresent("email", optionalValue(contactEmail))
                 .encode(StandardCharsets.UTF_8)
                 .build()
-                .toUriString();
+                .toUri();
 
-        NominatimReverseResponse response = executeGet(url, NominatimReverseResponse.class);
+        NominatimReverseResponse response = executeGet(uri, NominatimReverseResponse.class);
         if (response == null || response.getDisplayName() == null || response.getDisplayName().isBlank()) {
             return Optional.empty();
         }
@@ -97,8 +98,8 @@ public class NominatimService {
         return Optional.of(response.getDisplayName());
     }
 
-    private <T> T executeGet(String url, Class<T> responseType) {
-        log.info("Executing GET request to Nominatim API: {}", url);
+    private <T> T executeGet(URI uri, Class<T> responseType) {
+        log.info("Executing GET request to Nominatim API: {}", uri);
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         headers.set(HttpHeaders.USER_AGENT, userAgent);
@@ -111,7 +112,7 @@ public class NominatimService {
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         try {
-            ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+            ResponseEntity<T> response = restTemplate.exchange(uri, HttpMethod.GET, entity, responseType);
             log.info("Received response from Nominatim API: status={}, body={}", response.getStatusCode(), response.getBody());
             return response.getBody();
         } catch (HttpClientErrorException.Forbidden ex) {

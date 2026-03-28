@@ -58,4 +58,29 @@ public interface TournamentRepository extends JpaRepository<Tournament, String> 
     @Query("SELECT e FROM Tournament e WHERE e.status NOT IN :statuses")
     List<Tournament> findAllByStatusNot(@Param("statuses") List<TournamentStatus> excludedStatuses);
 
+    @EntityGraph(attributePaths = {
+            "facility",
+            "categories"
+    })
+    @Query("""
+            SELECT t FROM Tournament t
+            JOIN t.facility f
+            WHERE t.status <> :excludedStatus
+              AND f.latitude IS NOT NULL
+              AND f.longitude IS NOT NULL
+            ORDER BY (
+                6371 * acos(
+                    cos(radians(:latitude)) * cos(radians(f.latitude))
+                    * cos(radians(f.longitude) - radians(:longitude))
+                    + sin(radians(:latitude)) * sin(radians(f.latitude))
+                )
+            ) ASC
+            """)
+    List<Tournament> findNearestTournaments(
+            @Param("excludedStatus") TournamentStatus excludedStatus,
+            @Param("latitude") double latitude,
+            @Param("longitude") double longitude,
+            Pageable pageable
+    );
+
 }

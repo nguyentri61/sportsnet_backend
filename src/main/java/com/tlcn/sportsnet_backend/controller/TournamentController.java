@@ -32,6 +32,13 @@ public class TournamentController {
     public ResponseEntity<?> getTournamentBySlug(@PathVariable String slug) {
         return ResponseEntity.ok(tournamentService.getBySlug(slug));
     }
+
+    @GetMapping("/nearby")
+    public ResponseEntity<?> getNearestTournaments(
+            @RequestParam(defaultValue = "5") int top) {
+        return ResponseEntity.ok(tournamentService.getNearestTournaments(top));
+    }
+
     @PostMapping("/{categoryId}/register/single")
     public ResponseEntity<?> joinSingleTournament(@PathVariable String categoryId){
         return ResponseEntity.ok(participantService.joinSingle(categoryId));
@@ -50,4 +57,5 @@ public class TournamentController {
     public ResponseEntity<?> getAllPartner(@PathVariable String categoryId) {
         return ResponseEntity.ok(tournamentService.getAllPartner(categoryId));
     }
+
 }
