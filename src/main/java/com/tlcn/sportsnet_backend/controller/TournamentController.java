@@ -1,5 +1,6 @@
 package com.tlcn.sportsnet_backend.controller;
 
+import com.tlcn.sportsnet_backend.enums.TournamentParticipationTypeEnum;
 import com.tlcn.sportsnet_backend.repository.TournamentRepository;
 import com.tlcn.sportsnet_backend.service.TournamentCategoryService;
 import com.tlcn.sportsnet_backend.service.TournamentParticipantService;
@@ -17,10 +18,11 @@ public class TournamentController {
     private final TournamentParticipantService participantService;
 
     @GetMapping
-    public ResponseEntity<?> getAllMyClubEventClub(
+    public ResponseEntity<?> getAllTournaments(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(tournamentService.getAllTournament(page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) TournamentParticipationTypeEnum participationType) {
+        return ResponseEntity.ok(tournamentService.getAllTournament(page, size, participationType));
     }
 
     @GetMapping("/{slug}")

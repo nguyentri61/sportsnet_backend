@@ -1,6 +1,7 @@
 package com.tlcn.sportsnet_backend.repository;
 
 import com.tlcn.sportsnet_backend.entity.Tournament;
+import com.tlcn.sportsnet_backend.enums.TournamentParticipationTypeEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import io.micrometer.common.lang.NonNull;
 import io.micrometer.common.lang.NonNullApi;
@@ -23,6 +24,20 @@ public interface TournamentRepository extends JpaRepository<Tournament, String> 
             "facility"
     })
     Page<Tournament> findAllByStatusNot(Pageable pageable, TournamentStatus status);
+
+    // Filter by status + participationType
+    @NonNull
+    @EntityGraph(attributePaths = {
+            "categories",
+            "facility"
+    })
+    @Query("SELECT t FROM Tournament t WHERE t.status != :status " +
+           "AND (:participationType IS NULL OR t.participationType = :participationType)")
+    Page<Tournament> findAllByStatusNotAndParticipationType(
+            Pageable pageable,
+            @Param("status") TournamentStatus status,
+            @Param("participationType") TournamentParticipationTypeEnum participationType
+    );
 
     @NonNull
     Page<Tournament> findAll(Pageable pageable);

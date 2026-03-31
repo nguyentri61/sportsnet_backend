@@ -126,9 +126,10 @@ public class TournamentService {
 
         return toTournamentResponse(tournament);
     }
-    public PagedResponse<TournamentResponse> getAllTournament(int page, int size) {
+    public PagedResponse<TournamentResponse> getAllTournament(int page, int size, TournamentParticipationTypeEnum participationType) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
-        Page<Tournament> tournamentPage = tournamentRepository.findAllByStatusNot(pageable, TournamentStatus.CANCELLED);
+        Page<Tournament> tournamentPage = tournamentRepository.findAllByStatusNotAndParticipationType(
+                pageable, TournamentStatus.CANCELLED, participationType);
         List<TournamentResponse> content = new ArrayList<>();
         for (Tournament tournament : tournamentPage) {
             content.add(toTournamentResponse(tournament));
