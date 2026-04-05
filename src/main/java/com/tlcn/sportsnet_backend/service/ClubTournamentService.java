@@ -228,9 +228,9 @@ public class ClubTournamentService {
         ClubTournamentParticipant participant = clubTournamentParticipantRepository.findByIdWithDetails(participantId)
                 .orElseThrow(() -> new InvalidDataException("Không tìm thấy đăng ký CLB"));
 
-        // 3. Kiểm tra status hợp lệ (chỉ PENDING mới được duyệt - thanh toán sẽ implement sau)
-        if (participant.getStatus() != ClubTournamentParticipantStatusEnum.PENDING) {
-            throw new InvalidDataException("Chỉ có thể duyệt đăng ký ở trạng thái PENDING");
+        // 3. Kiểm tra status hợp lệ (chỉ PAID mới được duyệt - đã thanh toán rồi)
+        if (participant.getStatus() != ClubTournamentParticipantStatusEnum.PAID) {
+            throw new InvalidDataException("CLB chưa thanh toán, không thể duyệt");
         }
 
         // 4. Kiểm tra club còn ACTIVE
