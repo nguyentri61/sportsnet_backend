@@ -1,6 +1,5 @@
 package com.tlcn.sportsnet_backend.service;
 
-import com.tlcn.sportsnet_backend.dto.account.AccountFriend;
 import com.tlcn.sportsnet_backend.dto.facility.FacilityResponse;
 import com.tlcn.sportsnet_backend.dto.tournament.*;
 import com.tlcn.sportsnet_backend.entity.*;
@@ -15,17 +14,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -98,15 +96,29 @@ public class TournamentService {
         tournament.setCategories(tournamentCategories);
         return toTournamentResponse(tournament);
     }
-    public PagedResponse<TournamentResponse> getAllTournament(int page, int size) {
+    public PagedResponse<TournamentResponse> getAllTournament(
+            int page,
+            int size,
+            String content,
+            LocalDate organizationDateFrom,
+            LocalDate organizationDateTo
+    ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
-        Page<Tournament> tournamentPage = tournamentRepository.findAllByStatusNot(pageable, TournamentStatus.CANCELLED);
-        List<TournamentResponse> content = new ArrayList<>();
+        LocalDateTime startDateFrom = organizationDateFrom != null ? organizationDateFrom.atStartOfDay() : null;
+        LocalDateTime startDateTo = organizationDateTo != null ? organizationDateTo.atTime(23, 59, 59) : null;
+        Page<Tournament> tournamentPage = tournamentRepository.searchTournaments(
+                pageable,
+                TournamentStatus.CANCELLED,
+                content,
+                startDateFrom,
+                startDateTo
+        );
+        List<TournamentResponse> responses = new ArrayList<>();
         for (Tournament tournament : tournamentPage) {
-            content.add(toTournamentResponse(tournament));
+            responses.add(toTournamentResponse(tournament));
         }
         return new PagedResponse<>(
-                content,
+                responses,
                 tournamentPage.getNumber(),
                 tournamentPage.getSize(),
                 tournamentPage.getTotalElements(),
@@ -121,6 +133,24 @@ public class TournamentService {
         Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
         Tournament tournament = tournamentRepository.findBySlug(slug).orElseThrow(() -> new InvalidDataException("Tournament not found"));
         return tournamentDetailResponse(tournament, account);
+    }
+
+    public List<TournamentResponse> getNearestTournaments(int top) {
+        Coordinate coordinate = resolveCurrentUserCoordinate();
+        validateCoordinate(coordinate.latitude(), coordinate.longitude());
+        int limit = normalizeTop(top);
+
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Tournament> tournaments = tournamentRepository.findNearestTournaments(
+                TournamentStatus.CANCELLED,
+                coordinate.latitude(),
+                coordinate.longitude(),
+                pageable
+        );
+
+        return tournaments.stream()
+                .map(this::toTournamentResponse)
+                .toList();
     }
 
     public TournamentResponse toTournamentResponse(Tournament tournament) {
@@ -287,8 +317,37 @@ public class TournamentService {
 
     public Object getAllPartner(String categoryId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account account = accountRepository.findByEmail(authentication.getName()).orElse(null);
-        List<AccountFriend> accountFriends = friendshipService.getAllPartner(account.getId(),categoryId );
-        return accountFriends;
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+        return friendshipService.getAllPartner(account.getId(), categoryId);
     }
+
+    private void validateCoordinate(double latitude, double longitude) {
+        if (latitude < -90 || latitude > 90) {
+            throw new InvalidDataException("Latitude phai trong khoang -90 den 90");
+        }
+        if (longitude < -180 || longitude > 180) {
+            throw new InvalidDataException("Longitude phai trong khoang -180 den 180");
+        }
+    }
+
+    private int normalizeTop(int top) {
+        if (top <= 0) {
+            return 5;
+        }
+        return Math.min(top, 5);
+    }
+
+    private Coordinate resolveCurrentUserCoordinate() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new InvalidDataException("Account not found"));
+        UserInfo userInfo = account.getUserInfo();
+        if (userInfo == null || userInfo.getLatitude() == null || userInfo.getLongitude() == null) {
+            throw new InvalidDataException("Vui long cap nhat dia chi de he thong xac dinh vi tri cua ban");
+        }
+        return new Coordinate(userInfo.getLatitude(), userInfo.getLongitude());
+    }
+
+    private record Coordinate(double latitude, double longitude) {}
 }

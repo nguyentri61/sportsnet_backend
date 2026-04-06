@@ -10,6 +10,7 @@ import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.repository.*;
 import com.tlcn.sportsnet_backend.util.VNPayUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,9 @@ public class TournamentPaymentService {
     private final TournamentTeamRepository teamRepo;
     private final AccountRepository accountRepo;
     private final TournamentCategoryRepository categoryRepo;
+
+    @Value("${vnpay.client-ip:127.0.0.1}")
+    private String vnpClientIp;
 
     // Tạo URL thanh toán
     public VNPayCreateResponse createPayment(String categoryId, Double amount) {
@@ -69,7 +73,7 @@ public class TournamentPaymentService {
         params.put("vnp_OrderInfo", "Thanh toan le phi thi dau");
         params.put("vnp_OrderType", "other");
         params.put("vnp_Locale", "vn");
-        params.put("vnp_IpAddr", "127.0.0.1");
+        params.put("vnp_IpAddr", vnpClientIp);
         params.put("vnp_ReturnUrl", config.getReturnUrl());
         params.put("vnp_CreateDate", new java.text.SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
 
