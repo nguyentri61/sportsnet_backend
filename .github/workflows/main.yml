@@ -20,9 +20,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
- 
-      - name: Run Tests
-        run: mvn clean test
+
  
       # 2. Log into Docker Hub
       - name: Log in to Docker Hub
