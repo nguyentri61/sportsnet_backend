@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,8 @@ public class ChatbotController {
     private final ChatSessionRepository chatSessionRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    private static final String CHATBOT_URL = "http://127.0.0.1:8000/chat";
+    @Value("${chatbot.url:http://127.0.0.1:9000/chat}")
+    private String chatbotUrl;
 
     @PostMapping("/ask")
     public ResponseEntity<?> askChatbot(
@@ -71,7 +73,7 @@ public class ChatbotController {
 
         HttpEntity<ChatbotRequest> entity = new HttpEntity<>(request, headers);
         ResponseEntity<?> response = restTemplate.exchange(
-                CHATBOT_URL,
+                chatbotUrl,
                 HttpMethod.POST,
                 entity,
                 Object.class

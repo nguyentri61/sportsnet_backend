@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,6 +15,9 @@ import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
+
+    @Value("${openapi.server-url:http://localhost:8080}")
+    private String openApiServerUrl;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -27,7 +31,7 @@ public class OpenApiConfig {
                                 .name("SportsNet Team")
                                 .email("support@sportsnet.com")))
                 .servers(List.of(
-                        new Server().url("http://localhost:8080").description("Development server")
+                        new Server().url(openApiServerUrl).description("Development server")
                 ))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
