@@ -77,6 +77,12 @@ address:
   api:
     base-url: ${ADDRESS_API_BASE_URL:https://esgoo.net/api-tinhthanh-new}
 
+supabase:
+  url: ${SUPABASE_URL:}
+  service-key: ${SUPABASE_SERVICE_KEY:}
+  bucket: ${SUPABASE_BUCKET:}
+  base-public-url: ${SUPABASE_BASE_PUBLIC_URL:}
+
 vnpay:
   tmnCode: ${VNPAY_TMN_CODE:}
   hashSecret: ${VNPAY_HASH_SECRET:}
