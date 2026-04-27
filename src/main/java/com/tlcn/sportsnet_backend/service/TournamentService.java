@@ -5,6 +5,7 @@ import com.tlcn.sportsnet_backend.dto.tournament.*;
 import com.tlcn.sportsnet_backend.entity.*;
 import com.tlcn.sportsnet_backend.enums.BadmintonCategoryEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentParticipantEnum;
+import com.tlcn.sportsnet_backend.enums.TournamentParticipationTypeEnum;
 import com.tlcn.sportsnet_backend.enums.TournamentStatus;
 import com.tlcn.sportsnet_backend.error.InvalidDataException;
 import com.tlcn.sportsnet_backend.payload.response.PagedResponse;
@@ -86,7 +87,6 @@ public class TournamentService {
                     .firstPrize(c.getFirstPrize())
                     .secondPrize(c.getSecondPrize())
                     .thirdPrize(c.getThirdPrize())
-                    .registrationDeadline(request.getRegistrationEndDate())
                     .build();
 
             tournamentCategories.add(category);
@@ -99,6 +99,7 @@ public class TournamentService {
     public PagedResponse<TournamentResponse> getAllTournament(
             int page,
             int size,
+            TournamentParticipationTypeEnum participationType,
             String content,
             LocalDate organizationDateFrom,
             LocalDate organizationDateTo
@@ -106,10 +107,12 @@ public class TournamentService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
         LocalDateTime startDateFrom = organizationDateFrom != null ? organizationDateFrom.atStartOfDay() : null;
         LocalDateTime startDateTo = organizationDateTo != null ? organizationDateTo.atTime(23, 59, 59) : null;
+        String normalizedContent = (content != null && !content.isBlank()) ? content.trim() : null;
         Page<Tournament> tournamentPage = tournamentRepository.searchTournaments(
                 pageable,
                 TournamentStatus.CANCELLED,
-                content,
+                participationType,
+                normalizedContent,
                 startDateFrom,
                 startDateTo
         );
@@ -169,6 +172,7 @@ public class TournamentService {
                 .slug(tournament.getSlug())
                 .createdBy(tournament.getCreatedBy())
                 .status(tournament.getStatus())
+                .participationType(tournament.getParticipationType())
                 .categories(tournamentCategoryResponses)
                 .bannerUrl(fileStorageService.getFileUrl(tournament.getBannerUrl(), "/tournament"))
                 .logoUrl(fileStorageService.getFileUrl(tournament.getLogoUrl(), "/tournament"))
@@ -181,6 +185,11 @@ public class TournamentService {
                 .id(tournament.getId())
                 .name(tournament.getName())
                 .description(tournament.getDescription())
+                .teamMatchFormat(tournament.getTeamMatchFormat())
+                .clubRegistrationFee(tournament.getClubRegistrationFee())
+                .minClubRosterSize(tournament.getMinClubRosterSize())
+                .maxClubRosterSize(tournament.getMaxClubRosterSize())
+                .maxClubs(tournament.getMaxClubs())
                 .build();
     }
 
@@ -250,6 +259,7 @@ public class TournamentService {
                 .slug(tournament.getSlug())
                 .createdBy(tournament.getCreatedBy())
                 .status(tournament.getStatus())
+                .participationType(tournament.getParticipationType())
                 .rules(tournament.getRules())
                 .categories(tournamentCategoryResponses)
                 .bannerUrl(fileStorageService.getFileUrl(tournament.getBannerUrl(), "/tournament"))
@@ -264,6 +274,11 @@ public class TournamentService {
                 .name(tournament.getName())
                 .players(tournamentPlayerResponses)
                 .description(tournament.getDescription())
+                .teamMatchFormat(tournament.getTeamMatchFormat())
+                .clubRegistrationFee(tournament.getClubRegistrationFee())
+                .minClubRosterSize(tournament.getMinClubRosterSize())
+                .maxClubRosterSize(tournament.getMaxClubRosterSize())
+                .maxClubs(tournament.getMaxClubs())
                 .build();
 
     }
